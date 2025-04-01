@@ -22,14 +22,7 @@ public class UserService implements IUserService{
 		public boolean emailExists(String email) {
 	        return userRepository.existsByEmail(email);
 	    }
-	    @Override
-		public boolean existsByPhone(String phone) {
-	        return userRepository.existsByPhone(phone);
-	    }
-	    @Override
-		public boolean existsByUsername(String username) {
-	        return userRepository.existsByUsername(username);
-	    }
+	
 	    @Override
 	    public void saveActive(String email) {
 	        Optional<User> userOptional = userRepository.findByEmail(email);
@@ -65,19 +58,51 @@ public class UserService implements IUserService{
 	        userRepository.save(user);
 	    }
 
+	
+
 		@Override
-		public Optional<User> findByUsername(String username) {
-			// TODO Auto-generated method stub
-			return userRepository.findByUsername(username);
-		}
-		public boolean verifyOtpRegister(String email, String otp) {
-		    Optional<User> user = userRepository.findByEmail(email);
-		    if (user.isPresent()) {
-		        // Kiểm tra OTP với dữ liệu đã lưu trong cơ sở dữ liệu
-		        return otp.equals(user.get().getOtpCode());
+		public boolean verifyOtpForgotPassword(String email, String otp) {
+		    Optional<User> userOpt = userRepository.findByEmail(email);
+		    if (!userOpt.isPresent()) {
+		        return false; // Không tìm thấy user
+		    }
+
+		    User user = userOpt.get();
+		    // Kiểm tra OTP và thời gian hết hạn
+		    if (user.getOtpCode() != null && user.getOtpCode().equals(otp) && user.getOtpExpiration().isAfter(LocalDateTime.now())) {
+		        return true;
 		    }
 		    return false;
 		}
 
+		@Override
+		public boolean resetPassword(String email, String newPassword) {
+		    Optional<User> userOpt = userRepository.findByEmail(email);
+		    if (userOpt.isPresent()) {
+		        User user = userOpt.get();
+		        user.setPassword(newPassword); // Mã hóa mật khẩu nếu cần
+		        user.setOtpCode(null); // Xóa OTP sau khi reset thành công
+		        user.setOtpExpiration(null); // Xóa thời gian hết hạn OTP
+		        userRepository.save(user);
+		        return true;
+		    }
+		    return false;
+		}
 
+		@Override
+		public boolean verifyOtpRegister(String email, String otp) {
+			   Optional<User> userOpt = userRepository.findByEmail(email);
+			    if (!userOpt.isPresent()) {
+			        return false; // Không tìm thấy user
+			    }
+
+			    User user = userOpt.get();
+			    // Kiểm tra OTP và thời gian hết hạn
+			    if (user.getOtpCode() != null && user.getOtpCode().equals(otp) && user.getOtpExpiration().isAfter(LocalDateTime.now())) {
+			        return true;
+			    }
+			    return false;
+		}
+
+		
 }

@@ -9,8 +9,6 @@ import vn.iostar.Project_Mobile.entity.User;
 @Service
 public interface IUserService {
 
-	Optional<User> findByUsername(String username);
-
 
 	void saveOtp(User user, String otp);
 
@@ -18,15 +16,14 @@ public interface IUserService {
 
 	void saveUser(User user, String otp);
 
-	boolean existsByUsername(String username);
-
-	boolean existsByPhone(String phone);
-
 	boolean emailExists(String email);
 
 
 	boolean verifyOtpRegister(String email, String otp);
 
 	void saveActive(String email);
+
+	boolean verifyOtpForgotPassword(String email, String otp);
+	boolean resetPassword(String email, String newPassword);
 
 }

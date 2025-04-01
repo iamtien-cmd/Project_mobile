@@ -1,6 +1,8 @@
 package vn.iostar.Project_Mobile.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -10,33 +12,46 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @Entity
-@Table(name = "users")
+@Table(name = "User")
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private long userId;
+  
 
     @Column(unique = true, nullable = false)
     private String email;
     
-    @Column(unique = true, nullable = false)
-    private String username;
-    
     @Column(nullable = false)
     private String password;
 
-    @Column(name = "full_name")
     private String fullName;
-    private String phone;
-    private String address;
 
     private String otpCode;
 
     private LocalDateTime otpExpiration;
+    private boolean active;
 
-    private Boolean active = false;
 
+    // Quan hệ Nhiều-Nhiều với Address
+    @ManyToMany
+    @JoinTable(
+        name = "user_address",  // Tên bảng trung gian
+        joinColumns = @JoinColumn(name = "user_id"),  // Khóa ngoại tham chiếu đến User
+        inverseJoinColumns = @JoinColumn(name = "address_id") // Khóa ngoại tham chiếu đến Address
+    )
+    private List<Address> addresses;
+    
+ // Quan hệ 1-N: Một User có nhiều Comment
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Comment> comments = new ArrayList<>();
+    
+    @OneToOne(mappedBy = "user")
+    private Favorite favorite;
+    
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private Cart cart;
 
-    // Getters and Setters
+    
 }

@@ -12,19 +12,22 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .csrf(csrf -> csrf.disable()) // Tắt CSRF
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/register", "/api/auth/verifyOtpRegister","/forgot-password","/login").permitAll()  // Public endpoints
-                .anyRequest().authenticated()  // Các yêu cầu khác cần xác thực
-            );
-        return http.build();
-    }
+	@Bean
+	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+		http.csrf(csrf -> csrf.disable()) // Tắt CSRF
+				.authorizeHttpRequests(auth -> auth
+						.requestMatchers("/api/auth/register", "/api/auth/verifyOtpRegister", "/forgot-password",
+								"/reset-password", "/login", 
+								"/verifyOtpForgotPassword",
+								"api/product/getListProducts")
+						.permitAll() // Public endpoints
+						.anyRequest().authenticated() // Các yêu cầu khác cần xác thực
+				);
+		return http.build();
+	}
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();  // Mã hóa mật khẩu bằng BCrypt
-    }
+	@Bean
+	public PasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder(); // Mã hóa mật khẩu bằng BCrypt
+	}
 }

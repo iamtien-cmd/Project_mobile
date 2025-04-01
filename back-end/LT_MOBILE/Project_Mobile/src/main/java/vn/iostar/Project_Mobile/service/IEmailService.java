@@ -5,5 +5,6 @@ public interface IEmailService {
 
 	void sendRegisterOtp(String email, String otp);
 
+	void sendForgotPasswordOtp(String email, String otp);
 	String generateOTP();
 }

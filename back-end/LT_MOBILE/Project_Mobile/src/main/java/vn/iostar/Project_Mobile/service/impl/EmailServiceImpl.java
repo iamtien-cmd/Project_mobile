@@ -46,4 +46,16 @@ public class EmailServiceImpl  implements IEmailService {
 
 		        return otp.toString();
 		}
+		@Override
+		public void sendForgotPasswordOtp(String email, String otp) {
+			// TODO Auto-generated method stub
+			SimpleMailMessage message = new SimpleMailMessage();
+	        message.setTo(email);
+	        message.setSubject("Xác nhận mã quên mật khẩu ");
+	        message.setText("Your OTP code is: " + otp);
+	        
+	        // Gửi email
+	        javaMailSender.send(message);
+			
+		}
 }
