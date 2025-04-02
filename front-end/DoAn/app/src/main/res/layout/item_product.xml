@@ -6,22 +6,32 @@
     android:gravity="center"
     android:padding="4dp">
 
+    <!-- Hình ảnh sản phẩm -->
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="200dp"
         android:layout_height="200dp"
         android:scaleType="centerCrop"/>
 
+    <!-- Tên sản phẩm -->
     <TextView
         android:id="@+id/tvProductName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:padding="4dp"
         />
-
+    <!-- Giá sản phẩm -->
     <TextView
         android:id="@+id/tvProductPrice"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textColor="@android:color/holo_red_dark"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:paddingBottom="8dp"
         />
 
 </LinearLayout>
