@@ -1,7 +1,8 @@
 # Project_mobile
 # Handmade
 # class diagram
-![image](https://github.com/user-attachments/assets/1f5ed1f7-07b6-4140-852f-0d2a8c7a5654)
+![image](https://github.com/user-attachments/assets/6778c6ab-4d4d-4608-99e1-3e7e112b815f)
+
 # usecase diagram
 ![image](https://github.com/user-attachments/assets/17cbc100-c37e-46ea-b523-6a0710d34b5b)
 
