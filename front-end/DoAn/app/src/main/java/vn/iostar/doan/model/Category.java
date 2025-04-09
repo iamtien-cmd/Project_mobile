@@ -1,9 +1,9 @@
-package vn.iostar.doan.entity;
+package vn.iostar.doan.model;
 
 import java.util.List;
 
 public class Category {
     private int categoryId;
     private String categoryName;
-    private List<Product> Product;
+    private List<vn.iostar.doan.model.Product> Product;
 }

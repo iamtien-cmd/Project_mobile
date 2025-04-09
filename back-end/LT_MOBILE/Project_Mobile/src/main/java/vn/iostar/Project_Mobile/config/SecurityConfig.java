@@ -16,10 +16,8 @@ public class SecurityConfig {
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http.csrf(csrf -> csrf.disable()) // Tắt CSRF
 				.authorizeHttpRequests(auth -> auth
-						.requestMatchers("/api/auth/register", "/api/auth/verifyOtpRegister", "/forgot-password",
-								"/reset-password", "/login", 
-								"/verifyOtpForgotPassword",
-								"api/product/getListProducts")
+						.requestMatchers("/api/auth/**",
+								"/api/product/getListProducts")
 						.permitAll() // Public endpoints
 						.anyRequest().authenticated() // Các yêu cầu khác cần xác thực
 				);

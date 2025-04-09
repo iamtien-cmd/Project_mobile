@@ -32,6 +32,8 @@ public class User {
 
     private LocalDateTime otpExpiration;
     private boolean active;
+    @Enumerated(EnumType.STRING)
+    private Type type;
 
 
     // Quan hệ Nhiều-Nhiều với Address

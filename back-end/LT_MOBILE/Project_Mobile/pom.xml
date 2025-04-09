@@ -50,6 +50,12 @@
 		</dependency>
 		<!-- Lombok dependency with specific version -->
 		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.10.1</version> <!-- hoặc phiên bản mới nhất -->
+		</dependency>
+
+		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<version>1.18.30</version>
@@ -76,11 +82,7 @@
 			<version>8.0.33</version> <!-- Hoặc kiểm tra phiên bản mới nhất -->
 			<scope>runtime</scope>
 		</dependency>
-		<dependency>
-			<groupId>com.google.code.gson</groupId>
-			<artifactId>gson</artifactId>
-			<version>2.8.9</version>
-		</dependency>
+
 	</dependencies>
 
 	<build>

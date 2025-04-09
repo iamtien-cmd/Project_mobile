@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,6 +23,7 @@ import vn.iostar.Project_Mobile.entity.User;
 import vn.iostar.Project_Mobile.repository.IUserRepository;
 import vn.iostar.Project_Mobile.service.IEmailService;
 import vn.iostar.Project_Mobile.service.IUserService;
+import java.time.LocalDateTime;
 
 
 
@@ -29,11 +31,34 @@ import vn.iostar.Project_Mobile.service.IUserService;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    @Autowired
-    private IEmailService emailService;
+	@Autowired
+	private IEmailService emailService;
 
-    @Autowired
-    private IUserService userService;
+	@Autowired
+	private IUserService userService;
+
+	@Autowired
+	private PasswordEncoder passwordEncoder;
+
+@Autowired
+private IUserRepository userRepository;
+
+
+	    @Autowired
+	    public AuthController(IEmailService emailService, IUserService userService,
+	                          PasswordEncoder passwordEncoder, IUserRepository userRepository) {
+	        this.emailService = emailService;
+	        this.userService = userService;
+	        this.passwordEncoder = passwordEncoder;
+	        this.userRepository = userRepository;
+	    }
+
+    public void saveUser(User user) {
+        // Mã hóa mật khẩu trước khi lưu
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        userRepository.save(user);
+    }
+
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody User user) {
@@ -50,6 +75,7 @@ public class AuthController {
         
         // Lưu OTP và trạng thái chưa xác nhận vào cơ sở dữ liệu
         userService.saveUser(user, otp);
+       
 
         return ResponseEntity.ok("OTP đăng kí đã được gửi qua email.");
     }

@@ -1,4 +1,4 @@
-package vn.iostar.doan;
+package vn.iostar.doan.activity;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -10,8 +10,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.DividerItemDecoration;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.ViewPager;
 
@@ -22,10 +20,11 @@ import me.relex.circleindicator.CircleIndicator;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import vn.iostar.doan.R;
 import vn.iostar.doan.adapter.ImagesViewPageAdapter;
 import vn.iostar.doan.adapter.ProductAdapter;
 import vn.iostar.doan.api.ApiService;
-import vn.iostar.doan.entity.Product;
+import vn.iostar.doan.model.Product;
 import vn.iostar.doan.image.Images;
 
 public class HomeActivity extends AppCompatActivity {

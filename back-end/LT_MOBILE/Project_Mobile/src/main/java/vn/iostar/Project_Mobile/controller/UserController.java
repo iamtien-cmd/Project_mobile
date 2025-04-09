@@ -1,6 +1,7 @@
 package vn.iostar.Project_Mobile.controller;
 
 import java.util.Optional;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,23 +18,24 @@ import vn.iostar.Project_Mobile.service.IEmailService;
 import vn.iostar.Project_Mobile.service.IUserService;
 
 @RestController
+@RequestMapping("/api/auth")
 public class UserController {
 
-    private final IUserService userService;
-    private final IEmailService emailService;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    // Constructor-based injection for userService and emailService
-    public UserController(IUserService userService, IEmailService emailService) {
-        this.userService = userService;
-        this.emailService = emailService;
-    }
+	 private final IUserService userService;
+	    private final IEmailService emailService;
+	    private final PasswordEncoder passwordEncoder;
+	    @Autowired
+	    public UserController(IUserService userService, IEmailService emailService, PasswordEncoder passwordEncoder) {
+	        this.userService = userService;
+	        this.emailService = emailService;
+	        this.passwordEncoder = passwordEncoder;
+	    }
 
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest) {
-        // Tìm kiếm người dùng bằng username
-        Optional<User> userOpt = userService.findByEmail(loginRequest.getUsername());
+    	
+    	// Tìm kiếm người dùng bằng username
+        Optional<User> userOpt = userService.findByEmail(loginRequest.getEmail());
 
         // Kiểm tra nếu không tìm thấy user hoặc mật khẩu không khớp
         if (!userOpt.isPresent() || 
