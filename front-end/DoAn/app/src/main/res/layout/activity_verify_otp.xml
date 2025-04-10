@@ -7,16 +7,18 @@
     android:layout_height="match_parent">
 
     <!-- Hình nền -->
+
+    <!-- Phần chứa nội dung đăng nhập -->
     <ImageView
         android:id="@+id/backgroundImage"
         android:layout_width="match_parent"
         android:layout_height="250dp"
         android:scaleType="centerCrop"
         android:src="@drawable/image_51"
+        app:layout_constraintBottom_toTopOf="@id/loginContainer"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/loginContainer" />
+        tools:layout_editor_absoluteX="0dp" />
 
-    <!-- Phần chứa nội dung đăng nhập -->
     <androidx.cardview.widget.CardView
         android:id="@+id/loginContainer"
         android:layout_width="match_parent"
@@ -67,7 +69,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Forgot password"
+                android:text="Verify OTP Register"
                 android:textSize="20sp"
                 android:textColor="@color/gray"
                 android:gravity="center"

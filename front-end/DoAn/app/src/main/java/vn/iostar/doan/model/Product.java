@@ -1,4 +1,4 @@
-package vn.iostar.doan.entity;
+package vn.iostar.doan.model;
 
 public class Product {
     private int productId;

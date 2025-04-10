@@ -1,4 +1,4 @@
-package vn.iostar.doan.entity;
+package vn.iostar.doan.model;
 
 import java.util.List;
 

@@ -12,7 +12,7 @@ import vn.iostar.Project_Mobile.repository.IUserRepository;
 import vn.iostar.Project_Mobile.service.IUserService;
 
 @Service
-public class UserService implements IUserService{
+public class UserServiceImpl implements IUserService{
     @Autowired
     private PasswordEncoder passwordEncoder;
 	 @Autowired

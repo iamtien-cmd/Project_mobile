@@ -1,14 +1,15 @@
-package vn.iostar.doan;
+package vn.iostar.doan.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.textfield.TextInputEditText;
+
+import vn.iostar.doan.R;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -33,29 +34,24 @@ public class RegisterActivity extends AppCompatActivity {
         // Xử lý sự kiện khi nhấn nút Đăng ký
         btnRegister.setOnClickListener(v -> {
             String fullName = etFullName.getText().toString().trim();
-            String username = etUsername.getText().toString().trim();
+            String email = etUsername.getText().toString().trim();  // Email hoặc username
             String password = etPassword.getText().toString().trim();
 
-            // Kiểm tra các trường không được để trống
-            if (fullName.isEmpty() || username.isEmpty() || password.isEmpty()) {
+            if (fullName.isEmpty() || email.isEmpty() || password.isEmpty()) {
                 Toast.makeText(RegisterActivity.this, "Vui lòng điền đầy đủ thông tin!", Toast.LENGTH_SHORT).show();
             } else {
-                // Xử lý đăng ký (có thể lưu vào database hoặc Firebase)
-                Toast.makeText(RegisterActivity.this, "Đăng ký thành công!", Toast.LENGTH_SHORT).show();
+                // Đăng ký thành công (lưu vào database ở đây nếu có)
+                Toast.makeText(RegisterActivity.this, "Đăng ký thành công! Vui lòng xác thực OTP.", Toast.LENGTH_SHORT).show();
 
-                // Chuyển về màn hình đăng nhập sau khi đăng ký
-                Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
+                // Gửi username qua VerifyOtpActivity
+                Intent intent = new Intent(RegisterActivity.this, VerifyOtpRegisterActivity.class);
+                intent.putExtra("email", email);
                 startActivity(intent);
-                finish();
+                finish(); // Tùy chọn: đóng RegisterActivity
             }
         });
 
-        // Chuyển về màn hình đăng nhập nếu đã có tài khoản
-        tvLogin.setOnClickListener(v -> {
-            Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
-            startActivity(intent);
-            finish();
-        });
+
 
         // Xử lý sự kiện đăng nhập bằng Google
         googleSignIn.setOnClickListener(v -> {

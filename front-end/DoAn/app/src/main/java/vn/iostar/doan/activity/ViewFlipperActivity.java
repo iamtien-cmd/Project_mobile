@@ -1,4 +1,4 @@
-package vn.iostar.doan;
+package vn.iostar.doan.activity;
 
 import android.os.Bundle;
 import android.view.animation.Animation;
