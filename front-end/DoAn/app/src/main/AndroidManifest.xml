@@ -29,6 +29,7 @@
         <activity android:name=".activity.LoginActivity" />
         <activity android:name=".activity.RegisterActivity" />
         <activity android:name=".activity.HomeActivity" />
+        <activity android:name=".activity.VerifyOtpRegisterActivity" />
     </application>
 
 </manifest>

@@ -15,6 +15,7 @@ import retrofit2.http.POST;
 import vn.iostar.doan.model.Product;
 import vn.iostar.doan.model.User;
 import vn.iostar.doan.modelRequest.LoginRequest;
+import vn.iostar.doan.modelRequest.RegisterRequest;
 
 public interface ApiService {
     // Link API:
@@ -22,14 +23,19 @@ public interface ApiService {
             .setDateFormat("yyyy-MM-dd HH:mm:ss")
             .create();
     ApiService apiService = new Retrofit.Builder()
-            .baseUrl("http://192.168.2.137:8080/")
+            .baseUrl("http://192.168.2.130:8080/")
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
             .create(ApiService.class);
 
-    @POST("/login")
+    @POST("/api/auth/login")
     Call<User> loginUser(@Body LoginRequest userRequest);
 
+    @POST("/api/auth/register")
+    Call<User> registerUser(@Body User user);
+
+    @POST("/api/auth/verifyOtpRegister")
+    Call<Void> verifyOtpRegister(@Body RegisterRequest registerRequest);
     @GET("api/products")
     Call<List<Product>> getListProducts();
 
