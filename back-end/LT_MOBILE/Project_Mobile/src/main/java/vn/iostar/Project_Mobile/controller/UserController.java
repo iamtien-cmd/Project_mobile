@@ -1,27 +1,40 @@
 package vn.iostar.Project_Mobile.controller;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import org.springframework.web.bind.annotation.RequestMapping;
+import java.util.UUID;
 
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 import vn.iostar.Project_Mobile.DTO.ForgotPasswordRequest;
 import vn.iostar.Project_Mobile.DTO.LoginRequest;
+import vn.iostar.Project_Mobile.DTO.UserUpdateDTO;
+import vn.iostar.Project_Mobile.entity.Address;
 import vn.iostar.Project_Mobile.entity.User;
+import vn.iostar.Project_Mobile.repository.AddressRepository;
 import vn.iostar.Project_Mobile.service.IEmailService;
 import vn.iostar.Project_Mobile.service.IUserService;
 
 @RestController
 @RequestMapping("/api/auth")
 public class UserController {
+
+	@Autowired
+	private AddressRepository addressRepository;
 
 	 private final IUserService userService;
 	    private final IEmailService emailService;
@@ -49,6 +62,12 @@ public class UserController {
 	                    .body("Mật khẩu không chính xác!");
 	        }
 
+	        String token = UUID.randomUUID().toString();
+
+	        // ✅ Lưu token đó vào DB (thêm cột token trong bảng users)
+	        user.setToken(token);
+	        userService.save(user);
+	        
 	        // Log dữ liệu nếu bạn muốn kiểm tra
 	        System.out.println("User từ database: " + user);
 
@@ -62,9 +81,68 @@ public class UserController {
 
 	        return ResponseEntity.ok(response);
 	    }
+	    // Lấy thông tin của user để hiển thị
+	    @GetMapping("/info")
+	    public ResponseEntity<?> getUserInfo(@RequestHeader("Authorization") String authHeader) {
+	        String token = authHeader.replace("Bearer ", "").trim();
 
-    
+	        Optional<User> userOpt = userService.findByToken(token);
+	        if (!userOpt.isPresent()) {
+	            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token không hợp lệ.");
+	        }
 
+	        User user = userOpt.get();
+	        Map<String, Object> response = new HashMap<>();
+	        response.put("email", user.getEmail());
+	        response.put("fullName", user.getFullName());
+	        response.put("phone", user.getPhone());
+	        response.put("avatar", user.getAvatar());
+	        List<Map<String, Object>> addressList = new ArrayList<>();
+	        if (user.getAddresses() != null) {
+	            for (Address addr : user.getAddresses()) {
+	                Map<String, Object> addressMap = new HashMap<>();
+	                addressMap.put("addressId", addr.getAddressId()); 
+	                addressMap.put("houseNumber", addr.getHouseNumber());
+	                addressMap.put("street", addr.getStreet());
+	                addressMap.put("city", addr.getCity());
+	                addressMap.put("country", addr.getCountry());
+	                addressList.add(addressMap);
+	            }
+	        }
+	        response.put("addresses", addressList);
+	        return ResponseEntity.ok(response);
+	    }
+
+	    //update thông tin
+	    @PutMapping("/update")
+	    public ResponseEntity<?> updateUser(
+	            @RequestHeader("Authorization") String authHeader,
+	            @RequestBody UserUpdateDTO request
+	    ) {
+	        String token = authHeader.replace("Bearer ", "").trim();
+	        Optional<User> userOpt = userService.findByToken(token);
+
+	        if (!userOpt.isPresent()) {
+	            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token không hợp lệ.");
+	        }
+
+	        User user = userOpt.get();
+	        user.setFullName(request.getFullName());
+	        user.setAvatar(request.getAvatar());
+	        user.setPhone(request.getPhone());
+
+	        if (request.getAddressIds() != null) {
+	            List<Address> addressList = addressRepository.findAllById(request.getAddressIds());
+	            user.setAddresses(addressList);
+	        }
+
+	        userService.save(user);
+
+	        return ResponseEntity.ok("Cập nhật thông tin thành công!");
+	    }
+
+
+	    
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
         Optional<User> userOpt = userService.findByEmail(request.getEmail());

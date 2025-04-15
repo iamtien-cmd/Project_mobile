@@ -26,8 +26,11 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Column(nullable = true)
+    private String avatar;
     private String fullName;
-
+    private String phone;
+    private String token;
     private String otpCode;
 
     private LocalDateTime otpExpiration;
