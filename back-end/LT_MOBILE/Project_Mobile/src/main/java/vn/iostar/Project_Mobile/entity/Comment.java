@@ -25,6 +25,7 @@ public class Comment {
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long commentId;
+	private String image;
 	private String content;
 	private int rating;
 	

@@ -103,7 +103,7 @@ public class UserController {
 	                Map<String, Object> addressMap = new HashMap<>();
 	                addressMap.put("addressId", addr.getAddressId()); 
 	                addressMap.put("houseNumber", addr.getHouseNumber());
-	                addressMap.put("street", addr.getStreet());
+	                addressMap.put("district", addr.getDistrict());
 	                addressMap.put("city", addr.getCity());
 	                addressMap.put("country", addr.getCountry());
 	                addressList.add(addressMap);

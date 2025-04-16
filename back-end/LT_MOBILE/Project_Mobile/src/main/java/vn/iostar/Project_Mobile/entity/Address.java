@@ -30,12 +30,13 @@ public class Address {
 	 @GeneratedValue(strategy = GenerationType.IDENTITY)
 	 private long addressId;
 	 private String houseNumber;
-	 private String street;
+	 private String district;
 	 private String city;
 	 private String country;
 	 
-	 // Quan hệ Nhiều-Nhiều với User (hai chiều)
-	    @ManyToMany(mappedBy = "addresses")
-	    private List<User> users = new ArrayList<>();
+	 @ManyToOne
+	 @JoinColumn(name = "user_id")
+	 private User user;
+
 
 }
