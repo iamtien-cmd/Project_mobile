@@ -16,7 +16,7 @@
 	<name>Project_Mobile</name>
 	<description>Demo project for Spring Boot</description>
 	<properties>
-		<java.version>21</java.version>
+		<java.version>20</java.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -52,7 +52,6 @@
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>
-			<version>2.10.1</version> <!-- hoặc phiên bản mới nhất -->
 		</dependency>
 
 		<dependency>

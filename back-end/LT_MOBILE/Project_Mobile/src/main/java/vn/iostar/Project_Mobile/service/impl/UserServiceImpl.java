@@ -104,5 +104,16 @@ public class UserServiceImpl implements IUserService{
 			    return false;
 		}
 
+		@Override
+		public User save(User user) {
+			return userRepository.save(user); 
+		}
+
+		@Override
+		public Optional<User> findByToken(String token) {
+			// TODO Auto-generated method stub
+			return userRepository.findByToken(token);
+		}
+
 		
 }

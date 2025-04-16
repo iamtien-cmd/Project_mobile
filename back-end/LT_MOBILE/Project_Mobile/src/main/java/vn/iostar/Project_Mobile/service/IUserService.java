@@ -25,5 +25,8 @@ public interface IUserService {
 
 	boolean verifyOtpForgotPassword(String email, String otp);
 	boolean resetPassword(String email, String newPassword);
+	User save(User user);
+
+	Optional<User> findByToken(String token);
 
 }

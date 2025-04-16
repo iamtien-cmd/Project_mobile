@@ -26,8 +26,11 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Column(nullable = true)
+    private String avatar;
     private String fullName;
-
+    private String phone;
+    private String token;
     private String otpCode;
 
     private LocalDateTime otpExpiration;
@@ -36,14 +39,10 @@ public class User {
     private Type type;
 
 
-    // Quan hệ Nhiều-Nhiều với Address
-    @ManyToMany
-    @JoinTable(
-        name = "user_address",  // Tên bảng trung gian
-        joinColumns = @JoinColumn(name = "user_id"),  // Khóa ngoại tham chiếu đến User
-        inverseJoinColumns = @JoinColumn(name = "address_id") // Khóa ngoại tham chiếu đến Address
-    )
-    private List<Address> addresses;
+    // Quan hệ một-Nhiều với Address
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Address> addresses = new ArrayList<>();
+
     
  // Quan hệ 1-N: Một User có nhiều Comment
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
