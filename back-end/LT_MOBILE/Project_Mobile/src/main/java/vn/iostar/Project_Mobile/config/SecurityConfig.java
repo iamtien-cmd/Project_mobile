@@ -17,7 +17,8 @@ public class SecurityConfig {
 		http.csrf(csrf -> csrf.disable()) // Tắt CSRF
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers("/api/auth/**",
-								"/api/product/getListProducts")
+								"/api/product/**",
+								"/api/cart/**")
 						.permitAll() // Public endpoints
 						.anyRequest().authenticated() // Các yêu cầu khác cần xác thực
 				);

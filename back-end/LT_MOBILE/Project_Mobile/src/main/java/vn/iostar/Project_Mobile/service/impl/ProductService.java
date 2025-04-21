@@ -17,8 +17,10 @@ public class ProductService implements IProductService{
         return productRepository.findAll();
     }
 
+    @Override
     public Product getProductById(Long id) {
-        return productRepository.findById(id).orElse(null);
+    	return productRepository.findById(id)
+                .orElse(null);
     }
 
     public Product saveProduct(Product product) {
