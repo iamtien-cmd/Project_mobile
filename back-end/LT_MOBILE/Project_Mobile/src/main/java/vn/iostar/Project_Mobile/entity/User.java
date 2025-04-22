@@ -10,6 +10,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import vn.iostar.Project_Mobile.util.Type;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data

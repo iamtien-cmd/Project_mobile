@@ -16,7 +16,8 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import vn.iostar.Project_Mobile.entity.OrderStatus;
+import vn.iostar.Project_Mobile.util.OrderStatus;
+import vn.iostar.Project_Mobile.util.PaymentMethod;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
@@ -30,6 +31,9 @@ public class Order {
 	    private double totalPrice;
 	    private Date orderDate;
 	    private Date predictReceiveDate;
+	    
+	    @Enumerated(EnumType.STRING)
+	    private PaymentMethod paymentMethod;
 	    
 	    @Enumerated(EnumType.STRING)
 	    private OrderStatus status;
