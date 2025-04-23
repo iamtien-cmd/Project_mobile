@@ -1,5 +1,7 @@
 package vn.iostar.Project_Mobile.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,6 +22,7 @@ public class OrderLine {
 
     @ManyToOne
     @JoinColumn(name = "order_id") // KHÔNG ĐƯỢC DÙNG "order"
+    @JsonIgnore
     private Order order;
 
     @ManyToOne

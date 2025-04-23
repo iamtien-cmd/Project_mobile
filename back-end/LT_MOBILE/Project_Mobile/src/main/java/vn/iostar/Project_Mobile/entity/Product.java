@@ -27,7 +27,7 @@ public class Product {
     private String name;
     
     @Min(value = 1000, message = "Giá sản phẩm phải lớn hơn hoặc bằng 1.000đ")
-    @Column(name = "quantity")
+    @Column(name = "price")
     private double price;
     private String description;
     

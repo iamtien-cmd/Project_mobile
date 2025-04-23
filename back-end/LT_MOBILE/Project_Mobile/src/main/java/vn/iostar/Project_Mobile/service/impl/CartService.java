@@ -12,9 +12,10 @@ import vn.iostar.Project_Mobile.entity.CartItem;
 import vn.iostar.Project_Mobile.entity.Product;
 import vn.iostar.Project_Mobile.entity.User;
 import vn.iostar.Project_Mobile.repository.*;
+import vn.iostar.Project_Mobile.service.ICartService;
 
 @Service
-public class CartService {
+public class CartService implements ICartService{
 	@Autowired
     private CartRepository cartRepo;
 
@@ -26,8 +27,8 @@ public class CartService {
 
     @Autowired
     private IUserRepository userRepo;
-
-    public Cart getOrCreateCart(Long userId) {
+	@Override
+	public Cart getOrCreateCart(Long userId) {
         User user = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         Cart cart = cartRepo.findByUser_UserId(userId);
         if (cart == null) {
@@ -38,7 +39,8 @@ public class CartService {
         return cart;
     }
 
-    public Cart addToCart(Long userId, Long productId, int quantity) {
+    @Override
+	public Cart addToCart(Long userId, Long productId, int quantity) {
         Cart cart = getOrCreateCart(userId);
         Product product = productRepo.findById(productId)
             .orElseThrow(() -> new RuntimeException("Product not found"));
@@ -68,7 +70,8 @@ public class CartService {
     }
 
 
-    public Cart updateCartItem(Long userId, Long productId, int newQuantity) {
+    @Override
+	public Cart updateCartItem(Long userId, Long productId, int newQuantity) {
         Cart cart = getOrCreateCart(userId);
         CartItem item = itemRepo.findByCart_CartIdAndProduct_ProductId(cart.getCartId(), productId)
                 .orElseThrow(() -> new RuntimeException("Item not found"));
@@ -77,14 +80,16 @@ public class CartService {
         return cart;
     }
 
-    public void removeCartItem(Long userId, Long productId) {
+    @Override
+	public void removeCartItem(Long userId, Long productId) {
         Cart cart = getOrCreateCart(userId);
         CartItem item = itemRepo.findByCart_CartIdAndProduct_ProductId(cart.getCartId(), productId)
                 .orElseThrow(() -> new RuntimeException("Item not found"));
         itemRepo.delete(item);
     }
 
-    public List<CartItem> getCartItems(Long userId) {
+    @Override
+	public List<CartItem> getCartItems(Long userId) {
         Cart cart = cartRepo.findByUser_UserId(userId);
         return cart != null ? cart.getCartItems() : new ArrayList<>();
     }

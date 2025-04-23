@@ -18,8 +18,9 @@ public class SecurityConfig {
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers("/api/auth/**",
 								"/api/product/**",
-								"/api/cart/**")
-						.permitAll() // Public endpoints
+								"/api/cart/**",
+								"/api/order/**")
+						.permitAll()
 						.anyRequest().authenticated() // Các yêu cầu khác cần xác thực
 				);
 		return http.build();

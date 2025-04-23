@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import vn.iostar.Project_Mobile.DTO.CartItemRequest;
 import vn.iostar.Project_Mobile.entity.Cart;
 import vn.iostar.Project_Mobile.entity.CartItem;
+import vn.iostar.Project_Mobile.service.ICartService;
 import vn.iostar.Project_Mobile.service.impl.CartService;
 
 @RestController
@@ -17,7 +18,7 @@ import vn.iostar.Project_Mobile.service.impl.CartService;
 @RequiredArgsConstructor
 public class CartController {
 
-    private final CartService cartService;
+    private final ICartService cartService;
 
     @PostMapping("/add")
     public ResponseEntity<?> addToCart(@RequestBody CartItemRequest request) {
