@@ -40,4 +40,5 @@ public class Order {
 	    
 	    @OneToMany(mappedBy = "order")
 	    private List<OrderLine> orderLines;
+	    private String paymentMethod;
 }

@@ -30,6 +30,6 @@
         <activity android:name=".activity.RegisterActivity" />
         <activity android:name=".activity.HomeActivity" />
         <activity android:name=".activity.VerifyOtpRegisterActivity" />
+        <activity android:name=".activity.OrderHistoryActivity" />
     </application>
-
 </manifest>

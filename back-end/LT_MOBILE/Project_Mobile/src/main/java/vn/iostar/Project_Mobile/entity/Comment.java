@@ -2,6 +2,8 @@ package vn.iostar.Project_Mobile.entity;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -30,9 +32,10 @@ public class Comment {
 	private int rating;
 	
 	   // Quan hệ N-1: Một Comment thuộc về 1 User
-    @ManyToOne
-    @JoinColumn(name = "userId", nullable = false)
-    private User user;
+	@ManyToOne
+	@JsonBackReference
+	private User user;
+
 
     // Quan hệ N-1: Một Comment dành cho 1 Product
     @ManyToOne

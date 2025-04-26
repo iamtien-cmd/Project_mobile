@@ -6,7 +6,12 @@ plugins {
 android {
     namespace "vn.iostar.doan"
     compileSdk 35
-
+    viewBinding {
+        enabled = true
+    }
+    buildFeatures {
+        viewBinding true
+    }
     defaultConfig {
         applicationId "vn.iostar.doan"
         minSdk 24

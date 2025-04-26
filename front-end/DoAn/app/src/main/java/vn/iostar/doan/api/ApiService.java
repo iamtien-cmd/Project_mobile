@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 
 import retrofit2.converter.gson.GsonConverterFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Call;
@@ -12,6 +13,8 @@ import retrofit2.Retrofit;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
+import retrofit2.http.Path;
+import vn.iostar.doan.model.Order;
 import vn.iostar.doan.model.Product;
 import vn.iostar.doan.model.User;
 import vn.iostar.doan.modelRequest.LoginRequest;
@@ -38,6 +41,8 @@ public interface ApiService {
     Call<Void> verifyOtpRegister(@Body RegisterRequest registerRequest);
     @GET("api/products")
     Call<List<Product>> getListProducts();
+    @GET("/api/orders/status/{userId}")
+    Call<ArrayList<Order>> getOrdersByUserId(@Path("userId") long userId);
 
 
 }

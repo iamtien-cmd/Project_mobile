@@ -2,12 +2,14 @@ package vn.iostar.doan.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -19,23 +21,32 @@ import vn.iostar.doan.modelRequest.RegisterRequest;
 public class VerifyOtpRegisterActivity extends AppCompatActivity {
 
     private TextInputEditText etOtp;
+    private TextInputLayout otpLayout;
     private Button btnConfirmOtp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_verify_otp);
-
-        etOtp = findViewById(R.id.txt_otp); // Gắn ID trực tiếp cho TextInputEditText trong XML
+        otpLayout = findViewById(R.id.otp_layout);
+        etOtp = findViewById(R.id.txt_otp);
         btnConfirmOtp = findViewById(R.id.btn_confirmOtp);
+
+        if (etOtp == null || btnConfirmOtp == null || otpLayout == null) {
+            Toast.makeText(this, "Lỗi: Không tìm thấy view", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         btnConfirmOtp.setOnClickListener(v -> {
             String enteredOtp = etOtp.getText().toString().trim();
             String email = getIntent().getStringExtra("email");
+            Log.d("tab", email + enteredOtp);
 
             if (enteredOtp.isEmpty()) {
-                Toast.makeText(this, "Vui lòng nhập mã OTP", Toast.LENGTH_SHORT).show();
+                otpLayout.setError("Vui lòng nhập mã OTP");
                 return;
+            } else {
+                otpLayout.setError(null);
             }
 
             RegisterRequest request = new RegisterRequest(email, enteredOtp);
@@ -49,13 +60,13 @@ public class VerifyOtpRegisterActivity extends AppCompatActivity {
                         startActivity(intent);
                         finish();
                     } else {
-                        Toast.makeText(VerifyOtpRegisterActivity.this, "OTP không chính xác hoặc đã hết hạn", Toast.LENGTH_SHORT).show();
+                        otpLayout.setError("OTP không chính xác hoặc đã hết hạn");
                     }
                 }
 
                 @Override
                 public void onFailure(Call<Void> call, Throwable t) {
-                    Toast.makeText(VerifyOtpRegisterActivity.this, "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    otpLayout.setError("Lỗi kết nối: " + t.getMessage());
                 }
             });
         });
