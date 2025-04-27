@@ -21,6 +21,13 @@ Link: https://drive.google.com/file/d/1GVgKhK26V8Z96uTEEyROwZ1zyFLVAPKq/view?usp
 ![image](https://github.com/user-attachments/assets/025fcd18-8623-4746-bb65-2861dffd2ab4)
 ![image](https://github.com/user-attachments/assets/290ae64f-367c-4c16-be3c-4e125dda940e)
 ![image](https://github.com/user-attachments/assets/92eab083-e063-4da4-ac6c-82984aae83b7)
+![image](https://github.com/user-attachments/assets/025a2466-f041-41a2-8397-59fd52440084)
+![image](https://github.com/user-attachments/assets/fe350fa6-c58d-4009-a51e-a56172614fc8)
+![image](https://github.com/user-attachments/assets/3f11e19b-7d0a-4e23-96b9-6dda4316e668)
+![image](https://github.com/user-attachments/assets/0507dbea-c800-4be6-b0ff-9e97e80e22b9)
+![image](https://github.com/user-attachments/assets/24618fc0-e15b-4b53-90b3-6548b937f2f6)
+![image](https://github.com/user-attachments/assets/dd31a379-63eb-44e1-8d57-776fd3060821)
+
 
 
 # Test xem trạng thái đơn hàng
@@ -31,6 +38,7 @@ Với 1 là id của user
 # Test thêm bình luận
 http://localhost:8080/api/comments
 ![image](https://github.com/user-attachments/assets/3476223c-fb17-4e87-924a-f996cbdc2f7a)
+
 
 
 
