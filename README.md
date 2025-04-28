@@ -33,7 +33,7 @@ http://localhost:8080/api/auth/forgot-password
 ![image](https://github.com/user-attachments/assets/618bb238-33d0-4cd5-9af2-a01ac0c6f8b6)
 ![image](https://github.com/user-attachments/assets/60a47651-6fe5-4606-831e-b2d9f09ec1e9)
 http://localhost:8080/api/auth/verifyOtpForgotPassword
-![image](https://github.com/user-attachments/assets/8fc46647-98e3-4afd-abf0-cfd3d78044da)
+![image](https://github.com/user-attachments/assets/daedd8b8-35ca-4caa-9a5e-f87dc74dfe46)
 http://localhost:8080/api/auth/reset-password
 ![image](https://github.com/user-attachments/assets/ae27f811-7a74-4bec-b8a8-2ad012909c03)
 ![image](https://github.com/user-attachments/assets/4a48f938-ecca-418e-bf63-fd29974c1c70)
