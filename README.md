@@ -52,7 +52,11 @@ Với 1 là id của user
 
 # Test thêm bình luận
 http://localhost:8080/api/comments
-![image](https://github.com/user-attachments/assets/3476223c-fb17-4e87-924a-f996cbdc2f7a)
+![image](https://github.com/user-attachments/assets/c228e7d9-3eaa-4802-8210-da8fd66ffe8a)
+Xem tất cả bình luận của 1 product
+http://localhost:8080/api/comments/product/1001 Với 1001 là productId
+![image](https://github.com/user-attachments/assets/01a863d2-1be9-4b15-b3b5-21b52b4209c7)
+
 
 #Frontend trang home
 ![image](https://github.com/user-attachments/assets/6f61a17a-5f87-4e18-974b-5cc441778b6b)
