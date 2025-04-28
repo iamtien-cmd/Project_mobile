@@ -37,6 +37,12 @@ http://localhost:8080/api/auth/verifyOtpForgotPassword
 http://localhost:8080/api/auth/reset-password
 ![image](https://github.com/user-attachments/assets/ae27f811-7a74-4bec-b8a8-2ad012909c03)
 ![image](https://github.com/user-attachments/assets/4a48f938-ecca-418e-bf63-fd29974c1c70)
+![image](https://github.com/user-attachments/assets/97b7313e-1e5c-48a8-bdb0-d758be4f5990)
+![image](https://github.com/user-attachments/assets/8cafe4de-d65e-40e8-ab4e-4663afc77104)
+![image](https://github.com/user-attachments/assets/6e824ed6-812a-491a-9120-a2e50b66ae79)
+![image](https://github.com/user-attachments/assets/ba9018e8-863c-43ee-943b-c2b134a7f0ce)
+![image](https://github.com/user-attachments/assets/8b2391cc-2fa6-4a74-9b66-4a5915e6c80b)
+![image](https://github.com/user-attachments/assets/bcca94f0-02b2-4b44-8289-bb49efebc822)
 
 
 # Test xem trạng thái đơn hàng
