@@ -48,6 +48,9 @@ Với 1 là id của user
 http://localhost:8080/api/comments
 ![image](https://github.com/user-attachments/assets/3476223c-fb17-4e87-924a-f996cbdc2f7a)
 
+#Frontend trang home
+![image](https://github.com/user-attachments/assets/e9c5be8f-9663-4adc-ae4e-61d1e9176f72)
+
 
 
 
