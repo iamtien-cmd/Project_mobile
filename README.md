@@ -56,6 +56,7 @@ http://localhost:8080/api/comments
 Xem tất cả bình luận của 1 product
 http://localhost:8080/api/comments/product/1001 Với 1001 là productId
 ![image](https://github.com/user-attachments/assets/01a863d2-1be9-4b15-b3b5-21b52b4209c7)
+![image](https://github.com/user-attachments/assets/44f8c270-c970-42c5-a0b4-ea3d0316964d)
 
 
 #Frontend trang home
