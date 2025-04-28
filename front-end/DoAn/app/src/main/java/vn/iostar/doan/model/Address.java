@@ -1,43 +1,33 @@
 package vn.iostar.doan.model;
 
-public class Address {
-    private int addressId;
+import java.io.Serializable;
+
+public class Address  {
+    private long addressId;
     private String houseNumber;
-    private String street;
+    private String district;
     private String city;
     private String country;
     private User user;
 
-    public Address(int addressId, String houseNumber, String street, String city, String country, User user) {
+    public Address() {
+    }
+
+    public Address(long addressId, String houseNumber, String district, String city, String country, User user) {
         this.addressId = addressId;
         this.houseNumber = houseNumber;
-        this.street = street;
+        this.district = district;
         this.city = city;
         this.country = country;
         this.user = user;
     }
 
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public Address(int addressId, String houseNumber, String street, String city, String country) {
-        this.addressId = addressId;
-        this.houseNumber = houseNumber;
-        this.street = street;
-        this.city = city;
-        this.country = country;
-    }
-
-    public int getAddressId() {
+    // Getter và Setter
+    public long getAddressId() {
         return addressId;
     }
 
-    public void setAddressId(int addressId) {
+    public void setAddressId(long addressId) {
         this.addressId = addressId;
     }
 
@@ -49,12 +39,20 @@ public class Address {
         this.houseNumber = houseNumber;
     }
 
-    public String getStreet() {
-        return street;
+    public String getDistrict() {
+        return district;
     }
 
-    public void setStreet(String street) {
-        this.street = street;
+    public void setDistrict(String district) {
+        this.district = district;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
     }
 
     public String getCountry() {
@@ -65,11 +63,11 @@ public class Address {
         this.country = country;
     }
 
-    public String getCity() {
-        return city;
+    public User getUser() {
+        return user;
     }
 
-    public void setCity(String city) {
-        this.city = city;
+    public void setUser(User user) {
+        this.user = user;
     }
 }

@@ -2,14 +2,14 @@ package vn.iostar.doan.model;
 
 public class Product {
     private int productId;
-    private int image;
+    private String image;
     private String name;
     private double price;
     private String description;
 
     private Category category;
 
-    public Product(int productId, int image, String name, double price, String description, Category category) {
+    public Product(int productId, String image, String name, double price, String description, Category category) {
         this.productId = productId;
         this.image = image;
         this.name = name;
@@ -18,7 +18,7 @@ public class Product {
         this.category = category;
     }
 
-    public Product(int image, String name, double price) {
+    public Product(String image, String name, double price) {
 
         this.image = image;
         this.name = name;
@@ -34,11 +34,11 @@ public class Product {
         this.productId = productId;
     }
 
-    public int getImage() {
+    public String getImage() {
         return image;
     }
 
-    public void setImage(int image) {
+    public void setImage(String image) {
         this.image = image;
     }
 

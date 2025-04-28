@@ -4,15 +4,21 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
+import vn.iostar.Project_Mobile.util.Type;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
 @Entity
 @Table(name = "User")
+@ToString
 public class User {
 
     @Id
@@ -40,7 +46,9 @@ public class User {
 
 
     // Quan hệ một-Nhiều với Address
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonBackReference
+    @ToString.Exclude
     private List<Address> addresses = new ArrayList<>();
 
     
@@ -52,6 +60,8 @@ public class User {
     private Favorite favorite;
     
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
+    @ToString.Exclude
     private Cart cart;
 
     

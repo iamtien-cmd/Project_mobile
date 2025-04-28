@@ -1,6 +1,9 @@
 
 package vn.iostar.Project_Mobile.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 import lombok.*;
 @Entity
@@ -16,6 +19,7 @@ public class ImagesProduct {
     private String url;
 
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "product_id")
     private Product product;
 }

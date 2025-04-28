@@ -3,6 +3,8 @@ package vn.iostar.Project_Mobile.entity;
 import java.sql.Date;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -16,28 +18,36 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import vn.iostar.Project_Mobile.entity.OrderStatus;
+import vn.iostar.Project_Mobile.util.OrderStatus;
+import vn.iostar.Project_Mobile.util.PaymentMethod;
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
 @Entity
 @Table(name = "orders")
 public class Order {
-	  @Id 
-	  @GeneratedValue(strategy = GenerationType.IDENTITY)
-	    private long orderId;
-	  
-	    private double totalPrice;
-	    private Date orderDate;
-	    private Date predictReceiveDate;
-	    
-	    @Enumerated(EnumType.STRING)
-	    private OrderStatus status;
-	    
-	    @ManyToOne
-	    @JoinColumn(name = "user_id")
-	    private User user;
-	    
-	    @OneToMany(mappedBy = "order")
-	    private List<OrderLine> orderLines;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private long orderId;
+
+	private double totalPrice;
+	private Date orderDate;
+	private Date predictReceiveDate;
+
+	@Enumerated(EnumType.STRING)
+	private PaymentMethod paymentMethod;
+
+	@Enumerated(EnumType.STRING)
+	private OrderStatus status;
+	
+    private String shippingAddress;
+
+	@ManyToOne
+	@JoinColumn(name = "user_id")
+	private User user;
+
+	@OneToMany(mappedBy = "order")
+	@JsonIgnore
+	private List<OrderLine> orderLines;
 }

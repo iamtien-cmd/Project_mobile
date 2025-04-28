@@ -19,12 +19,14 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
 @Entity
 @Table(name = "Address")
+@ToString
 public class Address {
 	 @Id
 	 @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,6 +38,8 @@ public class Address {
 	 
 	 @ManyToOne
 	 @JoinColumn(name = "user_id")
+	 @JsonBackReference
+	 @ToString.Exclude
 	 private User user;
 
 

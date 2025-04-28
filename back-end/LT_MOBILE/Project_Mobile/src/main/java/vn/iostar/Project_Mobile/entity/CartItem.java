@@ -1,6 +1,6 @@
 package vn.iostar.Project_Mobile.entity;
 
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -16,16 +16,18 @@ import lombok.NoArgsConstructor;
 @Data
 @Entity
 public class CartItem {
-	 @Id
-	 @GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long cartItemId;
 	 
-	 private int quantity;
-	  @ManyToOne
-	    @JoinColumn(name = "cartId", nullable = false)
-	    private Cart cart;
+	private int quantity;
+	
+	@ManyToOne
+	@JoinColumn(name = "cartId", nullable = false)
+	@JsonIgnore
+	private Cart cart;
 
-	    @ManyToOne
-	    @JoinColumn(name = "productId", nullable = false)
-	    private Product product;
+	@ManyToOne
+	@JoinColumn(name = "productId", nullable = false)
+	private Product product;
 }
