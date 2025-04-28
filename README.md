@@ -28,6 +28,15 @@ Link: https://drive.google.com/file/d/1GVgKhK26V8Z96uTEEyROwZ1zyFLVAPKq/view?usp
 ![image](https://github.com/user-attachments/assets/24618fc0-e15b-4b53-90b3-6548b937f2f6)
 ![image](https://github.com/user-attachments/assets/dd31a379-63eb-44e1-8d57-776fd3060821)
 
+# Test quên mật khẩu
+http://localhost:8080/api/auth/forgot-password
+![image](https://github.com/user-attachments/assets/1723f0f2-8d5d-433f-bbc8-961ba84d93b7)
+![image](https://github.com/user-attachments/assets/60a47651-6fe5-4606-831e-b2d9f09ec1e9)
+http://localhost:8080/api/auth/verifyOtpForgotPassword
+![image](https://github.com/user-attachments/assets/8fc46647-98e3-4afd-abf0-cfd3d78044da)
+http://localhost:8080/api/auth/reset-password
+![image](https://github.com/user-attachments/assets/ae27f811-7a74-4bec-b8a8-2ad012909c03)
+![image](https://github.com/user-attachments/assets/4a48f938-ecca-418e-bf63-fd29974c1c70)
 
 
 # Test xem trạng thái đơn hàng
