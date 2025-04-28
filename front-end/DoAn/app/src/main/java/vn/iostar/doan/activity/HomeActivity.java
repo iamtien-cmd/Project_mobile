@@ -1,15 +1,23 @@
 package vn.iostar.doan.activity;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ViewFlipper;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.ViewPager;
 
@@ -20,159 +28,204 @@ import me.relex.circleindicator.CircleIndicator;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import retrofit2.Retrofit;
 import vn.iostar.doan.R;
+import vn.iostar.doan.adapter.CategoryAdapter;
 import vn.iostar.doan.adapter.ImagesViewPageAdapter;
 import vn.iostar.doan.adapter.ProductAdapter;
+import vn.iostar.doan.adapter.ViewFlipperManager;
 import vn.iostar.doan.api.ApiService;
+import vn.iostar.doan.model.Address;
+import vn.iostar.doan.model.Category;
 import vn.iostar.doan.model.Product;
 import vn.iostar.doan.image.Images;
+import vn.iostar.doan.model.User;
 
 public class HomeActivity extends AppCompatActivity {
 
-
-    private RecyclerView recyclerView;
+    private RecyclerView rcCate, rclProduct;
+    private CategoryAdapter categoryAdapter;
     private ProductAdapter productAdapter;
-    private ApiService apiService;
-    private List<Product> mListProduct;
-
-   /* @Override
+    private List<Category> categoryList;
+    private List<Product> productList;
+    private List<Product> filteredProductList;
+    private SearchView searchView;
+    private ViewFlipper viewFlipperMain;
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+        //init data
+        AnhXa();
+        loadUserInfo();
+        setupViewFlipper();
+        getAllProducts();
+        GetCategory();
+        setupSearchView();
+    }
+    private void AnhXa() {
+        // Ánh xạ
+        rcCate = findViewById(R.id.rc_category);
+        rclProduct = findViewById(R.id.rclcon);
+        searchView = findViewById(R.id.searchView);
+        viewFlipperMain = findViewById(R.id.viewFlipperMain);
+    }
+    private void loadUserInfo() {
+        String token = getIntent().getStringExtra("token");
 
-        recyclerView = findViewById(R.id.recyclerView);
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(linearLayoutManager);
-        DividerItemDecoration itemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
-        recyclerView.addItemDecoration(itemDecoration);
+        if (token == null) {
+            SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
+            token = prefs.getString("token", "");
+        }
 
-        // Gọi API
-        mListProduct = new ArrayList<>();
-        callApiGetProducts();
-    }*/
+        ApiService.apiService.getUserInfo("Bearer " + token)
+                .enqueue(new Callback<User>() {
+                    @Override
+                    public void onResponse(Call<User> call, Response<User> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            User user = response.body();
+                            if (user.getAddresses() != null && !user.getAddresses().isEmpty()) {
+                                Address address = user.getAddresses().get(0);
+                                String fullAddress = address.getHouseNumber() + ", " +
+                                        address.getDistrict() + ", " +
+                                        address.getCity() + ", " +
+                                        address.getCountry();
 
-    private void callApiGetProducts() {
-        ApiService.apiService.getListProducts().enqueue(new Callback<List<Product>>() {
+                                TextView tvLocationAddress = findViewById(R.id.tvLocationAddress);
+                                tvLocationAddress.setText(fullAddress);
+                            }
+                        } else {
+                            Log.e("API", "Error fetching user info: " + response.code());
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<User> call, Throwable t) {
+                        Log.e("API", "Failed to connect to server", t);
+                    }
+                });
+    }
+    private void setupViewFlipper() {
+        ViewFlipperManager.setupViewFlipper(viewFlipperMain, this);
+    }
+    private void getAllProducts() {
+        ApiService.apiService.getAllProducts()
+                .enqueue(new Callback<List<Product>>() {
+                    @Override
+                    public void onResponse(Call<List<Product>> call, Response<List<Product>> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            productList = response.body();
+                            filteredProductList = new ArrayList<>(productList);
+                            setupProductRecyclerView(filteredProductList);
+                        } else {
+                            Log.e("GetProducts", "Response error: " + response.code());
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<List<Product>> call, Throwable t) {
+                        Log.e("GetProducts", "Request failed", t);
+                    }
+                });
+    }
+
+    private void setupProductRecyclerView(List<Product> products) {
+        productAdapter = new ProductAdapter(this, products);
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 3);
+        rclProduct.setLayoutManager(gridLayoutManager);
+        rclProduct.setAdapter(productAdapter);
+    }
+
+    private void GetCategory() {
+        // Gọi trực tiếp ApiService đã được khai báo sẵn
+        ApiService.apiService.getAllCategories().enqueue(new Callback<List<Category>>() {
+            @Override
+            public void onResponse(Call<List<Category>> call, Response<List<Category>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    categoryList = response.body(); // Lấy danh sách categories
+
+                    // Khởi tạo Adapter
+                    categoryAdapter = new CategoryAdapter(HomeActivity.this, categoryList, new CategoryAdapter.OnCategoryClickListener() {
+                        @Override
+                        public void onCategoryClick(Category category) {
+                            // Khi click vào category sẽ chạy vào đây
+                            getProductsByCategory(category.getCategoryId());
+                        }
+                    });
+                    rcCate.setHasFixedSize(true);
+
+                    RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(
+                            HomeActivity.this, LinearLayoutManager.HORIZONTAL, false
+                    );
+                    rcCate.setLayoutManager(layoutManager);
+                    rcCate.setAdapter(categoryAdapter);
+                    categoryAdapter.notifyDataSetChanged();
+                } else {
+                    Log.e("GetCategory", "Response Error: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Category>> call, Throwable t) {
+                Log.e("GetCategory", "Failure: " + t.getMessage(), t);
+            }
+        });
+    }
+
+    private void getProductsByCategory(Long categoryId) {
+        ApiService.apiService.getProductsByCategory(categoryId).enqueue(new Callback<List<Product>>() {
             @Override
             public void onResponse(Call<List<Product>> call, Response<List<Product>> response) {
-                mListProduct = response.body();
-                ProductAdapter productAdapter = new ProductAdapter(mListProduct);
-                recyclerView.setAdapter(productAdapter);
+                if (response.isSuccessful() && response.body() != null) {
+                    List<Product> products = response.body();
+                    if (viewFlipperMain.getVisibility() == View.VISIBLE) {
+                        viewFlipperMain.setVisibility(View.GONE); // Ẩn flipper nếu đang hiện
+                    }
+                    // TODO: Hiển thị danh sách sản phẩm ra RecyclerView
+                    // Ví dụ bạn có 1 productAdapter và rcProduct
+                    productAdapter.updateList(products);
+                    rclProduct.setAdapter(productAdapter);
+                    productAdapter.notifyDataSetChanged();
+                } else {
+                    Log.e("getProductsByCategory", "Response error: " + response.code());
+                }
             }
 
             @Override
             public void onFailure(Call<List<Product>> call, Throwable t) {
-                Toast.makeText(HomeActivity.this, "onFailure", Toast.LENGTH_SHORT).show();
+                Log.e("getProductsByCategory", "Failure: " + t.getMessage(), t);
             }
         });
     }
-    private ViewPager viewPager;
-    private CircleIndicator circleIndicator;
-    private List<Images> imagesList;
-    private Handler handler = new Handler();
-    private Runnable runnable;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_view_flipper_main);
-
-        viewPager = findViewById(R.id.viewpage);
-        circleIndicator = findViewById(R.id.circle_indicator);
-
-        imagesList = getListImages();
-        ImagesViewPageAdapter adapter = new ImagesViewPageAdapter(this, imagesList);
-        viewPager.setAdapter(adapter);
-        circleIndicator.setViewPager(viewPager);
-
-        // Auto-run ViewPager
-        runnable = new Runnable() {
+    private void setupSearchView() {
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
-            public void run() {
-                if (viewPager.getCurrentItem() == imagesList.size() - 1) {
-                    viewPager.setCurrentItem(0);
-                } else {
-                    viewPager.setCurrentItem(viewPager.getCurrentItem() + 1);
-                }
-                handler.postDelayed(this, 3000);
-            }
-        };
-        handler.postDelayed(runnable, 3000);
-
-        // Lắng nghe sự kiện ViewPager
-        viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-            @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+            public boolean onQueryTextSubmit(String query) {
+                filterProducts(query);
+                return true;
             }
 
             @Override
-            public void onPageSelected(int position) {
-                handler.removeCallbacks(runnable);
-                handler.postDelayed(runnable, 3000);
-            }
-
-            @Override
-            public void onPageScrollStateChanged(int state) {
+            public boolean onQueryTextChange(String newText) {
+                filterProducts(newText);
+                return true;
             }
         });
     }
 
-    private List<Images> getListImages() {
-        List<Images> list = new ArrayList<>();
-        list.add(new Images(R.drawable.qc1));
-        list.add(new Images(R.drawable.qc2));
-        list.add(new Images(R.drawable.qc3));
-        list.add(new Images(R.drawable.qc4));
-        return list;
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        handler.removeCallbacks(runnable);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        handler.postDelayed(runnable, 3000);
-    }
-    public class ImagesViewPager2Adapter extends RecyclerView.Adapter<ImagesViewPager2Adapter.ImagesViewHolder> {
-        private List<Images> imagesList;
-
-        public ImagesViewPager2Adapter(List<Images> imagesList) {
-            this.imagesList = imagesList;
+    private void filterProducts(String keyword) {
+        if (viewFlipperMain.getVisibility() == View.VISIBLE) {
+            viewFlipperMain.setVisibility(View.GONE); // Ẩn flipper nếu đang hiện
         }
-
-        @NonNull
-        @Override
-        public ImagesViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_images, parent, false);
-            return new ImagesViewHolder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull ImagesViewHolder holder, int position) {
-            Images images = imagesList.get(position);
-            if (images != null) {
-                holder.imageView.setImageResource(images.getImagesId());
+        List<Product> filteredList = new ArrayList<>();
+        for (Product product : productList) {
+            if (product.getName().toLowerCase().contains(keyword.toLowerCase())) {
+                filteredList.add(product);
             }
         }
-
-        @Override
-        public int getItemCount() {
-            return (imagesList != null) ? imagesList.size() : 0;
-        }
-
-        // ✅ Thêm class ViewHolder
-        public class ImagesViewHolder extends RecyclerView.ViewHolder {
-            ImageView imageView;
-
-            public ImagesViewHolder(@NonNull View itemView) {
-                super(itemView);
-                imageView = itemView.findViewById(R.id.imgView); // Đảm bảo item_images.xml có ImageView với id này
-            }
-        }
+        productAdapter.updateList(filteredList);  // Viết thêm 1 hàm updateList trong adapter
     }
+
 
 }
+

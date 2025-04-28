@@ -76,7 +76,9 @@ public class UserController {
 	        response.put("message", "Đăng nhập thành công.");
 	        response.put("email", user.getEmail());
 	        response.put("fullName", user.getFullName());
-	        response.put("userType", user.getType()); // hoặc role gì đó nếu có
+	        response.put("userType", user.getType());
+	        response.put("token", user.getToken());
+	        // hoặc role gì đó nếu có
 	        // response.put("password", user.getPassword()); // ❌ Không nên gửi password
 
 	        return ResponseEntity.ok(response);

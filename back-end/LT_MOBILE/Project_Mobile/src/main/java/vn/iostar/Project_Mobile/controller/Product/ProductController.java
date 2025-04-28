@@ -10,8 +10,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import vn.iostar.Project_Mobile.DTO.ProductSearchRequest;
+import vn.iostar.Project_Mobile.entity.Category;
 import vn.iostar.Project_Mobile.entity.Product;
 import vn.iostar.Project_Mobile.repository.ProductRepository;
+import vn.iostar.Project_Mobile.service.ICategoryService;
 import vn.iostar.Project_Mobile.service.IProductService;
 import vn.iostar.Project_Mobile.specification.ProductSpecification;
 import lombok.RequiredArgsConstructor;
@@ -60,6 +62,22 @@ public class ProductController {
 
         Specification<Product> spec = ProductSpecification.withFilters(request);
         return productRepository.findAll(spec, pageable).getContent();
+    }
+   
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<List<Product>> getProductsByCategory(@PathVariable Long categoryId) {
+        List<Product> products = productService.getProductsByCategory(categoryId);
+        return ResponseEntity.ok(products);
+    }
+
+
+    @Autowired
+    private ICategoryService categoryService;
+
+    @GetMapping("/categories")
+    public ResponseEntity<List<Category>> getAllCategories() {
+        List<Category> categories = categoryService.getAllCategories();
+        return ResponseEntity.ok(categories);
     }
 
 }

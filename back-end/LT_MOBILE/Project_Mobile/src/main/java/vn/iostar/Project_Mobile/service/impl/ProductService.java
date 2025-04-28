@@ -30,4 +30,8 @@ public class ProductService implements IProductService{
     public void deleteProduct(Long id) {
         productRepository.deleteById(id);
     }
+    
+    public List<Product> getProductsByCategory(Long categoryId) {
+        return productRepository.findByCategory_CategoryId(categoryId);
+    }
 }
