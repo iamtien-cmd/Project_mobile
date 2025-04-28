@@ -30,7 +30,7 @@ Link: https://drive.google.com/file/d/1GVgKhK26V8Z96uTEEyROwZ1zyFLVAPKq/view?usp
 
 # Test quên mật khẩu
 http://localhost:8080/api/auth/forgot-password
-![image](https://github.com/user-attachments/assets/1723f0f2-8d5d-433f-bbc8-961ba84d93b7)
+![image](https://github.com/user-attachments/assets/618bb238-33d0-4cd5-9af2-a01ac0c6f8b6)
 ![image](https://github.com/user-attachments/assets/60a47651-6fe5-4606-831e-b2d9f09ec1e9)
 http://localhost:8080/api/auth/verifyOtpForgotPassword
 ![image](https://github.com/user-attachments/assets/8fc46647-98e3-4afd-abf0-cfd3d78044da)
