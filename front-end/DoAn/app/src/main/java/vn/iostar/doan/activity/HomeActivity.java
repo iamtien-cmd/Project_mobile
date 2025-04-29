@@ -1,44 +1,36 @@
 package vn.iostar.doan.activity;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
-import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.ViewFlipper;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.viewpager.widget.ViewPager;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import me.relex.circleindicator.CircleIndicator;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
 import vn.iostar.doan.R;
 import vn.iostar.doan.adapter.CategoryAdapter;
-import vn.iostar.doan.adapter.ImagesViewPageAdapter;
 import vn.iostar.doan.adapter.ProductAdapter;
 import vn.iostar.doan.adapter.ViewFlipperManager;
 import vn.iostar.doan.api.ApiService;
 import vn.iostar.doan.model.Address;
 import vn.iostar.doan.model.Category;
 import vn.iostar.doan.model.Product;
-import vn.iostar.doan.image.Images;
 import vn.iostar.doan.model.User;
 
 public class HomeActivity extends AppCompatActivity {
@@ -51,6 +43,7 @@ public class HomeActivity extends AppCompatActivity {
     private List<Product> filteredProductList;
     private SearchView searchView;
     private ViewFlipper viewFlipperMain;
+    private ImageView imgUser;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,6 +55,7 @@ public class HomeActivity extends AppCompatActivity {
         getAllProducts();
         GetCategory();
         setupSearchView();
+        setupUserMenu();
     }
     private void AnhXa() {
         // Ánh xạ
@@ -69,6 +63,8 @@ public class HomeActivity extends AppCompatActivity {
         rclProduct = findViewById(R.id.rclcon);
         searchView = findViewById(R.id.searchView);
         viewFlipperMain = findViewById(R.id.viewFlipperMain);
+        View headerLayout = findViewById(R.id.headerLayout); // Bắt đầu từ header
+        imgUser = headerLayout.findViewById(R.id.imgUser);
     }
     private void loadUserInfo() {
         String token = getIntent().getStringExtra("token");
@@ -105,9 +101,6 @@ public class HomeActivity extends AppCompatActivity {
                     }
                 });
     }
-    private void setupViewFlipper() {
-        ViewFlipperManager.setupViewFlipper(viewFlipperMain, this);
-    }
     private void getAllProducts() {
         ApiService.apiService.getAllProducts()
                 .enqueue(new Callback<List<Product>>() {
@@ -127,6 +120,9 @@ public class HomeActivity extends AppCompatActivity {
                         Log.e("GetProducts", "Request failed", t);
                     }
                 });
+    }
+    private void setupViewFlipper() {
+        ViewFlipperManager.setupViewFlipper(viewFlipperMain, this);
     }
 
     private void setupProductRecyclerView(List<Product> products) {
@@ -224,6 +220,37 @@ public class HomeActivity extends AppCompatActivity {
             }
         }
         productAdapter.updateList(filteredList);  // Viết thêm 1 hàm updateList trong adapter
+    }
+    private void setupUserMenu() {
+        imgUser.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                PopupMenu popupMenu = new PopupMenu(HomeActivity.this, imgUser);
+                popupMenu.getMenuInflater().inflate(R.menu.menu_user, popupMenu.getMenu());
+
+                popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem item) {
+                        int id = item.getItemId();
+                        if (id == R.id.menu_profile) {
+                            String token = getIntent().getStringExtra("token");
+                            Intent intent = new Intent(HomeActivity.this, ProfileActivity.class);
+                            intent.putExtra("token", token);
+                            startActivity(intent);
+                            return true;
+                        } else if (id == R.id.menu_logout) {
+                            Intent intent = new Intent(HomeActivity.this, LoginActivity.class);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            startActivity(intent);
+                            return true;
+                        }
+                        return false;
+                    }
+                });
+
+                popupMenu.show();
+            }
+        });
     }
 
 

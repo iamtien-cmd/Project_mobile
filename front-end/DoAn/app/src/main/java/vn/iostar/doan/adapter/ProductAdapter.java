@@ -1,6 +1,7 @@
 package vn.iostar.doan.adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -17,6 +18,7 @@ import com.bumptech.glide.Glide;
 import java.util.List;
 
 import vn.iostar.doan.R;
+import vn.iostar.doan.activity.ProductDetailActivity;
 import vn.iostar.doan.model.Product;
 
 public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHolder> {
@@ -72,6 +74,19 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
             imageView = itemView.findViewById(R.id.imageView);
             tvProductName = itemView.findViewById(R.id.tvProductName);
             tvProductPrice = itemView.findViewById(R.id.tvProductPrice);
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    int position = getAdapterPosition();
+                    if (position != RecyclerView.NO_POSITION) {
+                        Product clickedProduct = productList.get(position);
+
+                        Intent intent = new Intent(context, ProductDetailActivity.class);
+                        intent.putExtra("productId", clickedProduct.getProductId());  // truyền id sản phẩm
+                        context.startActivity(intent);
+                    }
+                }
+            });
 
             if (tvProductName == null || tvProductPrice == null) {
                 Log.e("ProductAdapter", "ViewHolder: TextView không được tìm thấy trong layout!");

@@ -19,7 +19,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import vn.iostar.Project_Mobile.entity.Product;
 import vn.iostar.Project_Mobile.repository.CategoryRepository;
 
-import vn.iostar.Project_Mobile.repository.FavoriteRepository;
 import vn.iostar.Project_Mobile.repository.ProductRepository;
 
 @SpringBootApplication

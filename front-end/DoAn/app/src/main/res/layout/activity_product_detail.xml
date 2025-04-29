@@ -1,123 +1,248 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ProductDetailActivity">
+    tools:context=".activity.ProductDetailActivity">
 
-    <!-- Hình ảnh sản phẩm -->
-    <ImageView
-        android:id="@+id/imageViewBackground"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scaleType="centerCrop"
-        android:src="@drawable/image_62"
-        android:alpha="0.7" />
-
-    <!-- Ảnh sản phẩm (đổ dữ liệu từ database) -->
-    <ImageView
-        android:id="@+id/img_product"
-        android:layout_width="match_parent"
-        android:layout_height="250dp"
-        android:scaleType="centerCrop"
-        tools:src="@drawable/image_57" />
-
-    <!-- Nội dung chi tiết -->
-    <ScrollView
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/img_product">
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
 
-        <LinearLayout
+        <com.google.android.material.appbar.CollapsingToolbarLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
+            app:layout_scrollFlags="scroll|exitUntilCollapsed|snap">
+
+            <androidx.viewpager2.widget.ViewPager2
+                android:id="@+id/viewPagerProductImages"
+                android:layout_width="match_parent"
+                android:layout_height="300dp"
+                app:layout_collapseMode="parallax" />
+
+            <!-- Indicator cho ViewPager2 (optional) -->
+            <!-- Indicator cho ViewPager2 (optional) -->
+            <me.relex.circleindicator.CircleIndicator3
+                android:id="@+id/indicator"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_gravity="bottom"
+                app:ci_gravity="center"/>
+
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                app:layout_collapseMode="pin"
+                app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+
+        </com.google.android.material.appbar.CollapsingToolbarLayout>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/nestedScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:padding="16dp">
 
-            <!-- Tên sản phẩm -->
-            <TextView
-                android:id="@+id/tv_product_name"
+            <!-- Progress Bar for Loading -->
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="?android:attr/progressBarStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="22sp"
-                android:textStyle="bold"
-                tools:text="Product Name" />
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:visibility="visible" />
 
-            <!-- Giá sản phẩm -->
+            <!-- Error Message View -->
             <TextView
-                android:id="@+id/tv_price"
-                android:layout_width="wrap_content"
+                android:id="@+id/textViewError"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                tools:text="₹500.00" />
+                android:textColor="@android:color/holo_red_dark"
+                android:textAlignment="center"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/progressBar"
+                app:layout_constraintBottom_toBottomOf="parent"
+                tools:text="Error loading data."
+                tools:visibility="visible"/>
 
-            <!-- Xếp hạng -->
+            <!-- Product Name -->
+            <TextView
+                android:id="@+id/textViewProductName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="Vòng tay đá tự nhiên" />
+
+            <!-- Thêm khu vực hiển thị Rating -->
             <RatingBar
-                android:id="@+id/rating_bar"
+                android:id="@+id/ratingBarAverage"
+                style="?android:attr/ratingBarStyleSmall"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:isIndicator="true"
+                android:layout_marginTop="4dp"
                 android:numStars="5"
-                android:rating="4.5" />
-            <!-- Số lượng và Wishlist -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingVertical="8dp">
-
-                <EditText
-                    android:id="@+id/et_quantity"
-                    android:layout_width="50dp"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:inputType="number"
-                    tools:text="1" />
-
-                <Button
-                    android:id="@+id/btn_wishlist"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:text="Wishlist" />
-            </LinearLayout>
-
-            <!-- Mô tả sản phẩm -->
+                android:stepSize="0.1"
+                android:isIndicator="true"
+                android:theme="@style/RatingBar"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/textViewProductName" />
 
             <TextView
+                android:id="@+id/textViewRatingInfo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="14sp"
-                tools:text="View seller information:" />
-            <!-- Đường kẻ ngang-->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginVertical="12dp"
-                android:background="@color/gray" />
+                android:layout_marginStart="8dp"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                tools:text="4.5 (15 đánh giá)"
+                app:layout_constraintStart_toEndOf="@id/ratingBarAverage"
+                app:layout_constraintTop_toTopOf="@id/ratingBarAverage"
+                app:layout_constraintBottom_toBottomOf="@id/ratingBarAverage" />
+
+
+            <!-- Product Price -->
             <TextView
-                android:id="@+id/tv_description"
+                android:id="@+id/textViewProductPrice"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="14sp"
-                tools:text="Product description goes here..." />
-            <!-- Sản phẩm tương tự -->
+                android:layout_marginTop="8dp"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+                android:textColor="@color/design_default_color_primary"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/ratingBarAverage"
+                tools:text="150.000 đ" />
+
+            <!-- Product Quantity -->
             <TextView
-                android:id="@+id/tv_similar_products"
+                android:id="@+id/textViewProductQuantity"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="16sp"
+                android:layout_marginStart="16dp"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+                app:layout_constraintBottom_toBottomOf="@+id/textViewProductPrice"
+                app:layout_constraintStart_toEndOf="@+id/textViewProductPrice"
+                app:layout_constraintTop_toTopOf="@+id/textViewProductPrice"
+                tools:text="Còn lại: 20" />
+
+            <!-- Product Category -->
+
+            <!-- Product Description -->
+            <TextView
+                android:id="@+id/textViewProductCategory"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/textViewProductPrice"
+                tools:text="Thể loại: Trang sức" />
+
+            <!-- Related Products Title -->
+            <TextView
+                android:id="@+id/textViewProductDescription"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/textViewProductCategory"
+                tools:text="Vòng tay đá thạch anh hồng handmade. Mô tả chi tiết sản phẩm ở đây..." />
+
+            <TextView
+                android:id="@+id/textViewRelatedTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Sản phẩm liên quan"
                 android:textStyle="bold"
-                tools:text="Similar Products" />
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/textViewProductDescription" />
 
+            <!-- Related Products RecyclerView -->
             <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recycler_similar_products"
+                android:id="@+id/recyclerViewRelatedProducts"
+                android:layout_width="150pt"
+                android:layout_height="wrap_content"
+                android:paddingStart="0dp"
+                android:paddingEnd="20dp"
+                android:clipToPadding="false"
+                android:layout_marginTop="2dp"
+                android:orientation="horizontal"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/textViewRelatedTitle"
+                tools:listitem="@layout/item_product"
+                tools:itemCount="5"/>
+
+            <!-- Comments Title (Hide if no comments) -->
+            <TextView
+                android:id="@+id/textViewCommentsTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Bình luận"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/recyclerViewRelatedProducts"
+                android:visibility="gone"
+                tools:visibility="visible"/>
+
+            <!-- Comments RecyclerView (Hide if no comments) -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerViewComments"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:scrollbars="horizontal" />
-        </LinearLayout>
-    </ScrollView>
-</androidx.constraintlayout.widget.ConstraintLayout>
+                android:layout_marginTop="88dp"
+                android:visibility="gone"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/textViewCommentsTitle"
+                tools:itemCount="2"
+                tools:listitem="@layout/item_comment"
+                tools:visibility="visible" />
+
+
+            <!-- Add To Cart Button or other actions -->
+            <!-- ... -->
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Add to Cart Floating Action Button (Example) -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAddToCart"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        app:srcCompat="@drawable/cart"
+        android:contentDescription="Thêm vào giỏ hàng"/>
+
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

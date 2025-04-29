@@ -52,4 +52,7 @@ public interface ApiService {
     @GET("/api/product/getListProducts")
     Call<List<Product>> getAllProducts();
 
+    @GET("api/product/{id}")
+    Call<Product> getProductDetails(@Path("id") long productId);
+
 }

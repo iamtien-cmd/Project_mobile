@@ -43,10 +43,6 @@ public class Product {
     @JsonBackReference
     private Category category;
 
-    @ManyToOne
-    @JoinColumn(name = "favoriteId")
-    private Favorite favorite;
-
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Comment> comments = new ArrayList<>();
