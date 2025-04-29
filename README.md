@@ -69,6 +69,7 @@ Nếu gõ những từ khóa đã được train nó sẽ trả lời
 ![image](https://github.com/user-attachments/assets/917c8c9a-8f58-4c31-b023-ed15c8fcceed)
 Nếu gõ những từ khóa chưa được biết nó sẽ trả lời "xin lỗi..."
 ![image](https://github.com/user-attachments/assets/8af698cf-c85d-4457-9a98-986c35c5a6a8)
+![image](https://github.com/user-attachments/assets/d6de670c-8c43-4c0c-8ba0-d9fd195c6fa5)
 
 
 
