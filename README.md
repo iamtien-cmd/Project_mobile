@@ -65,7 +65,11 @@ http://localhost:8080/api/v1/upload/image. Sau khi hosting ta có thể truy c�
 ![image](https://github.com/user-attachments/assets/84fc4214-e527-4629-b506-e0c369aa9e1f)
 
 # Test nhắn tin với chatbot
+Nếu gõ những từ khóa đã được train nó sẽ trả lời
 ![image](https://github.com/user-attachments/assets/917c8c9a-8f58-4c31-b023-ed15c8fcceed)
+Nếu gõ những từ khóa chưa được biết nó sẽ trả lời "xin lỗi..."
+![image](https://github.com/user-attachments/assets/8af698cf-c85d-4457-9a98-986c35c5a6a8)
+
 
 
 #Frontend trang home
