@@ -1,165 +1,196 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:background="@color/black">
+    android:background="#F5F5DC"
+    android:fillViewport="true">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_height="wrap_content">
 
-        <!-- Ảnh nền -->
+        <!-- Background Image -->
         <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="173dp"
+            android:id="@+id/headerImageView"
+            android:layout_width="0dp"
+            android:layout_height="200dp"
             android:scaleType="centerCrop"
-            android:src="@drawable/image_38" />
+            android:src="@drawable/image_38"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            tools:srcCompat="@tools:sample/backgrounds/scenic" />
 
-        <!-- Bọc ảnh đại diện và tiêu đề trong LinearLayout ngang -->
-        <RelativeLayout
-            android:layout_width="match_parent"
+        <!-- Profile Content Card -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/profileCard"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:layout_marginTop="120dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="#1A1A1A"
+            app:cardCornerRadius="25dp"
+            app:cardElevation="0dp"
+            app:layout_constraintTop_toTopOf="@id/headerImageView"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintVertical_bias="0.0">
 
-            <!-- Tiêu đề -->
-
-            <!-- Ảnh đại diện -->
-
-            <TextView
-                android:id="@+id/titleProfile"
-                android:layout_width="wrap_content"
-                android:layout_height="63dp"
-                android:layout_alignParentStart="true"
-                android:layout_marginStart="37dp"
-                android:layout_marginTop="16dp"
-                android:text="Your profile"
-                android:textColor="@color/white"
-                android:textSize="30sp"
-                android:textStyle="italic"
-                android:fontFamily="serif" />
-
-
-            <ImageView
-                android:id="@+id/avatar"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:layout_below="@id/titleProfile"
-                android:layout_marginStart="69dp"
-                android:layout_marginTop="-72dp"
-                android:layout_toEndOf="@+id/titleProfile"
-                android:src="@drawable/icon_avatar" />
-        </RelativeLayout>
-
-        <!-- Input Fullname -->
-        <EditText
-            android:id="@+id/txt_fullname"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:hint="   Fullname"
-            android:padding="12dp"
-            android:textColor="@color/white"
-            android:textColorHint="@color/white"
-            android:drawableLeft="@drawable/user_2" />
-
-        <!-- Input Email -->
-        <EditText
-            android:id="@+id/txt_email"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:hint="    Email..."
-            android:padding="12dp"
-            android:textColorHint="@color/white"
-            android:textColor="@color/white"
-            android:drawableLeft="@drawable/email" />
-
-        <!-- Thanh Swadeshi Points -->
-        <TextView
-            android:id="@+id/txt_point"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="YOU HAVE 2***/1000 SWADESHI POINTS"
-            android:textColor="@color/white"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:layout_marginTop="10dp"/>
-        <ProgressBar
-            android:id="@+id/progressBar2"
-            style="@android:style/Widget.ProgressBar.Horizontal"
-            android:layout_width="6dp"
-            android:layout_height="wrap_content"
-            android:max="100"
-            android:progress="40"
-            android:secondaryProgress="60"></ProgressBar>
-
-        <!-- Thông tin Followers / Following -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center"
-            android:layout_marginTop="10dp">
-
-            <TextView
-                android:id="@+id/number_follower"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="FOLLOWERS\n204"
-                android:textColor="@color/white"
-                android:textSize="16sp"
-                android:gravity="center"
-                android:layout_weight="1"/>
+                android:orientation="vertical"
+                android:padding="20dp">
 
-            <TextView
-                android:id="@+id/number_following"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="FOLLOWING\n100"
-                android:textColor="@color/white"
-                android:textSize="16sp"
-                android:gravity="center"
-                android:layout_weight="1"/>
-        </LinearLayout>
+                <!-- Your Profile + Avatar (Nằm ngang) -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="10dp">
 
-        <!-- Các nút chức năng -->
-        <Button
-            android:id="@+id/edit_profile"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:text="Edit Profile"
-            android:textColor="@color/white"
-            android:drawableLeft="@drawable/edit"
-            android:layout_marginTop="8dp"/>
+                    <TextView
+                        android:id="@+id/titleProfile"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Your profile"
+                        android:textColor="#FFFFFF"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:fontFamily="serif" />
 
-        <Button
-            android:id="@+id/order_history"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:text="Order History"
-            android:textColor="@color/white"
-            android:drawableLeft="@drawable/seen_history"
-            android:layout_marginTop="8dp"/>
+                    <ImageView
+                        android:id="@+id/avatarImageView"
+                        android:layout_width="85dp"
+                        android:layout_height="85dp"
+                        android:src="@drawable/icon_avatar"
+                        android:elevation="8dp"
+                        android:layout_marginStart="16dp" />
+                </LinearLayout>
 
-        <Button
-            android:id="@+id/ship_address"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:text="Shipping Address"
-            android:textColor="@color/white"
-            android:drawableLeft="@drawable/location"
-            android:layout_marginTop="8dp"/>
+                <!-- Các thông tin Fullname, Email, Phone, Address (TextView) -->
+                <TextView
+                    android:id="@+id/fullNameTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="55dp"
+                    android:layout_marginTop="25dp"
+                    android:drawableStart="@drawable/user_2"
+                    android:drawablePadding="12dp"
+                    android:maxLines="1"
+                    android:paddingStart="20dp"
+                    android:gravity="center_vertical"
+                    android:paddingEnd="20dp"
+                    android:text="Fullname"
+                    android:textColor="#E0E0E0" />
 
-        <Button
-            android:id="@+id/credit_card"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:text="Credit Cards"
-            android:textColor="@color/white"
-            android:drawableLeft="@drawable/cart"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="16dp"/>
+                <TextView
+                    android:id="@+id/emailTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="55dp"
+                    android:layout_marginTop="15dp"
+                    android:drawableStart="@drawable/email"
+                    android:drawablePadding="12dp"
+                    android:gravity="center_vertical"
+                    android:maxLines="1"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:text="Email"
+                    android:textColor="#E0E0E0" />
 
-    </LinearLayout>
+                <TextView
+                    android:id="@+id/phoneTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="55dp"
+                    android:layout_marginTop="15dp"
+                    android:drawableStart="@drawable/ic_phone"
+                    android:gravity="center_vertical"
+                    android:drawablePadding="12dp"
+                    android:maxLines="1"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:text="Phone"
+                    android:textColor="#E0E0E0" />
+
+                <TextView
+                    android:id="@+id/addressTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="55dp"
+                    android:layout_marginTop="15dp"
+                    android:drawableStart="@drawable/ic_location"
+                    android:gravity="center_vertical"
+                    android:drawablePadding="12dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:text="Address"
+                    android:textColor="#E0E0E0" />
+
+                <!-- Các Button chức năng -->
+                <Button
+                    android:id="@+id/editProfileButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="55dp"
+                    android:layout_marginTop="30dp"
+                    android:drawableStart="@drawable/edit"
+                    android:drawablePadding="16dp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:backgroundTint="#2C2C2C"
+                    android:text="Edit Profile"
+                    android:textColor="#E0E0E0" />
+
+                <Button
+                    android:id="@+id/orderHistoryButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="55dp"
+                    android:layout_marginTop="15dp"
+                    android:drawableStart="@drawable/seen_history"
+                    android:drawablePadding="16dp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:backgroundTint="#2C2C2C"
+                    android:text="Order History"
+                    android:textColor="#E0E0E0" />
+
+                <Button
+                    android:id="@+id/shippingAddressButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="55dp"
+                    android:layout_marginTop="15dp"
+                    android:drawableStart="@drawable/location"
+                    android:drawablePadding="16dp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:backgroundTint="#2C2C2C"
+                    android:text="Shipping Address"
+                    android:textColor="#E0E0E0" />
+
+                <Button
+                    android:id="@+id/creditCardsButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="55dp"
+                    android:layout_marginTop="15dp"
+                    android:drawableStart="@drawable/cart"
+                    android:drawablePadding="16dp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:backgroundTint="#2C2C2C"
+                    android:text="Credit Cards"
+                    android:textColor="#E0E0E0" />
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
 </ScrollView>

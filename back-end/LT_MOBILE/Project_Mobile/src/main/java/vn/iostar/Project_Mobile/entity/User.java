@@ -56,9 +56,6 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Comment> comments = new ArrayList<>();
     
-    @OneToOne(mappedBy = "user")
-    private Favorite favorite;
-    
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     @JsonIgnore
     @ToString.Exclude
