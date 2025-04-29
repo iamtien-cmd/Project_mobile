@@ -64,6 +64,9 @@ http://localhost:8080/api/v1/upload/image. Sau khi hosting ta có thể truy c�
 ![image](https://github.com/user-attachments/assets/2e0665c9-a2ab-4558-86f7-49017f864b99)
 ![image](https://github.com/user-attachments/assets/84fc4214-e527-4629-b506-e0c369aa9e1f)
 
+# Test nhắn tin với chatbot
+![image](https://github.com/user-attachments/assets/917c8c9a-8f58-4c31-b023-ed15c8fcceed)
+
 
 #Frontend trang home
 ![image](https://github.com/user-attachments/assets/6f61a17a-5f87-4e18-974b-5cc441778b6b)
