@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import vn.iostar.Project_Mobile.DTO.CommentResponse;
 import vn.iostar.Project_Mobile.entity.Comment;
 import vn.iostar.Project_Mobile.entity.Product;
 import vn.iostar.Project_Mobile.service.ICommentService;
@@ -24,13 +25,14 @@ public class CommentController {
 
     // GET: Lấy bình luận theo sản phẩm
     @GetMapping("/product/{productId}")
-    public List<Comment> getCommentsByProduct(@PathVariable Long productId) {
+    public List<CommentResponse> getCommentsByProductId(@PathVariable Long productId) {
+        // Gọi service để lấy danh sách comments cho product
         Product product = new Product();
-        product.setProductId(productId);  // giả sử bạn có trường này trong entity Product
+        product.setProductId(productId);  // Giả sử bạn tìm Product theo ID
         return commentService.getCommentsByProduct(product);
     }
 
-    // DELETE: Xóa bình luận theo ID
+   // DELETE: Xóa bình luận theo ID
     @DeleteMapping("/{id}")
     public void deleteComment(@PathVariable Long id) {
         commentService.deleteComment(id);

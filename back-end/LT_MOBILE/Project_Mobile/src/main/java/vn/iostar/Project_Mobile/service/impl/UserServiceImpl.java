@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import vn.iostar.Project_Mobile.entity.User;
 import vn.iostar.Project_Mobile.repository.IUserRepository;
 import vn.iostar.Project_Mobile.service.IUserService;
-
+import vn.iostar.Project_Mobile.entity.Type;
 @Service
 public class UserServiceImpl implements IUserService{
     @Autowired
@@ -41,8 +41,9 @@ public class UserServiceImpl implements IUserService{
 		public void saveUser(User user, String otp) {
 	    	  String encodedPassword = passwordEncoder.encode(user.getPassword());
 	           user.setPassword(encodedPassword);
+	           user.setType(Type.New);
 	        user.setOtpCode(otp);
-	        user.setOtpExpiration(LocalDateTime.now().plusMinutes(10));  // OTP có hiệu lực trong 10 phút
+	        user.setOtpExpiration(LocalDateTime.now().plusMinutes(30));  // OTP có hiệu lực trong 10 phút
 	        userRepository.save(user);
 	    }
 

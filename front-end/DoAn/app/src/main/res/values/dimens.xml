@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="comment_content_margin_with_image">8dp</dimen>
+    <!-- Bạn có thể thêm các định nghĩa dimension khác ở đây -->
+</resources>

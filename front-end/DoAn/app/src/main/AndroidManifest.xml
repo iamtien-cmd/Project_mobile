@@ -4,6 +4,9 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+
 
     <application
         android:allowBackup="true"
@@ -16,8 +19,9 @@
         android:usesCleartextTraffic="true"
         android:theme="@style/Theme.DoAn"
         tools:targetApi="31">
+
         <activity
-            android:name=".activity.MainActivity"
+            android:name=".activity.OrderHistoryActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -30,6 +34,12 @@
         <activity android:name=".activity.RegisterActivity" />
         <activity android:name=".activity.HomeActivity" />
         <activity android:name=".activity.VerifyOtpRegisterActivity" />
-        <activity android:name=".activity.OrderHistoryActivity" />
+        <activity android:name=".activity.ChatActivity" />
+        <activity android:name=".activity.ConfirmPasswordActivity"/>
+        <activity android:name=".activity.ForgetPasswordActivity"/>
+        <activity android:name=".activity.VerifyOtpForgetPasswordActivity"/>
+        <activity
+            android:name=".activity.ProductRatingActivity"/>
+
     </application>
 </manifest>

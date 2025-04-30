@@ -4,4 +4,16 @@
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">50%</item>
     </style>
+    <style name="KeyButton" parent="Widget.AppCompat.Button">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">40dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:backgroundTint">@android:color/white</item>
+        <item name="android:textColor">@color/black</item>
+    </style>
+    <style name="RatingBar" parent="Widget.AppCompat.RatingBar.Small">
+    <item name="colorControlNormal">@color/grey_400</item> <!-- Color for the empty stars -->
+    <item name="colorControlActivated">@color/yellow_500</item> <!-- Color for the filled stars -->
+    </style>
+
 </resources>

@@ -143,61 +143,62 @@ public class UserController {
 
 
 	    
-    @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
-        Optional<User> userOpt = userService.findByEmail(request.getEmail());
-        if (!userOpt.isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Email không tồn tại trong hệ thống.");
-        }
+	    @PostMapping("/forgot-password")
+	    public ResponseEntity<User> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+	        Optional<User> userOpt = userService.findByEmail(request.getEmail());
+	        if (!userOpt.isPresent()) {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); // If user not found, return empty response
+	        }
 
-        // Generate OTP
-        String otp = emailService.generateOTP();
+	        // Generate OTP
+	        String otp = emailService.generateOTP();
 
-        // Send OTP to the user's email
-        emailService.sendOtp(request.getEmail(), otp);
+	        // Send OTP to the user's email
+	        emailService.sendOtp(request.getEmail(), otp);
 
-        // Save OTP and expiration time to the database
-        userService.saveOtp(userOpt.get(), otp);
+	        // Save OTP and expiration time to the database
+	        userService.saveOtp(userOpt.get(), otp);
 
-        return ResponseEntity.ok("OTP quên mật khẩu đã được gửi qua email. Vui lòng kiểm tra hộp thư đến.");
-    }
-    
-    @PostMapping("/reset-password")
-    public ResponseEntity<?> resetPassword(@RequestBody ForgotPasswordRequest resetRequest) {
-        String email = resetRequest.getEmail();
-        String newPassword = resetRequest.getNewPassword();
-        String confirmPassword = resetRequest.getConfirmPassword();
+	        return ResponseEntity.ok(userOpt.get()); // Return the user object
+	    }
 
-        if (!newPassword.equals(confirmPassword)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Mật khẩu xác nhận không khớp.");
-        }
+	    @PostMapping("/reset-password")
+	    public ResponseEntity<User> resetPassword(@RequestBody ForgotPasswordRequest resetRequest) {
+	        String email = resetRequest.getEmail();
+	        String newPassword = resetRequest.getNewPassword();
+	        String confirmPassword = resetRequest.getConfirmPassword();
 
-        String encodedPassword = passwordEncoder.encode(newPassword);
+	        if (!newPassword.equals(confirmPassword)) {
+	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); // Return empty response if passwords do not match
+	        }
 
-        // Cập nhật mật khẩu
-        boolean isReset = userService.resetPassword(email, encodedPassword);
-        if (isReset) {
-            return ResponseEntity.ok("Mật khẩu đã được đặt lại thành công.");
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Không thể đặt lại mật khẩu. Vui lòng thử lại.");
-        }
-    }
+	        String encodedPassword = passwordEncoder.encode(newPassword);
 
+	        // Cập nhật mật khẩu
+	        boolean isReset = userService.resetPassword(email, encodedPassword);
+	        if (isReset) {
+	            Optional<User> userOpt = userService.findByEmail(email);
+	            return userOpt.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)); // Return updated user object
+	        } else {
+	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); // Return empty response if reset failed
+	        }
+	    }
 
+	    @PostMapping("/verifyOtpForgotPassword")
+	    public ResponseEntity<User> verifyOtpForgotPassword(@RequestBody ForgotPasswordRequest otpRequest) {
+	        String email = otpRequest.getEmail();
+	        String otp = otpRequest.getOtp();
 
-    @PostMapping("/verifyOtpForgotPassword")
-    public ResponseEntity<?> verifyOtpForgotPassword(@RequestBody ForgotPasswordRequest otpRequest) {
-        String email = otpRequest.getEmail();
-        String otp = otpRequest.getOtp();
+	        // Kiểm tra OTP từ userService
+	        boolean isOtpValid = userService.verifyOtpForgotPassword(email, otp);
 
-        // Kiểm tra OTP từ userService
-        boolean isOtpValid = userService.verifyOtpForgotPassword(email, otp);
+	        if (isOtpValid) {
+	            Optional<User> userOpt = userService.findByEmail(email);
+	            return userOpt.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)); // Return user if OTP is valid
+	        } else {
+	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); // Return empty response if OTP is invalid or expired
+	        }
+	    }
 
-        if (isOtpValid) {
-            return ResponseEntity.ok("OTP hợp lệ. Bạn có thể đặt lại mật khẩu.");
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("OTP không hợp lệ hoặc đã hết hạn.");
-        }
-    }
 
 }

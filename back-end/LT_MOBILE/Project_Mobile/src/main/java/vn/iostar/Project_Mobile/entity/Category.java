@@ -2,6 +2,8 @@ package vn.iostar.Project_Mobile.entity;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty; // Import thư viện này
 
 import jakarta.persistence.*;
@@ -24,5 +26,7 @@ public class Category {
     private String categoryName;
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties({"products"})
     private List<Product> products;
+
 }

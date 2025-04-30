@@ -5,5 +5,15 @@
     <color name="pink">#FFC0CB</color>
     <color name="blue">#2196F3</color>
     <color name="gray">#808080</color>
-
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="grey_400">#BDBDBD</color>
+    <color name="yellow_500">#FFEB3B</color>
+    <color name="my_red_error">#F44336</color>  <!-- Màu đỏ cho lỗi -->
+    <color name="my_grey_neutral">#9E9E9E</color> <!-- Màu xám cho trạng thái mặc định -->
+    <color name="my_green_success">#4CAF50</color> <!-- Màu xanh lá cho thành công (ví dụ: RECEIVED) -->
+    <color name="my_orange_processing">#FF9800</color>
 </resources>

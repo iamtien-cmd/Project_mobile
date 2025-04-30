@@ -1,143 +1,45 @@
 package vn.iostar.doan.model;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-
-import java.util.ArrayList;
+import java.util.Date; // Hoặc dùng String tùy theo API/Gson
 import java.util.List;
 
-import vn.iostar.doan.model.OrderLine;
-import vn.iostar.doan.model.OrderStatus;
-import vn.iostar.doan.model.User;
-
-public class Order implements Parcelable {
+public class Order {
     private long orderId;
     private double totalPrice;
-    private String orderDate;
-    private String predictReceiveDate;
-    private OrderStatus status; // Đổi lại cho đơn giản
+    private Date orderDate; // Hoặc String
+    private Date predictReceiveDate; // Hoặc String
+    private OrderStatus status; // Enum
     private String paymentMethod;
-    private User user;
     private List<OrderLine> orderLines;
-    @Override
-    public String toString() {
-        return "Order ID: " + orderId + ", Status: " + status + ", Customer: " + (user != null ? user.getEmail() : "Unknown");
+
+    // *** THÊM TRƯỜNG NÀY ***
+    private boolean reviewed; // Lưu trạng thái đã đánh giá
+
+    // Getters and Setters cho các trường cũ
+    // ... (Giữ nguyên các getter/setter cũ) ...
+
+    // *** THÊM GETTER VÀ SETTER CHO TRƯỜNG MỚI ***
+    public boolean isReviewed() { // Getter cho boolean thường bắt đầu bằng 'is'
+        return reviewed;
     }
 
-
-    public Order(long orderId, double totalPrice, String orderDate, String predictReceiveDate, OrderStatus status, String paymentMethod, User user, List<OrderLine> orderLines) {
-        this.orderId = orderId;
-        this.totalPrice = totalPrice;
-        this.orderDate = orderDate;
-        this.predictReceiveDate = predictReceiveDate;
-        this.status = status;
-        this.paymentMethod = paymentMethod;
-        this.user = user;
-        this.orderLines = orderLines;
+    public void setReviewed(boolean reviewed) {
+        this.reviewed = reviewed;
     }
 
-    protected Order(Parcel in) {
-        orderId = in.readLong();
-        totalPrice = in.readDouble();
-        orderDate = in.readString();
-        predictReceiveDate = in.readString();
-        status = OrderStatus.valueOf(in.readString());
-        paymentMethod = in.readString();
-        user = in.readParcelable(User.class.getClassLoader());
-        orderLines = new ArrayList<>();
-        in.readList(orderLines, OrderLine.class.getClassLoader());
-    }
-
-    public static final Creator<Order> CREATOR = new Creator<Order>() {
-        @Override
-        public Order createFromParcel(Parcel in) {
-            return new Order(in);
-        }
-
-        @Override
-        public Order[] newArray(int size) {
-            return new Order[size];
-        }
-    };
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeLong(orderId);
-        dest.writeDouble(totalPrice);
-        dest.writeString(orderDate);
-        dest.writeString(predictReceiveDate);
-        dest.writeString(status.name());
-        dest.writeString(paymentMethod);
-        dest.writeParcelable(user, flags);
-        dest.writeList(orderLines);
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    public long getOrderId() {
-        return orderId;
-    }
-
-    public void setOrderId(long orderId) {
-        this.orderId = orderId;
-    }
-
-    public List<OrderLine> getOrderLines() {
-        return orderLines;
-    }
-
-    public void setOrderLines(List<OrderLine> orderLines) {
-        this.orderLines = orderLines;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public String getPaymentMethod() {
-        return paymentMethod;
-    }
-
-    public void setPaymentMethod(String paymentMethod) {
-        this.paymentMethod = paymentMethod;
-    }
-
-    public OrderStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(OrderStatus status) {
-        this.status = status;
-    }
-
-    public String getPredictReceiveDate() {
-        return predictReceiveDate;
-    }
-
-    public void setPredictReceiveDate(String predictReceiveDate) {
-        this.predictReceiveDate = predictReceiveDate;
-    }
-
-    public String getOrderDate() {
-        return orderDate;
-    }
-
-    public void setOrderDate(String orderDate) {
-        this.orderDate = orderDate;
-    }
-
-    public double getTotalPrice() {
-        return totalPrice;
-    }
-
-    public void setTotalPrice(double totalPrice) {
-        this.totalPrice = totalPrice;
-    }
+    // Các getter/setter còn lại
+    public long getOrderId() { return orderId; }
+    public void setOrderId(long orderId) { this.orderId = orderId; }
+    public double getTotalPrice() { return totalPrice; }
+    public void setTotalPrice(double totalPrice) { this.totalPrice = totalPrice; }
+    public Date getOrderDate() { return orderDate; }
+    public void setOrderDate(Date orderDate) { this.orderDate = orderDate; }
+    public Date getPredictReceiveDate() { return predictReceiveDate; }
+    public void setPredictReceiveDate(Date predictReceiveDate) { this.predictReceiveDate = predictReceiveDate; }
+    public OrderStatus getStatus() { return status; }
+    public void setStatus(OrderStatus status) { this.status = status; }
+    public String getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+    public List<OrderLine> getOrderLines() { return orderLines; }
+    public void setOrderLines(List<OrderLine> orderLines) { this.orderLines = orderLines; }
 }

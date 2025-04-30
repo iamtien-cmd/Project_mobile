@@ -1,8 +1,11 @@
 package vn.iostar.Project_Mobile.entity;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -30,10 +33,11 @@ public class Comment {
 	private String image;
 	private String content;
 	private int rating;
-	
+	private LocalDateTime createdAt = LocalDateTime.now();
+	private String avatar;
 	   // Quan hệ N-1: Một Comment thuộc về 1 User
 	@ManyToOne
-	@JsonBackReference
+	@JoinColumn(name = "user_id") 
 	private User user;
 
 
@@ -42,5 +46,4 @@ public class Comment {
     @JoinColumn(name = "productId", nullable = false)
     private Product product;
 
-	
 }

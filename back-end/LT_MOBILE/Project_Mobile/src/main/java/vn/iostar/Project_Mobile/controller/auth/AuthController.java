@@ -2,6 +2,7 @@ package vn.iostar.Project_Mobile.controller.auth;
 
 
 
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -61,10 +62,10 @@ private IUserRepository userRepository;
 
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody User user) {
+    public ResponseEntity<User> registerUser(@RequestBody User user) {
         // Kiểm tra xem email đã tồn tại chưa
         if (userService.emailExists(user.getEmail())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Email đã tồn tại!");
+        	return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
 
         // Tạo OTP và gửi qua email
@@ -77,22 +78,28 @@ private IUserRepository userRepository;
         userService.saveUser(user, otp);
        
 
-        return ResponseEntity.ok("OTP đăng kí đã được gửi qua email.");
+        return ResponseEntity.ok(user);
     }
     @PostMapping("/verifyOtpRegister")
-    public ResponseEntity<?> verifyOtp(@RequestBody RegisterRequest otpRequest) {
+    public ResponseEntity<User> verifyOtp(@RequestBody RegisterRequest otpRequest) {
         String email = otpRequest.getEmail();
         String otp = otpRequest.getOtp();
         
-        // Kiểm tra OTP
-        boolean isOtpValid = userService.verifyOtpRegister(email, otp);
-
-        if (isOtpValid) {
+        if (userService.verifyOtpRegister(email, otp)) {
             userService.saveActive(email);
-            return ResponseEntity.ok("OTP hợp lệ, đăng ký thành công.");
+            Optional<User> userOptional = userService.findByEmail(email);
+            
+            if (userOptional.isPresent()) {
+                User user = userOptional.get(); // lấy ra User từ Optional
+                return ResponseEntity.ok(user);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); // Không tìm thấy user
+            }
         } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("OTP không hợp lệ.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); // OTP không hợp lệ
         }
     }
+
+
 
 }

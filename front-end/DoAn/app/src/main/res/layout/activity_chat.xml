@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+   >
+
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar_chat"
+        android:layout_width="0dp"
+    android:layout_height="?attr/actionBarSize"
+    android:background="@color/black"
+    android:elevation="4dp"
+    android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+    app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+        app:navigationIcon="?attr/homeAsUpIndicator"
+    app:layout_constraintTop_toTopOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintEnd_toEndOf="parent">
+    <!-- Tiêu đề và Nút Back sẽ được đặt/xử lý trong code Java -->
+        <!-- app:titleTextColor="@color/white" có thể không cần nếu theme đã xử lý -->
+    <!-- app:navigationIcon="?attr/homeAsUpIndicator" sẽ được kích hoạt khi setSupportActionBar -->
+
+</androidx.appcompat.widget.Toolbar>
+
+<androidx.recyclerview.widget.RecyclerView
+android:id="@+id/recycler_view_messages"
+android:layout_width="0dp"
+android:layout_height="0dp"
+android:padding="8dp"
+android:clipToPadding="false"
+app:layout_constraintTop_toBottomOf="@id/toolbar_chat"
+app:layout_constraintBottom_toTopOf="@+id/input_layout"
+app:layout_constraintStart_toStartOf="parent"
+app:layout_constraintEnd_toEndOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/input_layout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:background="@android:color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <EditText
+            android:id="@+id/edit_text_message"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="Nhập tin nhắn..."
+            android:inputType="textMultiLine"
+            android:maxLines="4"
+            android:background="@drawable/edit_text_background"
+            android:padding="10dp"
+            android:layout_marginEnd="8dp"
+            android:minHeight="48dp"
+            android:gravity="center_vertical"
+        />
+
+        <ImageButton
+            android:id="@+id/button_send"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@android:drawable/ic_menu_send"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Gửi"
+            android:padding="10dp"
+            android:layout_gravity="center_vertical"
+            android:minWidth="48dp"
+        android:minHeight="48dp"
+        />
+    </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>

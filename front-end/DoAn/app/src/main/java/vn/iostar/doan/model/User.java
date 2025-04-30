@@ -6,14 +6,23 @@ import android.os.Parcelable;
 public class User implements Parcelable {
     private long userId;
     private String email;
+    private String otp;
     private String password;
     private String fullName;
 
-    public User(long userId, String email, String password, String fullName) {
+    public User(long userId) {
+        this.userId = userId;
+    }
+
+    public User() {
+    }
+
+    public User(long userId, String email, String password, String fullName, String otp) {
         this.userId = userId;
         this.email = email;
         this.password = password;
         this.fullName = fullName;
+        this.otp = otp;
     }
 
     protected User(Parcel in) {
@@ -21,6 +30,7 @@ public class User implements Parcelable {
         email = in.readString();
         password = in.readString();
         fullName = in.readString();
+        otp =  in.readString();
     }
 
     public static final Creator<User> CREATOR = new Creator<User>() {
@@ -41,6 +51,8 @@ public class User implements Parcelable {
         dest.writeString(email);
         dest.writeString(password);
         dest.writeString(fullName);
+        dest.writeString(otp);
+
     }
 
     @Override
@@ -79,5 +91,13 @@ public class User implements Parcelable {
 
     public void setFullName(String fullName) {
         this.fullName = fullName;
+    }
+
+    public String getOtp() {
+        return otp;
+    }
+
+    public void setOtp(String otp) {
+        this.otp = otp;
     }
 }

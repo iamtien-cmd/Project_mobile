@@ -84,6 +84,12 @@ public class LoginActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+        TextView txtForget = findViewById(R.id.txtForget);
+        txtForget.setOnClickListener(v -> {
+            // Start the ForgetPasswordActivity when the "Forgot password?" link is clicked
+            Intent intent = new Intent(LoginActivity.this, ForgetPasswordActivity.class);
+            startActivity(intent);
+        });
     }
 
 
