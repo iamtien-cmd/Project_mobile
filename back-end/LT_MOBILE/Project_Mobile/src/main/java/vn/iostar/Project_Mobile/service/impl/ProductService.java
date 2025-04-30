@@ -17,8 +17,10 @@ public class ProductService implements IProductService{
         return productRepository.findAll();
     }
 
+    @Override
     public Product getProductById(Long id) {
-        return productRepository.findById(id).orElse(null);
+    	return productRepository.findById(id)
+                .orElse(null);
     }
 
     public Product saveProduct(Product product) {
@@ -27,5 +29,9 @@ public class ProductService implements IProductService{
 
     public void deleteProduct(Long id) {
         productRepository.deleteById(id);
+    }
+    
+    public List<Product> getProductsByCategory(Long categoryId) {
+        return productRepository.findByCategory_CategoryId(categoryId);
     }
 }

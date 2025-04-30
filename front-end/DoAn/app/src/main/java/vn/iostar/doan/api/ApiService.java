@@ -2,6 +2,7 @@ package vn.iostar.doan.api;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import retrofit2.http.Path;
 
 import okhttp3.MultipartBody;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -42,6 +43,9 @@ public interface ApiService {
             .build()
             .create(ApiService.class);
 
+    @GET("/api/auth/info")
+    Call<User> getUserInfo(@Header("Authorization") String token);
+
     @POST("/api/auth/login")
     Call<User> loginUser(@Body LoginRequest userRequest);
 
@@ -80,4 +84,15 @@ public interface ApiService {
     Call<ChatResponse> sendMessage(@Body ChatRequest request);
     @PUT("api/orders/{orderId}/cancel") // Đường dẫn tương đối từ Base URL
     Call<Order> cancelOrder(@Path("orderId") Long orderId);
+    @GET("api/product/category/{id}")
+    Call<List<Product>> getProductsByCategory(@Path("id") Long id);
+
+    @GET("/api/product/categories")
+    Call<List<Category>> getAllCategories();
+
+    @GET("/api/product/getListProducts")
+    Call<List<Product>> getAllProducts();
+
+    @GET("api/product/{id}")
+    Call<Product> getProductDetails(@Path("id") long productId);
 }

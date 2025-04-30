@@ -16,4 +16,5 @@
     <color name="my_grey_neutral">#9E9E9E</color> <!-- Màu xám cho trạng thái mặc định -->
     <color name="my_green_success">#4CAF50</color> <!-- Màu xanh lá cho thành công (ví dụ: RECEIVED) -->
     <color name="my_orange_processing">#FF9800</color>
+    <color name="yellow">#FFD700</color>
 </resources>

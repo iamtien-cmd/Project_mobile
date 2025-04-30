@@ -22,6 +22,8 @@ public class Category {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long categoryId;
 
+    private String imageCate;
+    
     @JsonProperty("name") // Ánh xạ "name" trong JSON vào categoryName
     private String categoryName;
 

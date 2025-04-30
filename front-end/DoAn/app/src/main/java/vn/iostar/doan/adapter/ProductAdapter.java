@@ -24,10 +24,12 @@ import java.util.List;
 import java.util.Locale; // <<< THÊM IMPORT Locale
 
 import vn.iostar.doan.R;
+import vn.iostar.doan.activity.ProductDetailActivity;
 import vn.iostar.doan.model.Product;
 
 public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHolder> {
 
+    private Context context;
     private List<Product> productList;
     private Context context; // <<< Thêm biến Context
     private NumberFormat currencyFormatter; // <<< Thêm biến định dạng tiền tệ
@@ -61,7 +63,10 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
         // Gọi hàm bind trong ViewHolder để gán dữ liệu
         holder.bind(product, currencyFormatter /*, listener*/); // Truyền formatter, listener nếu có
     }
-
+    public void updateList(List<Product> newList) {
+        productList = newList;
+        notifyDataSetChanged();
+    }
     @Override
     public int getItemCount() {
         // Không cần kiểm tra null ở đây nếu đã khởi tạo trong constructor

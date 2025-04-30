@@ -1,16 +1,37 @@
 package vn.iostar.doan.model;
 
+import com.google.gson.annotations.SerializedName;
+
+import java.util.List;
+
 public class Product {
     private long productId;
+    //ảnh đại diện
     private String image;
+
+    //danh sách các ảnh của product
+    private List<String> images;
+    @SerializedName("imageUrls")
+    private List<String> imageUrls;
+
     private String name;
     private double price;
     private String description;
-
+    private int quantity;
     private Category category;
+    private List<Comment> comments;
+    private List<Product> relatedProducts;
 
-    public Product(long productId) {
+    public Product(long productId, String image, List<String> imageUrls, String name, double price, String description, int quantity, Category category, List<Comment> comments, List<Product> relatedProducts) {
         this.productId = productId;
+        this.imageUrls = imageUrls;
+        this.name = name;
+        this.price = price;
+        this.description = description;
+        this.quantity = quantity;
+        this.category = category;
+        this.comments = comments;
+        this.relatedProducts = relatedProducts;
     }
 
     public Product(long productId, String image, String name, double price, String description, Category category) {
@@ -20,6 +41,19 @@ public class Product {
         this.price = price;
         this.description = description;
         this.category = category;
+    }
+    public List<String> getImages() {
+        return images;
+    }
+    public void setImages(List<String> images) {
+        this.images = images;
+    }
+    public Product(String image, String name, double price) {
+
+        this.image = image;
+        this.name = name;
+        this.price = price;
+
     }
 
     public long getProductId() {
@@ -36,6 +70,37 @@ public class Product {
 
     public void setImage(String image) {
         this.image = image;
+    }
+    public List<String> getImageUrls() {
+        return imageUrls;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
+
+    public List<Comment> getComments() {
+        return comments;
+    }
+
+    public void setComments(List<Comment> comments) {
+        this.comments = comments;
+    }
+
+    public List<Product> getRelatedProducts() {
+        return relatedProducts;
+    }
+
+    public void setRelatedProducts(List<Product> relatedProducts) {
+        this.relatedProducts = relatedProducts;
+    }
+
+    public void setImageUrls(List<String> imageUrls) {
+        this.imageUrls = imageUrls;
     }
 
     public String getName() {

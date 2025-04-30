@@ -44,6 +44,7 @@ public class Comment {
     // Quan hệ N-1: Một Comment dành cho 1 Product
     @ManyToOne
     @JoinColumn(name = "productId", nullable = false)
+    @JsonIgnore
     private Product product;
 
 }
