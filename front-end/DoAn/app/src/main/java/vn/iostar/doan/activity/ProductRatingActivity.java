@@ -52,13 +52,10 @@ import vn.iostar.doan.adapter.CommentAdapter;
 import vn.iostar.doan.api.ApiService; // Đảm bảo ApiService có định nghĩa các call cần thiết
 import vn.iostar.doan.model.Comment;
 import vn.iostar.doan.modelRequest.CommentRequest;
-import vn.iostar.doan.model.Product; // Import nếu cần dùng Product
-import vn.iostar.doan.model.User;   // Import nếu cần dùng User
 import vn.iostar.doan.modelResponse.ImageUploadResponse;
 import vn.iostar.doan.utils.SharedPreferencesUtils;
 
 // *** Quan trọng: Import đúng lớp HomeActivity của bạn ***
-import vn.iostar.doan.activity.HomeActivity; // Ví dụ, thay thế nếu tên/package khác
 
 
 public class ProductRatingActivity extends AppCompatActivity {

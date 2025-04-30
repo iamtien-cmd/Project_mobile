@@ -7,7 +7,6 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.provider.FontRequest;
 
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
@@ -17,9 +16,8 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import vn.iostar.doan.R;
 import vn.iostar.doan.api.ApiService;
-import vn.iostar.doan.model.User;
+import vn.iostar.doan.model.User1;
 import vn.iostar.doan.modelRequest.ForgotPasswordRequest;
-import vn.iostar.doan.modelRequest.RegisterRequest;
 
 public class VerifyOtpForgetPasswordActivity extends AppCompatActivity {
     private TextInputEditText etOtp;
@@ -53,11 +51,11 @@ public class VerifyOtpForgetPasswordActivity extends AppCompatActivity {
             ForgotPasswordRequest request = new ForgotPasswordRequest();
             request.setEmail(email); // set ở đây là backend get dữ liệu lên rồi so sánh
             request.setOtp(enteredOtp);
-            ApiService.apiService.verifyOtpForgotPassword(request).enqueue(new Callback<User>() {
+            ApiService.apiService.verifyOtpForgotPassword(request).enqueue(new Callback<User1>() {
                 @Override
-                public void onResponse(Call<User> call, Response<User> response) {
+                public void onResponse(Call<User1> call, Response<User1> response) {
                     if (response.isSuccessful()) {
-                        User user = response.body();
+                        User1 user = response.body();
 
                         Toast.makeText(VerifyOtpForgetPasswordActivity.this, "Xác thực thành công!", Toast.LENGTH_SHORT).show();
                         Intent intent = new Intent(VerifyOtpForgetPasswordActivity.this, ConfirmPasswordActivity.class);
@@ -71,7 +69,7 @@ public class VerifyOtpForgetPasswordActivity extends AppCompatActivity {
                 }
 
                 @Override
-                public void onFailure(Call<User> call, Throwable t) {
+                public void onFailure(Call<User1> call, Throwable t) {
                     otpLayout.setError("Lỗi kết nối: " + t.getMessage());
                 }
             });

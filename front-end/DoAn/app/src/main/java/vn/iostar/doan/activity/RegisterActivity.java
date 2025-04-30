@@ -13,7 +13,7 @@ import com.google.android.material.textfield.TextInputEditText;
 import retrofit2.Call;
 import vn.iostar.doan.R;
 import vn.iostar.doan.api.ApiService;
-import vn.iostar.doan.model.User;
+import vn.iostar.doan.model.User1;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -51,14 +51,14 @@ public class RegisterActivity extends AppCompatActivity {
             if (fullName.isEmpty() || email.isEmpty() || password.isEmpty()) {
                 Toast.makeText(RegisterActivity.this, "Vui lòng điền đầy đủ thông tin!", Toast.LENGTH_SHORT).show();
             } else {
-                User user = new User();
+                User1 user = new User1();
                 user.setFullName(fullName);
                 user.setEmail(email);
                 user.setPassword(password);
 
-                ApiService.apiService.registerUser(user).enqueue(new retrofit2.Callback<User>() {
+                ApiService.apiService.registerUser(user).enqueue(new retrofit2.Callback<User1>() {
                     @Override
-                    public void onResponse(Call<User> call, retrofit2.Response<User> response) {
+                    public void onResponse(Call<User1> call, retrofit2.Response<User1> response) {
                         if (response.isSuccessful() && response.body() != null) {
                             Toast.makeText(RegisterActivity.this, "Đăng ký thành công! Vui lòng xác thực OTP.", Toast.LENGTH_SHORT).show();
 
@@ -76,7 +76,7 @@ public class RegisterActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onFailure(Call<User> call, Throwable t) {
+                    public void onFailure(Call<User1> call, Throwable t) {
                         Toast.makeText(RegisterActivity.this, "Lỗi kết nối server!", Toast.LENGTH_SHORT).show();
                     }
                 });

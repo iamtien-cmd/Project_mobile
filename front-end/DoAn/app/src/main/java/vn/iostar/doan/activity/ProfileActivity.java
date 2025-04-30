@@ -16,7 +16,7 @@ import retrofit2.Response;
 import vn.iostar.doan.R;
 import vn.iostar.doan.api.ApiService;
 import vn.iostar.doan.model.Address;
-import vn.iostar.doan.model.User;
+import vn.iostar.doan.model.User1;
 
 public class ProfileActivity extends AppCompatActivity {
     private TextView emailTextView, fullNameTextView, phoneTextView, addressTextView;
@@ -45,25 +45,25 @@ public class ProfileActivity extends AppCompatActivity {
     }
     private void getUserInfo(String token) {
         ApiService.apiService.getUserInfo("Bearer " + token)
-                .enqueue(new Callback<User>() {
+                .enqueue(new Callback<User1>() {
             @Override
-            public void onResponse(Call<User> call, Response<User> response) {
+            public void onResponse(Call<User1> call, Response<User1> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    User user = response.body();
+                    User1 user = response.body();
                     updateUI(user);
                 } else {
                     Toast.makeText(ProfileActivity.this, "Lỗi: " + response.message(), Toast.LENGTH_SHORT).show();
                 }
             }
             @Override
-            public void onFailure(Call<User> call, Throwable t) {
+            public void onFailure(Call<User1> call, Throwable t) {
                 Log.e("API Error", "Yêu cầu thất bại: " + t.getMessage());
                 Toast.makeText(ProfileActivity.this, "Lỗi kết nối API", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    private void updateUI(User userInfo) {
+    private void updateUI(User1 userInfo) {
         emailTextView.setText(userInfo.getEmail());
         fullNameTextView.setText(userInfo.getFullName());
         phoneTextView.setText(userInfo.getPhone());

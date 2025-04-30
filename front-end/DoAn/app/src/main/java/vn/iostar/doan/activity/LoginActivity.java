@@ -2,7 +2,6 @@ package vn.iostar.doan.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -18,7 +17,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import vn.iostar.doan.R;
 import vn.iostar.doan.api.ApiService;
-import vn.iostar.doan.model.User;
+import vn.iostar.doan.model.User1;
 import vn.iostar.doan.modelRequest.LoginRequest;
 
 public class LoginActivity extends AppCompatActivity {
@@ -52,11 +51,11 @@ public class LoginActivity extends AppCompatActivity {
                 }
 
                 LoginRequest request = new LoginRequest(username, password);
-                ApiService.apiService.loginUser(request).enqueue(new Callback<User>() {
+                ApiService.apiService.loginUser(request).enqueue(new Callback<User1>() {
                     @Override
-                    public void onResponse(Call<User> call, Response<User> response) {
+                    public void onResponse(Call<User1> call, Response<User1> response) {
                         if (response.isSuccessful() && response.body() != null) {
-                            User user = response.body();
+                            User1 user = response.body();
                             Toast.makeText(LoginActivity.this, "Xin chào " + user.getFullName(), Toast.LENGTH_SHORT).show();
                             Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
                             intent.putExtra("token", user.getToken());
@@ -68,7 +67,7 @@ public class LoginActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onFailure(Call<User> call, Throwable t) {
+                    public void onFailure(Call<User1> call, Throwable t) {
                         Toast.makeText(LoginActivity.this, "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });

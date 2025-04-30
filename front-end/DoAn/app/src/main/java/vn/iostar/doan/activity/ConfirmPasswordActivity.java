@@ -16,7 +16,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import vn.iostar.doan.R;
 import vn.iostar.doan.api.ApiService;
-import vn.iostar.doan.model.User;
+import vn.iostar.doan.model.User1;
 import vn.iostar.doan.modelRequest.ForgotPasswordRequest;
 
 public class ConfirmPasswordActivity extends AppCompatActivity {
@@ -69,9 +69,9 @@ public class ConfirmPasswordActivity extends AppCompatActivity {
 
     private void resetPassword(ForgotPasswordRequest request) {
         // Make the API call to reset the password
-        ApiService.apiService.resetPassword(request).enqueue(new Callback<User>() {
+        ApiService.apiService.resetPassword(request).enqueue(new Callback<User1>() {
             @Override
-            public void onResponse(Call<User> call, Response<User> response) {
+            public void onResponse(Call<User1> call, Response<User1> response) {
                 if (response.isSuccessful()) {
                     // If password reset is successful, show message and redirect to LoginActivity
                     Toast.makeText(ConfirmPasswordActivity.this, "Password reset successfully", Toast.LENGTH_SHORT).show();
@@ -85,7 +85,7 @@ public class ConfirmPasswordActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<User> call, Throwable t) {
+            public void onFailure(Call<User1> call, Throwable t) {
                 // Handle failure (network error, etc.)
                 Toast.makeText(ConfirmPasswordActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }

@@ -1,19 +1,17 @@
 package vn.iostar.doan.model;
 
-import java.io.Serializable;
-
 public class Address  {
     private long addressId;
     private String houseNumber;
     private String district;
     private String city;
     private String country;
-    private User user;
+    private User1 user;
 
     public Address() {
     }
 
-    public Address(long addressId, String houseNumber, String district, String city, String country, User user) {
+    public Address(long addressId, String houseNumber, String district, String city, String country, User1 user) {
         this.addressId = addressId;
         this.houseNumber = houseNumber;
         this.district = district;
@@ -63,11 +61,11 @@ public class Address  {
         this.country = country;
     }
 
-    public User getUser() {
+    public User1 getUser() {
         return user;
     }
 
-    public void setUser(User user) {
+    public void setUser(User1 user) {
         this.user = user;
     }
 }

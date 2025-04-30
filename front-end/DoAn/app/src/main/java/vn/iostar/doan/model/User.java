@@ -3,21 +3,22 @@ package vn.iostar.doan.model;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-public class User1 implements Parcelable {
+public class User implements Parcelable {
     private long userId;
     private String email;
     private String otp;
     private String password;
     private String fullName;
+    private String token;
 
-    public User1(long userId) {
+    public User(long userId) {
         this.userId = userId;
     }
 
-    public User1() {
+    public User() {
     }
 
-    public User1(long userId, String email, String password, String fullName, String otp) {
+    public User(long userId, String email, String password, String fullName, String otp) {
         this.userId = userId;
         this.email = email;
         this.password = password;
@@ -25,7 +26,7 @@ public class User1 implements Parcelable {
         this.otp = otp;
     }
 
-    protected User1(Parcel in) {
+    protected User(Parcel in) {
         userId = in.readLong();
         email = in.readString();
         password = in.readString();
@@ -33,15 +34,15 @@ public class User1 implements Parcelable {
         otp =  in.readString();
     }
 
-    public static final Creator<User1> CREATOR = new Creator<User1>() {
+    public static final Creator<User> CREATOR = new Creator<User>() {
         @Override
-        public User1 createFromParcel(Parcel in) {
-            return new User1(in);
+        public User createFromParcel(Parcel in) {
+            return new User(in);
         }
 
         @Override
-        public User1[] newArray(int size) {
-            return new User1[size];
+        public User[] newArray(int size) {
+            return new User[size];
         }
     };
 
@@ -67,6 +68,13 @@ public class User1 implements Parcelable {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
     public String getFullName() {
         return fullName;

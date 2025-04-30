@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName;
 import java.time.LocalDateTime;
 
 import vn.iostar.doan.model.Product;
-import vn.iostar.doan.model.User;
+import vn.iostar.doan.model.User1;
 
 public class CommentRequest {
     private String content;
@@ -40,12 +40,12 @@ public class CommentRequest {
         this.productRef = productRef;
     }
 
-    public void setUserRef(User userRef) {
+    public void setUserRef(User1 userRef) {
         this.userRef = userRef;
     }
 
     @SerializedName("user") // Đảm bảo tên JSON key là "user"
-    private User userRef;     // Sử dụng lớp UserRef
+    private User1 userRef;     // Sử dụng lớp UserRef
 
     // Bỏ qua createdAt vì thường do server tạo
 
@@ -55,7 +55,7 @@ public class CommentRequest {
         this.rating = rating;   // Có thể bạn không cần gửi rating khi tạo? Xác nhận với backend.
         this.image = image;     // Có thể bạn không cần gửi image khi tạo?
         this.productRef = new Product(productId);
-        this.userRef = new User(userId);
+        this.userRef = new User1(userId);
     }
 
     // Getters (không bắt buộc cho việc gửi đi với Gson/Moshi, nhưng có thể hữu ích)
@@ -63,5 +63,5 @@ public class CommentRequest {
     public int getRating() { return rating; }
     public String getImage() { return image; }
     public Product getProductRef() { return productRef; }
-    public User getUserRef() { return userRef; }
+    public User1 getUserRef() { return userRef; }
 }

@@ -13,17 +13,15 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.http.Body;
-import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Part;
-import retrofit2.http.Path;
 import vn.iostar.doan.model.Comment;
 import vn.iostar.doan.model.Order;
 import vn.iostar.doan.model.Product;
-import vn.iostar.doan.model.User;
+import vn.iostar.doan.model.User1;
 import vn.iostar.doan.modelRequest.ChatRequest;
 import vn.iostar.doan.modelRequest.CommentRequest;
 import vn.iostar.doan.modelRequest.ForgotPasswordRequest;
@@ -44,16 +42,16 @@ public interface ApiService {
             .create(ApiService.class);
 
     @GET("/api/auth/info")
-    Call<User> getUserInfo(@Header("Authorization") String token);
+    Call<User1> getUserInfo(@Header("Authorization") String token);
 
     @POST("/api/auth/login")
-    Call<User> loginUser(@Body LoginRequest userRequest);
+    Call<User1> loginUser(@Body LoginRequest userRequest);
 
     @POST("/api/auth/register")
-    Call<User> registerUser(@Body User user);
+    Call<User1> registerUser(@Body User1 user);
 
     @POST("/api/auth/verifyOtpRegister")
-    Call<User> verifyOtpRegister(@Body RegisterRequest registerRequest);
+    Call<User1> verifyOtpRegister(@Body RegisterRequest registerRequest);
     @GET("api/products")
     Call<List<Product>> getListProducts();
     @GET("/api/orders/status/{userId}")
@@ -62,10 +60,10 @@ public interface ApiService {
     Call<ForgotPasswordRequest> forgotPassword(@Body ForgotPasswordRequest forgotPasswordRequest);
 
     @POST("/api/auth/verifyOtpForgotPassword")
-    Call<User> verifyOtpForgotPassword(@Body ForgotPasswordRequest forgotPasswordRequest);
+    Call<User1> verifyOtpForgotPassword(@Body ForgotPasswordRequest forgotPasswordRequest);
 
     @POST("/api/auth/reset-password")
-    Call<User> resetPassword(@Body ForgotPasswordRequest forgotPasswordRequest);
+    Call<User1> resetPassword(@Body ForgotPasswordRequest forgotPasswordRequest);
 
     @POST("/api/comments")
     Call<Comment> createComment(@Body CommentRequest commentRequest);

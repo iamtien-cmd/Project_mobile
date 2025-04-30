@@ -19,7 +19,6 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import vn.iostar.doan.R;
 import vn.iostar.doan.api.ApiService;
-import vn.iostar.doan.model.User;
 import vn.iostar.doan.modelRequest.ForgotPasswordRequest;
 
 public class ForgetPasswordActivity extends AppCompatActivity {
