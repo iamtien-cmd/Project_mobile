@@ -49,6 +49,8 @@ http://localhost:8080/api/auth/reset-password
 http://localhost:8080/api/orders/status/1 
 Với 1 là id của user
 ![image](https://github.com/user-attachments/assets/c17ce919-1424-4f5d-8c50-6d1369c47998)
+![image](https://github.com/user-attachments/assets/7a4772dd-0247-4713-82de-6ced52ca2c5b)
+
 
 # Test thêm bình luận
 http://localhost:8080/api/comments
