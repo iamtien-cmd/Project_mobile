@@ -19,7 +19,10 @@ public class SecurityConfig {
 						.requestMatchers("/api/auth/**",
 								"/api/product/**",
 								"/api/cart/**",
-								"/api/order/**")
+								"/api/order/**",
+								"/api/upload/**",
+								"/api/files/**",
+								"/api/addresses/**")
 						.permitAll()
 						.anyRequest().authenticated() // Các yêu cầu khác cần xác thực
 				);

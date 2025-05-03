@@ -6,17 +6,18 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import vn.iostar.Project_Mobile.entity.Cart;
 import vn.iostar.Project_Mobile.entity.CartItem;
 import vn.iostar.Project_Mobile.entity.Product;
 import vn.iostar.Project_Mobile.entity.User;
 import vn.iostar.Project_Mobile.repository.*;
-import vn.iostar.Project_Mobile.service.ICartService;
+        import vn.iostar.Project_Mobile.service.ICartService;
 
 @Service
 public class CartService implements ICartService{
-	@Autowired
+    @Autowired
     private CartRepository cartRepo;
 
     @Autowired
@@ -26,10 +27,17 @@ public class CartService implements ICartService{
     private ProductRepository productRepo;
 
     @Autowired
-    private IUserRepository userRepo;
-	@Override
-	public Cart getOrCreateCart(Long userId) {
-        User user = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+    private IUserRepository userRepo; // Keep IUserRepository
+
+    private User getUserById(Long userId) {
+        return userRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+    }
+
+    @Override
+    @Transactional
+    public Cart getOrCreateCart(Long userId) {
+        User user = getUserById(userId);
         Cart cart = cartRepo.findByUser_UserId(userId);
         if (cart == null) {
             cart = new Cart();
@@ -40,18 +48,23 @@ public class CartService implements ICartService{
     }
 
     @Override
-	public Cart addToCart(Long userId, Long productId, int quantity) {
-        Cart cart = getOrCreateCart(userId);
+    @Transactional
+    public Cart addToCart(Long userId, Long productId, int quantity) {
+        Cart cart = getOrCreateCart(userId); // userId is now validated from token
         Product product = productRepo.findById(productId)
-            .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new RuntimeException("Product not found with ID: " + productId));
 
-        // 🔒 Kiểm tra tồn kho
+        // 🔒 Stock check logic remains the same
         int stock = product.getQuantity();
         Optional<CartItem> optional = itemRepo.findByCart_CartIdAndProduct_ProductId(cart.getCartId(), productId);
         int existingQty = optional.map(CartItem::getQuantity).orElse(0);
 
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("Quantity must be positive.");
+        }
+
         if (existingQty + quantity > stock) {
-            throw new RuntimeException("Số lượng vượt quá số lượng sản phẩm trong kho! Còn lại: " + (stock - existingQty));
+            throw new RuntimeException("Số lượng yêu cầu (" + (existingQty + quantity) + ") vượt quá số lượng sản phẩm trong kho (" + stock + "). Bạn đã có " + existingQty + " trong giỏ.");
         }
 
         CartItem item;
@@ -66,32 +79,45 @@ public class CartService implements ICartService{
         }
 
         itemRepo.save(item);
-        return cartRepo.findById(cart.getCartId()).orElse(cart);
+        return cartRepo.findById(cart.getCartId())
+                .orElseThrow(() -> new RuntimeException("Cart not found after adding item, ID: " + cart.getCartId())); // Should not happen normally
     }
 
 
     @Override
-	public Cart updateCartItem(Long userId, Long productId, int newQuantity) {
-        Cart cart = getOrCreateCart(userId);
+    @Transactional
+    public Cart updateCartItem(Long userId, Long productId, int newQuantity) {
+        if (newQuantity <= 0) {
+            throw new IllegalArgumentException("Quantity must be positive. To remove, use the remove endpoint.");
+        }
+
+        Cart cart = getOrCreateCart(userId); // userId validated from token
         CartItem item = itemRepo.findByCart_CartIdAndProduct_ProductId(cart.getCartId(), productId)
-                .orElseThrow(() -> new RuntimeException("Item not found"));
+                .orElseThrow(() -> new RuntimeException("Item with Product ID " + productId + " not found in cart for user ID " + userId));
+
+        Product product = item.getProduct();
+        if (newQuantity > product.getQuantity()) {
+            throw new RuntimeException("Số lượng yêu cầu (" + newQuantity + ") vượt quá số lượng sản phẩm trong kho (" + product.getQuantity() + ").");
+        }
+
         item.setQuantity(newQuantity);
         itemRepo.save(item);
-        return cart;
+        return cartRepo.findById(cart.getCartId())
+                .orElseThrow(() -> new RuntimeException("Cart not found after updating item, ID: " + cart.getCartId()));
     }
 
     @Override
-	public void removeCartItem(Long userId, Long productId) {
-        Cart cart = getOrCreateCart(userId);
+    @Transactional
+    public void removeCartItem(Long userId, Long productId) {
+        Cart cart = getOrCreateCart(userId); // userId validated from token
         CartItem item = itemRepo.findByCart_CartIdAndProduct_ProductId(cart.getCartId(), productId)
-                .orElseThrow(() -> new RuntimeException("Item not found"));
+                .orElseThrow(() -> new RuntimeException("Item with Product ID " + productId + " not found in cart for user ID " + userId + ". Cannot remove.")); // More specific error
         itemRepo.delete(item);
     }
 
     @Override
-	public List<CartItem> getCartItems(Long userId) {
+    @Transactional(readOnly = true) // Good practice for read operations
+    public List<CartItem> getCartItems(Long userId) {
         Cart cart = cartRepo.findByUser_UserId(userId);
-        return cart != null ? cart.getCartItems() : new ArrayList<>();
-    }
-
-}
+        return cart != null ? itemRepo.findByCart_CartId(cart.getCartId()) : new ArrayList<>();
+    }}

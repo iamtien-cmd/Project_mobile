@@ -36,6 +36,9 @@ android {
 
 dependencies {
     implementation 'com.squareup.okhttp3:logging-interceptor:4.9.1'
+    implementation libs.androidx.fragment
+    implementation libs.androidx.navigation.fragment.ktx
+    implementation libs.androidx.navigation.ui.ktx
     annotationProcessor 'com.github.bumptech.glide:compiler:4.13.2'
     implementation 'de.hdodenhof:circleimageview:3.1.0'
     implementation 'me.relex:circleindicator:2.1.6'

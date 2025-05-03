@@ -106,8 +106,7 @@ public class OrderServiceImpl implements IOrderService {
 		newOrder.setStatus(OrderStatus.Waiting);
 
 
-		String add = shippingAddress.getHouseNumber()+ ", " + shippingAddress.getDistrict()+ ", " + shippingAddress.getCity()+ ", " + shippingAddress.getCountry();
-		newOrder.setShippingAddress(add);
+		
 
 		Order savedOrder = orderRepository.save(newOrder);
 

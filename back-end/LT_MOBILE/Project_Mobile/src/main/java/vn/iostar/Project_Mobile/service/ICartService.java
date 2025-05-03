@@ -13,19 +13,20 @@ import vn.iostar.Project_Mobile.repository.ProductRepository;
 
 public interface ICartService {
 
-	List<CartItem> getCartItems(Long userId);
+    Cart getOrCreateCart(Long userId);
 
-	void removeCartItem(Long userId, Long productId);
+    Cart addToCart(Long userId, Long productId, int quantity);
 
-	Cart updateCartItem(Long userId, Long productId, int newQuantity);
+    Cart updateCartItem(Long userId, Long productId, int newQuantity);
 
-	Cart addToCart(Long userId, Long productId, int quantity);
+    void removeCartItem(Long userId, Long productId);
 
-	Cart getOrCreateCart(Long userId);
+    List<CartItem> getCartItems(Long userId);
 
-	public static final CartRepository cartRepo = null;
-	public static final CartItemRepository itemRepo = null;
-	public static final ProductRepository productRepo = null;
-	public static final IUserRepository userRepo = null;
+    public static final CartRepository cartRepo = null;
+    public static final CartItemRepository itemRepo = null;
+    public static final ProductRepository productRepo = null;
+    public static final IUserRepository userRepo = null;
 
 }
+

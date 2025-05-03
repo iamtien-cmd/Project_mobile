@@ -22,7 +22,7 @@ import vn.iostar.doan.activity.ProductDetailActivity;
 import vn.iostar.doan.model.Product;
 
 public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHolder> {
-
+    private String token;
     private Context context;
     private List<Product> productList;
 
@@ -30,7 +30,11 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
         this.context = context;
         this.productList = productList;
     }
-
+    public ProductAdapter(Context context, List<Product> productList, String token) {
+        this.context = context;
+        this.productList = productList;
+        this.token = token; // <<< Lưu token
+    }
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -41,6 +45,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Product product = productList.get(position);
+        if (product == null) return;
         try {
             Glide.with(context)
                     .load(product.getImage())  // getImage() trả về URL
@@ -83,6 +88,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
 
                         Intent intent = new Intent(context, ProductDetailActivity.class);
                         intent.putExtra("productId", clickedProduct.getProductId());  // truyền id sản phẩm
+                        intent.putExtra("token", token);
                         context.startActivity(intent);
                     }
                 }
