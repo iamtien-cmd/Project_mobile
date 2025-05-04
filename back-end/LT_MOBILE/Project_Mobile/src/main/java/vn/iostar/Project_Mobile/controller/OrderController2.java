@@ -17,7 +17,7 @@ import vn.iostar.Project_Mobile.service.IOrderService;
 
 @RestController
 @RequestMapping("/api/orders")
-public class OrderController {
+public class OrderController2 {
 
     @Autowired
     private IOrderService orderService;
@@ -26,7 +26,9 @@ public class OrderController {
     @GetMapping("/status/{userId}")
     public ResponseEntity<List<Order>> getOrderStatusesByUser(@PathVariable Long userId) {
         try {
+        	System.err.println("Kiểm tra UserID " + userId);
             List<Order> orders = orderService.getOrdersByUserId(userId);
+            System.err.println("Kiểm tra Order "+ orders);
             if (orders == null || orders.isEmpty()) {
                 // Trả về 204 No Content hoặc 404 Not Found nếu không có đơn hàng
                  return ResponseEntity.noContent().build();

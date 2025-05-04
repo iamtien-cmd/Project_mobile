@@ -33,6 +33,10 @@ public class Product {
         this.comments = comments;
         this.relatedProducts = relatedProducts;
     }
+    public Product(long id) {
+        this.productId = id;
+    }
+
 
     public Product(long productId, String image, String name, double price, String description, Category category) {
         this.productId = productId;

@@ -1,67 +1,26 @@
 package vn.iostar.doan.model;
+import java.util.List;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-
-public class User implements Parcelable {
-    private long userId;
-    private String email;
-    private String otp;
-    private String password;
-    private String fullName;
+public class User {
     private String token;
 
-    public User(long userId) {
+    private long userId;
+
+    public long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(long userId) {
         this.userId = userId;
     }
 
-    public User() {
-    }
+    private String email;
+    private String fullName;
+    private String phone;
+    private String avatar;
+    private List<Address> addresses;
 
-    public User(long userId, String email, String password, String fullName, String otp) {
-        this.userId = userId;
-        this.email = email;
-        this.password = password;
-        this.fullName = fullName;
-        this.otp = otp;
-    }
-
-    protected User(Parcel in) {
-        userId = in.readLong();
-        email = in.readString();
-        password = in.readString();
-        fullName = in.readString();
-        otp =  in.readString();
-    }
-
-    public static final Creator<User> CREATOR = new Creator<User>() {
-        @Override
-        public User createFromParcel(Parcel in) {
-            return new User(in);
-        }
-
-        @Override
-        public User[] newArray(int size) {
-            return new User[size];
-        }
-    };
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeLong(userId);
-        dest.writeString(email);
-        dest.writeString(password);
-        dest.writeString(fullName);
-        dest.writeString(otp);
-
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    // Getters và setters
+    // Getter và Setter
     public String getEmail() {
         return email;
     }
@@ -84,11 +43,27 @@ public class User implements Parcelable {
         this.fullName = fullName;
     }
 
-    public String getOtp() {
-        return otp;
+    public String getPhone() {
+        return phone;
     }
 
-    public void setOtp(String otp) {
-        this.otp = otp;
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
+
+    public List<Address> getAddresses() {
+        return addresses;
+    }
+
+    public void setAddresses(List<Address> addresses) {
+        this.addresses = addresses;
     }
 }

@@ -7,7 +7,9 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
+import vn.iostar.Project_Mobile.util.OrderStatus;
+import vn.iostar.Project_Mobile.util.PaymentMethod;
+import vn.iostar.Project_Mobile.entity.User;
 import java.util.Date; // <<< Đổi sang java.util.Date
 import java.util.List;
 import java.util.ArrayList; // <<< Import nếu khởi tạo list rỗng
@@ -33,7 +35,7 @@ public class Order {
 
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
-
+    private String shippingAddress;
     // === THÊM FetchType.LAZY VÀ @JsonIgnoreProperties CHO USER ===
     @ManyToOne(fetch = FetchType.LAZY) // <<< Tải trễ User
     @JoinColumn(name = "user_id")
@@ -48,8 +50,9 @@ public class Order {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY) // <<< Tải trễ OrderLine
     @JsonManagedReference // Phía chính của quan hệ Order <-> OrderLine
     private List<OrderLine> orderLines = new ArrayList<>(); // Khởi tạo để tránh NullPointerException
-
-    private String paymentMethod;
+    
+    @Enumerated(EnumType.STRING)
+    private PaymentMethod paymentMethod;
 
     // Thêm trường này nếu cần cho logic review ở frontend
     private boolean reviewed = false;

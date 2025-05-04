@@ -1,7 +1,11 @@
 package vn.iostar.doan.activity;
 
+import static android.content.ContentValues.TAG;
+
 import android.content.Intent; // <<< THÊM IMPORT INTENT
 import android.os.Bundle;
+import android.util.Log;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -38,6 +42,15 @@ public class OrderHistoryActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_order_history);
+        currentUserId = getIntent().getLongExtra("user_id", currentUserId); // *** Dùng đúng key "user_id" ***
+
+        // Kiểm tra xem userId có hợp lệ không
+        if (currentUserId <= 0) {
+            Log.e(TAG, "Invalid User ID received: " + currentUserId);
+            Toast.makeText(this, "Error: Could not load user history.", Toast.LENGTH_LONG).show();
+            finish(); // Đóng Activity nếu không có ID hợp lệ
+            return;
+        }
 
         toolbar = findViewById(R.id.toolbar); // Đảm bảo ID toolbar đúng trong layout
         setSupportActionBar(toolbar);

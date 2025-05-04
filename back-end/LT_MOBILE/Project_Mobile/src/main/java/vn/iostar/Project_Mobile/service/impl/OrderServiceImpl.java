@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional; // Quan trọng
 import vn.iostar.Project_Mobile.DTO.CreateOrderRequest;
 import vn.iostar.Project_Mobile.entity.*;
+import vn.iostar.Project_Mobile.exception.ResourceNotFoundException;
 import vn.iostar.Project_Mobile.repository.*;
 import vn.iostar.Project_Mobile.service.IOrderService;
 import vn.iostar.Project_Mobile.util.OrderStatus; // Import enum OrderStatus
@@ -103,7 +104,7 @@ public class OrderServiceImpl implements IOrderService {
 		long predictMillis = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(5);
 		newOrder.setPredictReceiveDate(new Date(predictMillis));
 		newOrder.setPaymentMethod(request.getPaymentMethod());
-		newOrder.setStatus(OrderStatus.Waiting);
+		newOrder.setStatus(OrderStatus.WAITING);
 
 
 		String add = shippingAddress.getHouseNumber()+ ", " + shippingAddress.getDistrict()+ ", " + shippingAddress.getCity()+ ", " + shippingAddress.getCountry();
@@ -135,7 +136,15 @@ public class OrderServiceImpl implements IOrderService {
 	}
 	
     public List<Order> getOrdersByUserId(Long userId) {
-        return orderRepository.findByUserUserId(userId);
+    	  try {
+              // Kiểm tra xem userId có tồn tại không
+              List<Order> orders = orderRepository.findByUserId(userId);
+              System.err.println("Lấy đơn hàng: " + orders);
+              return orders;
+          } catch (Exception e) {
+              e.printStackTrace(); // In ra lỗi nếu có
+              throw e; // Ném lại exception nếu có lỗi
+          }
     }
     @Override
     @Transactional // Đảm bảo thao tác cập nhật là một transaction

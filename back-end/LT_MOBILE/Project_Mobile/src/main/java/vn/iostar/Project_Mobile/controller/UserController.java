@@ -54,13 +54,14 @@ public class UserController {
 	            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
 	                    .body("Email không tồn tại trong hệ thống!");
 	        }
-
+	        
 	        User user = userOpt.get();
-
+	       
 	        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
 	            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
 	                    .body("Mật khẩu không chính xác!");
 	        }
+	        
 
 	        String token = UUID.randomUUID().toString();
 

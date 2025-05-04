@@ -4,6 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    tools:context=".activity.MainActivity"
+    android:id="@+id/mainCoordinatorLayout"
     android:background="@android:color/white">
 
     <!-- Header -->
@@ -55,7 +57,7 @@
         android:textSize="20sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintBottom_toTopOf="@id/rc_category"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rc_category"
@@ -84,6 +86,7 @@
         app:layout_constraintTop_toBottomOf="@id/rc_category" />
 
     <!--list danh sách product-->
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rclcon"
         android:layout_width="match_parent"
@@ -94,6 +97,40 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/viewFlipperMain"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintVertical_bias="1.0" />
+
+    <FrameLayout
+        android:id="@+id/fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
+    <!-- Bỏ android:layout_above, không cần thiết/không đúng trong CoordinatorLayout kiểu này -->
+    <!-- layout_behavior giúp xử lý cuộn nếu có AppBar, nhưng match_parent thường là đủ -->
+
+    <ImageView
+        android:id="@+id/chatBotIcon"
+        android:layout_width="86dp"
+        android:layout_height="86dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="72dp"
+    android:src="@drawable/ic_chatbot_icon"
+    android:contentDescription="Chat Bot"
+    android:padding="12dp"
+    android:elevation="8dp"
+    android:clickable="true"
+    android:focusable="true"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Thanh điều hướng dưới cùng -->
+    <include
+        layout="@layout/footer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

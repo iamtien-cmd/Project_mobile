@@ -2,6 +2,7 @@ package vn.iostar.doan.adapter;
 
 import android.annotation.SuppressLint; // Import nếu cần
 import android.content.Context; // <<< THÊM IMPORT CONTEXT
+import android.content.Intent;
 import android.content.res.Resources; // Có thể bỏ import này nếu không dùng try-catch nữa
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -31,7 +32,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
 
     private Context context;
     private List<Product> productList;
-    private Context context; // <<< Thêm biến Context
+
     private NumberFormat currencyFormatter; // <<< Thêm biến định dạng tiền tệ
     // Thêm listener nếu bạn cần xử lý click
     // private OnProductClickListener listener;
@@ -46,6 +47,14 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
         // Khởi tạo định dạng tiền tệ (ví dụ: VNĐ)
         this.currencyFormatter = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
         // this.listener = listener; // Nếu có listener
+    }
+    private long userId;
+
+    public ProductAdapter(Context context, List<Product> productList, long userId) {
+        this.context = context;
+        this.productList = (productList != null) ? productList : new ArrayList<>();
+        this.currencyFormatter = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+        this.userId = userId; // Lưu userId
     }
     // ---------------------
 
@@ -140,14 +149,13 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
                         .load(R.drawable.ic_error_image) // Hoặc R.drawable.ic_placeholder_image
                         .into(imageView);
             }
-            // ==================================
+            itemView.setOnClickListener(v -> {
+                Intent intent = new Intent(context, ProductDetailActivity.class);
+                intent.putExtra("product_id", product.getProductId()); // Truyền ID sản phẩm
+                intent.putExtra("user_id", userId);             // Truyền userId (cần có biến userId ở Adapter)
+                context.startActivity(intent);
+            });
 
-            // Thêm sự kiện click nếu cần
-            // itemView.setOnClickListener(v -> {
-            //     if (listener != null) {
-            //         listener.onProductClick(product);
-            //     }
-            // });
         }
         // ------------------------------------
     }

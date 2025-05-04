@@ -38,6 +38,7 @@ public class Comment {
 	   // Quan hệ N-1: Một Comment thuộc về 1 User
 	@ManyToOne
 	@JoinColumn(name = "user_id") 
+	@JsonBackReference
 	private User user;
 
 

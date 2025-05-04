@@ -2,6 +2,8 @@ package vn.iostar.doan.api;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
+import retrofit2.http.Header;
 import retrofit2.http.Path;
 
 import okhttp3.MultipartBody;
@@ -18,9 +20,11 @@ import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Part;
+import vn.iostar.doan.model.Category;
 import vn.iostar.doan.model.Comment;
 import vn.iostar.doan.model.Order;
 import vn.iostar.doan.model.Product;
+import vn.iostar.doan.model.User;
 import vn.iostar.doan.model.User1;
 import vn.iostar.doan.modelRequest.ChatRequest;
 import vn.iostar.doan.modelRequest.CommentRequest;
@@ -36,16 +40,16 @@ public interface ApiService {
             .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
             .create();
     ApiService apiService = new Retrofit.Builder()
-            .baseUrl("http://192.168.1.7:8080/")
+            .baseUrl("http://192.168.1.11:8080/")
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
             .create(ApiService.class);
 
     @GET("/api/auth/info")
-    Call<User1> getUserInfo(@Header("Authorization") String token);
+    Call<User> getUserInfo(@Header("Authorization") String token);
 
     @POST("/api/auth/login")
-    Call<User1> loginUser(@Body LoginRequest userRequest);
+    Call<User> loginUser(@Body LoginRequest userRequest);
 
     @POST("/api/auth/register")
     Call<User1> registerUser(@Body User1 user);

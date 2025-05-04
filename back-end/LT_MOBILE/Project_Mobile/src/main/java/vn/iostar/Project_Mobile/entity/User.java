@@ -7,7 +7,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-
+import vn.iostar.Project_Mobile.entity.Order;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -24,7 +24,7 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long userId;
+    private Long userId;
   
 
     @Column(unique = true, nullable = false)
@@ -56,11 +56,11 @@ public class User {
  // Quan hệ 1-N: Một User có nhiều Comment
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
+    @ToString.Exclude
     private List<Comment> comments = new ArrayList<>();
 
     
-    @OneToOne(mappedBy = "user")
-    private Favorite favorite;
+    
     
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     @JsonIgnore
