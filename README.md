@@ -2,10 +2,11 @@
 # Handmade
 Link: https://drive.google.com/file/d/1GVgKhK26V8Z96uTEEyROwZ1zyFLVAPKq/view?usp=sharing 
 # class diagram
-![image](https://github.com/user-attachments/assets/6778c6ab-4d4d-4608-99e1-3e7e112b815f)
+![image](https://github.com/user-attachments/assets/e99d69dd-24fe-4892-a412-b3400295457d)
+
 
 # usecase diagram
-![image](https://github.com/user-attachments/assets/e562f32b-6892-4488-9a0c-06631d8a681f)
+![image](https://github.com/user-attachments/assets/905ca45d-ae93-489a-89dc-d4e0b28ee625)
 
 
 # ERD
