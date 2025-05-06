@@ -8,7 +8,18 @@
     android:background="#F0F0F0"
     android:fitsSystemWindows="true"
     tools:context=".activity.OrderActivity">
-
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:indeterminate="true"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="visible" />
     <!-- Header -->
     <!-- Bạn có thể include một header layout tùy chỉnh hoặc sử dụng Toolbar -->
     <androidx.appcompat.widget.Toolbar
@@ -101,12 +112,6 @@
                                 android:textSize="14sp"/>
                         </LinearLayout>
 
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@drawable/ic_arrow_right"
-                            app:tint="@color/gray"/>
-
                     </LinearLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -144,71 +149,83 @@
                         android:layout_marginTop="8dp"
                         android:nestedScrollingEnabled="false"
                         tools:itemCount="2"
-                        tools:listitem="@layout/item_cart" /> <!-- Cần tạo layout này -->
+                        tools:listitem="@layout/item_checkout_cart" /> <!-- Cần tạo layout này -->
 
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Phần Phương thức thanh toán -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardPaymentMethod"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="2dp">
+            <!-- Bỏ clickable, focusable, foreground vì dùng RadioButton -->
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginBottom="8dp"
-                app:cardCornerRadius="8dp"
-                app:cardElevation="2dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?android:attr/selectableItemBackground">
+                android:orientation="vertical"
+                android:padding="16dp">
 
-                <LinearLayout
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Phương thức thanh toán"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="12dp"/> <!-- Thêm margin bottom -->
+
+                <!-- RadioGroup để chứa các lựa chọn thanh toán -->
+                <RadioGroup
+                    android:id="@+id/rgPaymentMethod"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:orientation="vertical">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Phương thức thanh toán"
-                        android:textColor="@color/black"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <LinearLayout
+                    <!-- Lựa chọn COD -->
+                    <RadioButton
+                        android:id="@+id/rbCOD"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:text="Thanh toán khi nhận hàng (COD)"
+                        android:textSize="14sp"
+                        android:textColor="@color/black"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:drawableStart="@drawable/ic_payment"
+                    android:drawablePadding="12dp"
+                    android:checked="true" />
+
+                    <!-- Đường kẻ phân cách (tùy chọn) -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#E0E0E0"
+                        android:layout_marginStart="40dp"
                         android:layout_marginTop="8dp"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
+                        android:layout_marginBottom="8dp"/>
 
-                        <ImageView
-                            android:id="@+id/ivPaymentIcon"
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@drawable/ic_payment"
-                            app:tint="@color/gray"
-                            android:layout_marginEnd="8dp"/>
+                    <!-- Lựa chọn VNPAY -->
+                    <RadioButton
+                        android:id="@+id/rbVNPAY"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Thanh toán qua VNPAY"
+                        android:textSize="14sp"
+                        android:textColor="@color/black"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:drawableStart="@drawable/ic_vnpay"
+                    android:drawablePadding="12dp"/>
 
-                        <TextView
-                            android:id="@+id/tvPaymentMethod"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            tools:text="Thanh toán khi nhận hàng (COD)"
-                            android:textColor="@color/black"
-                            android:textSize="14sp"/>
-
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@drawable/ic_arrow_right"
-                            app:tint="@color/gray"/>
-                    </LinearLayout>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+                </RadioGroup>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
             <!-- Phần Tóm tắt đơn hàng -->
             <androidx.cardview.widget.CardView

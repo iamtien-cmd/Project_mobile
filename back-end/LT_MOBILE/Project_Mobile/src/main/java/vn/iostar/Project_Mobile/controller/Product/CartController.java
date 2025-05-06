@@ -1,15 +1,22 @@
 package vn.iostar.Project_Mobile.controller.Product;
 
 import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-        import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import vn.iostar.Project_Mobile.DTO.CartItemDetailsRequest;
 import vn.iostar.Project_Mobile.DTO.CartItemRequest;
+import vn.iostar.Project_Mobile.DTO.SelectedItemDetailDTO;
 import vn.iostar.Project_Mobile.entity.Cart;
 import vn.iostar.Project_Mobile.entity.CartItem;
 import vn.iostar.Project_Mobile.entity.User;
@@ -25,6 +32,8 @@ public class CartController {
     @Autowired
     private ICartService cartService;
 
+    private static final Logger logger = LoggerFactory.getLogger(CartController.class);
+    
     @Autowired
     private UserServiceImpl userService;
     private Optional<User> getUserFromToken(String authHeader) {
@@ -110,6 +119,34 @@ public class CartController {
         } catch (Exception e) {
             // Log the exception e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while retrieving cart items.");
+        }
+    }
+    
+    @PostMapping("/items/details")
+    public ResponseEntity<?> getSelectedCartItemDetails(
+            @RequestHeader("Authorization") String authHeader,
+            @Valid @RequestBody CartItemDetailsRequest request) {
+
+        Optional<User> userOpt = getUserFromToken(authHeader);
+        if (userOpt.isEmpty()) {
+            logger.warn("Unauthorized attempt to get cart item details: Invalid token or header.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Token không hợp lệ hoặc bị thiếu."));
+        }
+        User currentUser = userOpt.get();
+        logger.info("User '{}' requesting details for cartItemIds: {}", currentUser.getUserId(), request.getCartItemIds());
+
+        try {
+            List<SelectedItemDetailDTO> itemDetails = cartService.getDetailsForSelectedItems(currentUser, request.getCartItemIds());
+            logger.debug("Successfully fetched {} item details for user '{}'", itemDetails.size(), currentUser.getUserId());
+            return ResponseEntity.ok(itemDetails); // Trả về danh sách DTO chi tiết
+
+        } catch (NoSuchElementException e) {
+            logger.warn("Not Found error while getting cart item details for user '{}': {}", currentUser.getUserId(), e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Unexpected error getting cart item details for user '{}'", currentUser.getUserId(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Lỗi hệ thống khi lấy chi tiết giỏ hàng."));
         }
     }
 }

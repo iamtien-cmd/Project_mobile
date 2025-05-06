@@ -1,10 +1,12 @@
 package vn.iostar.Project_Mobile.entity;
 
+import java.math.BigDecimal;
 import java.sql.Date;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -35,12 +37,15 @@ public class Order {
 	private Date orderDate;
 	private Date predictReceiveDate;
 
+	@Column(nullable = false)
+	private double itemsSubtotal; 
+	
 	@Enumerated(EnumType.STRING)
 	private PaymentMethod paymentMethod;
 
 	@Enumerated(EnumType.STRING)
 	private OrderStatus status;
-	
+		
     private String shippingAddress;
 
 	@ManyToOne
@@ -48,6 +53,5 @@ public class Order {
 	private User user;
 
 	@OneToMany(mappedBy = "order")
-	@JsonIgnore
 	private List<OrderLine> orderLines;
 }

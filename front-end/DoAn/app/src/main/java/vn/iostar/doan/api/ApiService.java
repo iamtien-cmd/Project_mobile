@@ -28,13 +28,18 @@ import vn.iostar.doan.model.Address;
 import vn.iostar.doan.model.Cart;
 import vn.iostar.doan.model.CartItem;
 import vn.iostar.doan.model.Category;
+import vn.iostar.doan.model.Order;
 import vn.iostar.doan.model.Product;
+import vn.iostar.doan.model.SelectedItemDetail;
 import vn.iostar.doan.model.User;
 import vn.iostar.doan.modelRequest.CartActionRequest;
+import vn.iostar.doan.modelRequest.CartItemDetailsRequest;
+import vn.iostar.doan.modelRequest.CreateOrderRequest;
 import vn.iostar.doan.modelRequest.LoginRequest;
 import vn.iostar.doan.modelRequest.RegisterRequest;
 import vn.iostar.doan.modelRequest.UpdateProfileRequest;
 import vn.iostar.doan.modelResponse.AddressInputDTO;
+import vn.iostar.doan.modelResponse.CreateOrderResponseDTO;
 import vn.iostar.doan.modelResponse.ImageUploadResponse;
 
 public interface ApiService {
@@ -74,6 +79,12 @@ public interface ApiService {
 
     @POST("api/cart/add")
     Call<Cart> addToCart(@Header("Authorization") String token, @Body CartActionRequest request);
+
+    @POST("/api/cart/items/details")
+    Call<List<SelectedItemDetail>> getSelectedCartItemDetails(
+                                                               @Header("Authorization") String authToken,
+                                                               @Body CartItemDetailsRequest request
+    );
 
     @GET("api/cart/items")
     Call<List<CartItem>> getCartItems(@Header("Authorization") String token);
@@ -135,5 +146,16 @@ public interface ApiService {
             @Header("Authorization") String authHeader
     );
 
+    @POST("api/order/createOrder") // Make sure endpoint path is correct
+    Call<CreateOrderResponseDTO> createOrder( // <--- CHANGE Return Type Here
+                                              @Header("Authorization") String authorization,
+                                              @Body CreateOrderRequest orderRequest
+    );
+
+    @GET("/api/order/{orderId}")
+    Call<Order> getOrderDetails(
+                                 @Header("Authorization") String authToken,
+                                 @Path("orderId") Long orderId
+    );
 
 }

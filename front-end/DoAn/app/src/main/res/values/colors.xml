@@ -7,4 +7,7 @@
     <color name="gray">#808080</color>
     <color name="yellow">#FFD700</color>
     <color name="red">#F45000</color>
+    <color name="grey_dark">#616161</color>
+    <color name="grey_darker">#424242</color>
+    <!-- Thêm các màu khác nếu bạn dùng tên khác -->
 </resources>

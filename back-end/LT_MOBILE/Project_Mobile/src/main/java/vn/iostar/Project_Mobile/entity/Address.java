@@ -34,40 +34,36 @@ public class Address {
 	 @GeneratedValue(strategy = GenerationType.IDENTITY)
 	 private long addressId;
 	 
-	 	@Column(nullable = true) // Cho phép null nếu dùng chung cho địa chỉ user
-	    private String recipientName; // Tên người nhận tại địa chỉ này
+	 	@Column(nullable = true) 
+	    private String recipientName; 
 
-	    @Column(nullable = true) // Cho phép null nếu dùng chung cho địa chỉ user
-	    private String recipientPhone; // SĐT người nhận tại địa chỉ này
+	    @Column(nullable = true) 
+	    private String recipientPhone; 
 
-	    // --- Chi tiết địa chỉ ---
-	    @Column(nullable = true) // Số nhà, tên đường, ngõ, hẻm...
-	    private String streetAddress; // Ví dụ: "189/36 Định Phong Phú" hoặc "Số 203 Đường Điện Biên Phủ"
+	    @Column(nullable = true) 
+	    private String streetAddress;
 
-	    @Column(nullable = true) // Phường / Xã - RẤT QUAN TRỌNG
-	    private String ward;          // Ví dụ: "Tăng Nhơn Phú B", "Hoài Đức" (Trong TH Hoài Đức là xã)
+	    @Column(nullable = true) 
+	    private String ward; 
 
-	    @Column(nullable = false) // Quận / Huyện / Thị xã / Thành phố thuộc tỉnh
-	    private String district;      // Ví dụ: "Thủ Đức", "Hoài Nhơn"
+	    @Column(nullable = false)
+	    private String district;
 
-	    @Column(nullable = false) // Tỉnh / Thành phố trực thuộc trung ương
-	    private String city;          // Ví dụ: "Hồ Chí Minh", "Bình Định"
+	    @Column(nullable = false) 
+	    private String city;    
 
-	    @Column(nullable = true) // Quốc gia (Có thể mặc định là "Việt Nam" nếu ứng dụng chỉ ở VN)
+	    @Column(nullable = true) 
 	    private String country;
 
-	    // --- Trạng thái địa chỉ ---
 	    @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
-	    private boolean isDefault = false; // Đánh dấu địa chỉ mặc định
+	    private boolean isDefault = false; 
 
-	    // --- Quan hệ với User ---
-	    @ManyToOne(fetch = FetchType.LAZY) // Sử dụng LAZY loading
-	    @JoinColumn(name = "user_id", nullable = false) // Khóa ngoại không được null
-	    @JsonBackReference // Tránh vòng lặp JSON khi serialize
-	    @ToString.Exclude // Tránh vòng lặp khi gọi toString()
+	    @ManyToOne(fetch = FetchType.LAZY) 
+	    @JoinColumn(name = "user_id", nullable = false)
+	    @JsonBackReference 
+	    @ToString.Exclude 
 	    private User user;
 
-	    // --- (Tùy chọn) Lưu trữ Place ID từ Goong ---
 	    @Column(nullable = true)
 	    private String goongPlaceId;
 

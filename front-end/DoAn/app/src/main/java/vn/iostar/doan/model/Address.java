@@ -36,6 +36,7 @@ public class Address  implements Serializable{
     public Address() {
     }
 
+
     // Getters and Setters
     public Long getAddressId() {
         return addressId;

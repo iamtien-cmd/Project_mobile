@@ -22,7 +22,8 @@ public class SecurityConfig {
 								"/api/order/**",
 								"/api/upload/**",
 								"/api/files/**",
-								"/api/addresses/**")
+								"/api/addresses/**",
+								"/api/vnpay/**")
 						.permitAll()
 						.anyRequest().authenticated() // Các yêu cầu khác cần xác thực
 				);

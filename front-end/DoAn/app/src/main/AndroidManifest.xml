@@ -43,6 +43,25 @@
         <activity android:name=".activity.ShippingAddressActivity"/>
         <activity android:name=".activity.AddressFormActivity"/>
         <activity android:name=".activity.AboutUsActivity"/>
+        <activity android:name=".activity.OrderActivity"/>
+        <activity android:name=".activity.OrderSuccessActivity"/>
+        <activity android:name=".activity.OrderDetailActivity"/>
+        <activity
+            android:name=".activity.VNPAYPaymentActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+        android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+
+        <!-- Intent Filter để bắt Custom Scheme URL từ VNPAY -->
+        <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <!-- Thay "myapp" và "vnpayresult" nếu bạn dùng scheme/host khác -->
+            <data android:scheme="myapp" android:host="vnpayresult" />
+        </intent-filter>
+
+    </activity>
     </application>
 
 </manifest>

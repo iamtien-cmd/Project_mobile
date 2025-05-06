@@ -252,34 +252,46 @@ public class ProductDetailActivity extends AppCompatActivity {
 
     private void showLoading(boolean isLoading) {
         progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+
         if (isLoading) {
+            // Khi bắt đầu loading (cho cả fetch ban đầu và add to cart), ẩn content và error
             showContent(false);
-            showError(null);
+            showError(null); // Xóa lỗi cũ nếu có khi bắt đầu loading mới
+        } else {
+            // Khi loading kết thúc:
+            // Chỉ hiện lại content nếu không có lỗi nào đang được hiển thị.
+            // Điều này đảm bảo nếu fetch ban đầu bị lỗi, content sẽ không hiện lại.
+            // Nếu chỉ là loading của add to cart, error view sẽ đang GONE.
+            if (textViewError.getVisibility() == View.GONE) {
+                showContent(true);
+            }
+            // Nếu textViewError đang VISIBLE, nghĩa là có lỗi (thường là lỗi fetch ban đầu),
+            // không nên gọi showContent(true) vì nó sẽ ẩn thông báo lỗi.
         }
     }
 
+    // Hàm showError nên đảm bảo ẩn content khi hiển thị lỗi
     private void showError(String message) {
         if (message != null) {
             textViewError.setText(message);
             textViewError.setVisibility(View.VISIBLE);
-            showContent(false);
+            showContent(false); // Quan trọng: Ẩn content khi có lỗi
         } else {
             textViewError.setVisibility(View.GONE);
         }
     }
 
+    // Hàm showContent giữ nguyên
     private void showContent(boolean show) {
         if (nestedScrollViewContent != null) {
             nestedScrollViewContent.setVisibility(show ? View.VISIBLE : View.GONE);
-        } else {
-            textViewProductName.setVisibility(show ? View.VISIBLE : View.GONE);
-            textViewProductPrice.setVisibility(show ? View.VISIBLE : View.GONE);
-            textViewProductQuantity.setVisibility(show ? View.VISIBLE : View.GONE);
-            textViewProductCategory.setVisibility(show ? View.VISIBLE : View.GONE);
-            textViewProductDescription.setVisibility(show ? View.VISIBLE : View.GONE);
         }
+        // Nút Add to cart cũng nên đi theo content
         fabAddToCart.setVisibility(show ? View.VISIBLE : View.GONE);
     }
+
+// Không cần thay đổi trong addProductToCart, onResponse, onFailure
+// vì logic đã được chuyển vào showLoading và showError
 
     private void addProductToCart(long productId, int quantity) {
         if (apiService == null) {

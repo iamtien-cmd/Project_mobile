@@ -16,6 +16,9 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
+    buildFeatures {
+        viewBinding true
+    }
 
     buildTypes {
         release {
@@ -35,6 +38,7 @@ android {
 }
 
 dependencies {
+    implementation "androidx.browser:browser:1.5.0"
     implementation 'com.squareup.okhttp3:logging-interceptor:4.9.1'
     implementation libs.androidx.fragment
     implementation libs.androidx.navigation.fragment.ktx

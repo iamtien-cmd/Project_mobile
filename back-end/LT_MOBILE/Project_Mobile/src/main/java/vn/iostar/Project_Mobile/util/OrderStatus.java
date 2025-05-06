@@ -1,5 +1,5 @@
 package vn.iostar.Project_Mobile.util;
 
 public enum OrderStatus {
-	Waiting, Reviewed, Delivered , 	Shipping, 	Error
+	Waiting, Pending, Reviewed, Delivered , 	Shipping, 	Error, Cancelled
 }

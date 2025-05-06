@@ -19,6 +19,7 @@ public class OrderLine {
     private long orderLineId;
 
     private int quantity;
+    private double price;
 
     @ManyToOne
     @JoinColumn(name = "order_id") // KHÔNG ĐƯỢC DÙNG "order"
