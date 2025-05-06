@@ -13,12 +13,13 @@ import vn.iostar.Project_Mobile.entity.User;
 import java.util.Date; // <<< Đổi sang java.util.Date
 import java.util.List;
 import java.util.ArrayList; // <<< Import nếu khởi tạo list rỗng
-
+import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
 @Entity
 @Table(name = "orders")
+@ToString(exclude = {"user", "orderLines"})
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

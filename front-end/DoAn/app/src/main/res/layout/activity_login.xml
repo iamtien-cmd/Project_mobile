@@ -48,7 +48,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Rediscover Vietnam's lost treasures."
+                android:text="Khám phá những hàng thủ công mỹ nghệ ở Việt Nam"
                 android:textSize="18sp"
                 android:textColor="@color/white"
                 android:textStyle="italic"

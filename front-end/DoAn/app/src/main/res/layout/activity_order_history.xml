@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@drawable/bg_card"
-    >
+    tools:context=".activity.OrderHistoryActivity">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
@@ -20,14 +20,16 @@
             android:background="?attr/colorPrimary"
             android:backgroundTint="@color/black"
             app:navigationIcon="?attr/homeAsUpIndicator"
-            app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+            app:title="Theo dõi đơn hàng" /> <!-- Đặt tiêu đề mặc định -->
 
 
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/tab_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:tabMode="scrollable" />
+            app:tabMode="scrollable" /> <!-- 'scrollable' là ổn nếu có nhiều tab. Nếu ít (2-4 tab), cân nhắc 'fixed' -->
+        <!-- Nếu dùng 'fixed', có thể thêm: app:tabGravity="fill" -->
 
     </com.google.android.material.appbar.AppBarLayout>
 

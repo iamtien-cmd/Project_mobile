@@ -57,7 +57,7 @@ public class OrderHistoryActivity extends AppCompatActivity {
 
         // --- KÍCH HOẠT VÀ CẤU HÌNH ACTIONBAR/TOOLBAR ---
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle("Order history"); // Đặt tiêu đề
+            getSupportActionBar().setTitle("Theo dõi trạng thái đơn hàng"); // Đặt tiêu đề
             getSupportActionBar().setDisplayHomeAsUpEnabled(true); // <<< HIỂN THỊ NÚT BACK
             getSupportActionBar().setDisplayShowHomeEnabled(true); // <<< Đảm bảo icon được hiển thị (tùy theme)
         }

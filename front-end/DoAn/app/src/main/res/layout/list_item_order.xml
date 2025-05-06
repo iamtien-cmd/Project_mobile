@@ -42,7 +42,7 @@
                 android:textSize="14sp"
                 android:textStyle="bold|italic"
                 tools:textColor="@color/purple_500"
-                tools:text="Shipping" />
+            tools:text="Đang vận chuyển" />
 
         </LinearLayout>
 
@@ -53,27 +53,29 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:textSize="14sp"
-            tools:text="Ngày đặt: 2023-10-27 10:30:00" />
+            tools:text="Ngày đặt: 27/10/2023 10:30" />
 
-        <!-- (Optional) Ngày dự kiến nhận -->
+        <!-- Ngày dự kiến nhận -->
         <TextView
             android:id="@+id/tv_predict_date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:textSize="14sp"
-            tools:text="Dự kiến nhận: 2023-11-01"
-            android:visibility="gone"/> <!-- Set visible nếu có dữ liệu -->
+            android:visibility="gone"
+        tools:visibility="visible"
+        tools:text="Dự kiến nhận: 01/11/2023" />
 
-        <!-- (Optional) Phương thức thanh toán -->
+        <!-- Phương thức thanh toán -->
         <TextView
             android:id="@+id/tv_payment_method"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:textSize="14sp"
-            tools:text="Thanh toán: COD"
-            android:visibility="gone"/> <!-- Set visible nếu có dữ liệu -->
+            android:visibility="gone"
+        tools:visibility="visible"
+        tools:text="Thanh toán: COD" />
 
 
         <!-- === KHU VỰC HIỂN THỊ SẢN PHẨM === -->
@@ -93,14 +95,14 @@
             android:paddingStart="8dp"
             android:paddingEnd="8dp">
             <!-- Các TextView sản phẩm sẽ được thêm vào đây bằng code -->
-            <!-- Ví dụ mẫu trong tools -->
+            <!-- Ví dụ mẫu trong tools để dễ hình dung -->
             <TextView
-                tools:text="- Sản phẩm A x 2"
+                tools:text="- Sản phẩm A (SL: 2)"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="14sp"/>
             <TextView
-                tools:text="- Sản phẩm B x 1"
+                tools:text="- Sản phẩm B siêu dài không thể tin được (SL: 1)"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="14sp"/>
@@ -113,69 +115,76 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="?android:attr/listDivider"
-            android:layout_marginTop="12dp"
-            android:layout_marginBottom="8dp"/>
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="8dp"/>
 
-        <!-- Hàng dưới cùng: Tổng tiền và Các nút bấm -->
-        <RelativeLayout
+        <!-- Phần cuối: Tổng tiền và Các nút bấm (dùng LinearLayout dọc) -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp">
+            android:orientation="vertical">
 
+            <!-- Dòng Tổng tiền -->
             <TextView
                 android:id="@+id/tv_total_price"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:layout_centerVertical="true"
-                android:textColor="@color/purple_700"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                tools:text="Tổng tiền: 1.500.000 ₫" />
+                android:gravity="start"
+            android:textColor="@color/purple_700"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            tools:text="Tổng tiền: 1.500.000 ₫" />
 
-            <!-- === KHU VỰC CÁC NÚT BẤM === -->
+            <!-- Dòng Các nút bấm (căn phải) -->
             <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="end"
+            android:layout_marginTop="8dp">
+
+            <Button
+                android:id="@+id/btn_cancel_order"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                android:orientation="horizontal">
+                android:text="Hủy đơn"
+                android:textColor="@color/my_red_error"
+                android:visibility="gone"
+            tools:visibility="visible"/>
 
-                <Button
-                    android:id="@+id/btn_cancel_order"
-                    style="@style/Widget.MaterialComponents.Button.TextButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Cancel"
-                    android:textColor="@color/my_red_error"
-                    android:visibility="gone"
-                    tools:visibility="visible"/>
+            <Button
+                android:id="@+id/btn_review_order"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Đánh giá"
+                android:layout_marginStart="8dp"
+                android:visibility="gone"
+            tools:visibility="visible"/>
 
-                <Button
-                    android:id="@+id/btn_review_order"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="REVIEW"
-                    android:layout_marginStart="8dp"
-                    android:visibility="gone"
-                    tools:visibility="visible"/>
+            <Button
+                android:id="@+id/btn_repurchase_order"
+                style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Mua lại"
+                android:layout_marginStart="8dp"
+                android:visibility="gone"
+            tools:visibility="visible"/>
+            <Button
+                android:id="@+id/btn_view_details"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="Xem chi tiết"
+                android:visibility="visible" /> <!-- Nút này luôn hiển thị -->
 
-                <Button
-                    android:id="@+id/btn_repurchase_order"
-                    style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="REPURCHASE"
-                    android:layout_marginStart="8dp"
-                    android:visibility="gone"
-                    tools:visibility="visible"/>
+        </LinearLayout> <!-- Kết thúc LinearLayout chứa nút -->
 
-            </LinearLayout>
-            <!-- === KẾT THÚC KHU VỰC NÚT BẤM === -->
+    </LinearLayout> <!-- Kết thúc LinearLayout dọc cho phần cuối -->
 
-        </RelativeLayout>
+</LinearLayout> <!-- Kết thúc LinearLayout gốc của CardView -->
 
-    </LinearLayout>
-
-</androidx.cardview.widget.CardView>
+    </androidx.cardview.widget.CardView>

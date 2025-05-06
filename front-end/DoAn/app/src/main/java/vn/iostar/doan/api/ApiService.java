@@ -40,7 +40,7 @@ public interface ApiService {
             .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
             .create();
     ApiService apiService = new Retrofit.Builder()
-            .baseUrl("http://192.168.1.11:8080/")
+            .baseUrl("http://10.0.2.2:8080/")
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
             .create(ApiService.class);
@@ -97,4 +97,7 @@ public interface ApiService {
 
     @GET("api/product/{id}")
     Call<Product> getProductDetails(@Path("id") long productId);
+
+    @GET("api/orders/{orderId}") // <<< THÊM ENDPOINT LẤY CHI TIẾT NẾU CHƯA CÓ
+    Call<Order> getOrderDetail(@Path("orderId") Long orderId);
 }

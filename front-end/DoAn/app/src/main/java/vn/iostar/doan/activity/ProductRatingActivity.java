@@ -38,6 +38,7 @@ import com.google.android.material.button.MaterialButton;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList; // Import lại nếu chưa có
 import java.util.List;
 import java.util.Objects;
 
@@ -87,6 +88,12 @@ public class ProductRatingActivity extends AppCompatActivity {
     private static final String READ_STORAGE_PERMISSION = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
             ? Manifest.permission.READ_MEDIA_IMAGES
             : Manifest.permission.READ_EXTERNAL_STORAGE;
+
+    // Biến để theo dõi các cuộc gọi mạng đang diễn ra (Tùy chọn, nhưng hữu ích)
+    private Call<ImageUploadResponse> imageUploadCall;
+    private Call<Comment> createCommentCall;
+    private Call<List<Comment>> fetchCommentsCall;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -170,13 +177,6 @@ public class ProductRatingActivity extends AppCompatActivity {
         // if (layoutRatingInputSection != null) {
         //     layoutRatingInputSection.setVisibility(View.GONE);
         // }
-
-        // (Tùy chọn) Có thể thêm TextView thông báo đăng nhập vào layout và hiển thị ở đây
-        // TextView tvLoginPrompt = findViewById(R.id.tvLoginToReviewPrompt);
-        // if (tvLoginPrompt != null) {
-        //     tvLoginPrompt.setVisibility(View.VISIBLE);
-        //     tvLoginPrompt.setText("Please log in to submit a review.");
-        // }
     }
 
     // Hàm hiển thị phần nhập liệu đánh giá (để đảm bảo nó hiện khi cần)
@@ -188,17 +188,6 @@ public class ProductRatingActivity extends AppCompatActivity {
         if (btnSendComment != null) btnSendComment.setVisibility(View.VISIBLE);
         // Không cần set VISIBLE cho ivSelectedImagePreview và ivClearSelectedImage ở đây
         // Chúng sẽ tự hiển thị khi ảnh được chọn
-
-        // Cách 2: Hiện cả container
-        // if (layoutRatingInputSection != null) {
-        //     layoutRatingInputSection.setVisibility(View.VISIBLE);
-        // }
-
-        // (Tùy chọn) Ẩn thông báo yêu cầu đăng nhập nếu có
-        // TextView tvLoginPrompt = findViewById(R.id.tvLoginToReviewPrompt);
-        // if (tvLoginPrompt != null) {
-        //     tvLoginPrompt.setVisibility(View.GONE);
-        // }
     }
 
     // Khởi tạo các ActivityResultLaunchers
@@ -219,15 +208,13 @@ public class ProductRatingActivity extends AppCompatActivity {
             if (uri != null) {
                 Log.d(TAG, "Media selected: " + uri.toString());
                 selectedImageUri = uri; // Lưu Uri ảnh đã chọn
-                // Chỉ hiển thị preview nếu các nút input đang hiển thị
+                // Chỉ hiển thị preview nếu các nút input đang hiển thị và view không null
                 if (ivSelectedImagePreview != null && ivClearSelectedImage != null && ratingBar != null && ratingBar.getVisibility() == View.VISIBLE) {
                     ivSelectedImagePreview.setImageURI(selectedImageUri); // Hiển thị ảnh preview
                     ivSelectedImagePreview.setVisibility(View.VISIBLE);
                     ivClearSelectedImage.setVisibility(View.VISIBLE); // Hiện nút xóa ảnh preview
                 } else {
-                    Log.w(TAG, "Image picked, but input section is hidden. Preview not shown.");
-                    // Optionally clear the URI if input is hidden to avoid confusion
-                    // selectedImageUri = null;
+                    Log.w(TAG, "Image picked, but input section is hidden or views are null. Preview not shown.");
                 }
             } else {
                 Log.d(TAG, "No media selected by user.");
@@ -238,8 +225,12 @@ public class ProductRatingActivity extends AppCompatActivity {
     // Thiết lập Toolbar làm ActionBar
     private void setupToolbar() {
         setSupportActionBar(toolbar);
-        Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true); // Hiển thị nút back (<-)
-        getSupportActionBar().setTitle("Comment & Rating"); // Đặt tiêu đề cho Toolbar
+        if (getSupportActionBar() != null) { // Kiểm tra null trước khi dùng
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true); // Hiển thị nút back (<-)
+            getSupportActionBar().setTitle("Comment & Rating"); // Đặt tiêu đề cho Toolbar
+        } else {
+            Log.e(TAG, "SupportActionBar is null after setting toolbar!");
+        }
     }
 
     // Thiết lập RecyclerView
@@ -283,18 +274,30 @@ public class ProductRatingActivity extends AppCompatActivity {
 
     // Cập nhật trạng thái (enable/disable) của nút Gửi
     private void updateSendButtonState() {
-        // Nếu các view cần thiết là null hoặc phần nhập liệu bị ẩn, không làm gì cả
-        if (btnSendComment == null || ratingBar == null || etCommentInput == null || ratingBar.getVisibility() == View.GONE) {
-            // Đảm bảo nút gửi bị disable nếu phần input ẩn
-            if (btnSendComment != null) btnSendComment.setEnabled(false);
+        // --- SỬA ĐỔI: Thêm kiểm tra null rõ ràng hơn ngay trước khi sử dụng ---
+        if (btnSendComment == null || ratingBar == null) {
+            Log.w(TAG, "updateSendButtonState: Button or RatingBar is null. Cannot update state.");
+            return; // Thoát sớm nếu các view cơ bản bị null
+        }
+
+        // Kiểm tra xem phần nhập liệu có ẩn không
+        if (ratingBar.getVisibility() == View.GONE) {
+            btnSendComment.setEnabled(false); // Nếu ẩn thì luôn tắt nút gửi
             return;
         }
 
-        boolean hasRating = ratingBar.getRating() > 0; // Đã rate chưa?
-        boolean hasText = !etCommentInput.getText().toString().trim().isEmpty(); // Đã nhập text chưa?
-        boolean isLoading = progressBar.getVisibility() == View.VISIBLE; // Có đang loading không?
+        // Kiểm tra etCommentInput TRƯỚC khi dùng getText()
+        if (etCommentInput == null) {
+            Log.e(TAG, "updateSendButtonState: etCommentInput is null unexpectedly!");
+            btnSendComment.setEnabled(false); // Lỗi nghiêm trọng, tắt nút
+            return;
+        }
 
-        // Nút chỉ bật khi có cả rating, text và không loading VÀ phần input đang hiển thị
+        boolean hasRating = ratingBar.getRating() > 0;
+        boolean hasText = !etCommentInput.getText().toString().trim().isEmpty(); // Bây giờ an toàn để gọi getText
+        boolean isLoading = progressBar != null && progressBar.getVisibility() == View.VISIBLE; // Kiểm tra progressBar null
+
+        // Nút chỉ bật khi có cả rating, text và không loading VÀ phần input đang hiển thị (đã kiểm tra ở trên)
         boolean shouldBeEnabled = hasRating && hasText && !isLoading;
 
         // Chỉ thay đổi trạng thái nếu nó khác trạng thái hiện tại để tránh log thừa
@@ -307,7 +310,8 @@ public class ProductRatingActivity extends AppCompatActivity {
 
     // Kiểm tra quyền truy cập bộ nhớ và mở bộ chọn ảnh
     private void checkPermissionAndPickImage() {
-        if (progressBar.getVisibility() == View.VISIBLE) {
+        // Kiểm tra progressBar null trước khi truy cập visibility
+        if (progressBar != null && progressBar.getVisibility() == View.VISIBLE) {
             Toast.makeText(this, "Please wait...", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -316,16 +320,24 @@ public class ProductRatingActivity extends AppCompatActivity {
             launchImagePicker(); // Đã có quyền, mở bộ chọn
         } else {
             Log.d(TAG, "Requesting storage permission: " + READ_STORAGE_PERMISSION);
-            requestPermissionLauncher.launch(READ_STORAGE_PERMISSION); // Chưa có quyền, yêu cầu
+            if (requestPermissionLauncher != null) { // Kiểm tra launcher không null
+                requestPermissionLauncher.launch(READ_STORAGE_PERMISSION); // Chưa có quyền, yêu cầu
+            } else {
+                Log.e(TAG, "requestPermissionLauncher is null! Cannot request permission.");
+            }
         }
     }
 
     // Mở ActivityResultLauncher để chọn ảnh
     private void launchImagePicker() {
         Log.d(TAG, "Launching media picker...");
-        pickMediaLauncher.launch(new PickVisualMediaRequest.Builder()
-                .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE) // Chỉ chọn ảnh
-                .build());
+        if (pickMediaLauncher != null) { // Kiểm tra launcher không null
+            pickMediaLauncher.launch(new PickVisualMediaRequest.Builder()
+                    .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE) // Chỉ chọn ảnh
+                    .build());
+        } else {
+            Log.e(TAG, "pickMediaLauncher is null! Cannot launch picker.");
+        }
     }
 
     // Xóa ảnh đã chọn và ẩn preview
@@ -346,7 +358,6 @@ public class ProductRatingActivity extends AppCompatActivity {
         // Kiểm tra lại userId lần nữa cho chắc chắn
         if (currentUserId <= 0) {
             Log.e(TAG, "AttemptSendComment called but user is not logged in (ID=" + currentUserId + "). This should not happen if UI is hidden correctly.");
-            // Có thể hiển thị lại thông báo đăng nhập hoặc không làm gì cả vì nút gửi không thể nhấn được
             return;
         }
 
@@ -381,11 +392,22 @@ public class ProductRatingActivity extends AppCompatActivity {
             uploadImageToServer(selectedImageUri, new ImageUploadCallback() {
                 @Override
                 public void onSuccess(String uploadedImageUrl) {
+                    // --- SỬA ĐỔI: Kiểm tra Activity còn hợp lệ trước khi gửi comment ---
+                    if (isFinishing() || isDestroyed()) {
+                        Log.w(TAG, "uploadImageToServer onSuccess: Activity is finishing or destroyed. Aborting sendCommentData.");
+                        showLoading(false); // Tắt loading nếu có lỗi
+                        return;
+                    }
                     Log.i(TAG, "Image upload successful. Sending comment data with URL: " + uploadedImageUrl);
                     sendCommentData(commentText, ratingValue, uploadedImageUrl);
                 }
                 @Override
                 public void onError(String error) {
+                    // --- SỬA ĐỔI: Kiểm tra Activity còn hợp lệ trước khi hiển thị Toast ---
+                    if (isFinishing() || isDestroyed()) {
+                        Log.w(TAG, "uploadImageToServer onError: Activity is finishing or destroyed. Ignoring error display.");
+                        return;
+                    }
                     Log.e(TAG, "Image upload failed: " + error);
                     Toast.makeText(ProductRatingActivity.this, "Image upload failed: " + error, Toast.LENGTH_LONG).show();
                     showLoading(false); // Tắt loading và bật lại các nút (updateSendButtonState sẽ xử lý nút Send)
@@ -407,6 +429,10 @@ public class ProductRatingActivity extends AppCompatActivity {
     // Hàm thực hiện upload ảnh lên server
     private void uploadImageToServer(Uri imageUri, ImageUploadCallback callback) {
         Log.d(TAG, "Executing image upload for URI: " + imageUri);
+        if (imageUri == null) {
+            callback.onError("Image URI is null");
+            return;
+        }
 
         ContentResolver contentResolver = getContentResolver();
         String mimeType = contentResolver.getType(imageUri);
@@ -422,16 +448,17 @@ public class ProductRatingActivity extends AppCompatActivity {
             inputStream = contentResolver.openInputStream(imageUri);
             if (inputStream == null) throw new IOException("Unable to open InputStream for URI: " + imageUri);
 
+            // --- SỬA ĐỔI: Sử dụng try-with-resources cho ByteArrayOutputStream ---
             byte[] fileBytes;
-            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            byte[] data = new byte[4096];
-            int nRead;
-            while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
-                buffer.write(data, 0, nRead);
-            }
-            buffer.flush();
-            fileBytes = buffer.toByteArray();
-            buffer.close();
+            try (ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
+                byte[] data = new byte[4096];
+                int nRead;
+                while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
+                    buffer.write(data, 0, nRead);
+                }
+                buffer.flush();
+                fileBytes = buffer.toByteArray();
+            } // buffer.close() sẽ tự động được gọi
 
             RequestBody requestFileBody = RequestBody.create(fileBytes, MediaType.parse(mimeType));
             String fileName = getFileNameFromUri(imageUri);
@@ -441,28 +468,47 @@ public class ProductRatingActivity extends AppCompatActivity {
             MultipartBody.Part body = MultipartBody.Part.createFormData("file", fileName, requestFileBody);
 
             Log.d(TAG, "Calling uploadImage API endpoint...");
-            ApiService.apiService.uploadImage(body) // Đảm bảo ApiService có phương thức này
-                    .enqueue(new Callback<ImageUploadResponse>() { // Đảm bảo ImageUploadResponse đúng
-                        @Override
-                        public void onResponse(@NonNull Call<ImageUploadResponse> call, @NonNull Response<ImageUploadResponse> response) {
-                            if (response.isSuccessful() && response.body() != null && response.body().getImageUrl() != null && !response.body().getImageUrl().isEmpty()) {
-                                String uploadedImageUrl = response.body().getImageUrl();
-                                Log.i(TAG, "API Image upload successful. URL: " + uploadedImageUrl);
-                                callback.onSuccess(uploadedImageUrl);
-                            } else {
-                                String errorMsg = "Server error during upload: " + response.code() + " - " + response.message();
-                                String responseBodyString = "";
-                                try { if (response.errorBody() != null) responseBodyString = response.errorBody().string(); } catch (IOException e) { /* ignore */ }
-                                Log.e(TAG, errorMsg + (!responseBodyString.isEmpty() ? "\nError Body: "+responseBodyString : ""));
-                                callback.onError("Upload failed: " + response.code());
-                            }
-                        }
-                        @Override
-                        public void onFailure(@NonNull Call<ImageUploadResponse> call, @NonNull Throwable t) {
-                            Log.e(TAG, "Upload network failure: " + t.getMessage(), t);
-                            callback.onError("Network Error: " + t.getMessage());
-                        }
-                    });
+            // Hủy call cũ nếu có
+            cancelCall(imageUploadCall);
+            imageUploadCall = ApiService.apiService.uploadImage(body); // Gán call mới
+
+            imageUploadCall.enqueue(new Callback<ImageUploadResponse>() { // Đảm bảo ImageUploadResponse đúng
+                @Override
+                public void onResponse(@NonNull Call<ImageUploadResponse> call, @NonNull Response<ImageUploadResponse> response) {
+                    // --- SỬA ĐỔI: Kiểm tra Activity hợp lệ ---
+                    if (isFinishing() || isDestroyed()) {
+                        Log.w(TAG, "uploadImageToServer onResponse: Activity is finishing or destroyed. Ignoring callback.");
+                        return;
+                    }
+
+                    if (response.isSuccessful() && response.body() != null && response.body().getImageUrl() != null && !response.body().getImageUrl().isEmpty()) {
+                        String uploadedImageUrl = response.body().getImageUrl();
+                        Log.i(TAG, "API Image upload successful. URL: " + uploadedImageUrl);
+                        callback.onSuccess(uploadedImageUrl);
+                    } else {
+                        String errorMsg = "Server error during upload: " + response.code() + " - " + response.message();
+                        String responseBodyString = "";
+                        try { if (response.errorBody() != null) responseBodyString = response.errorBody().string(); } catch (IOException e) { /* ignore */ }
+                        Log.e(TAG, errorMsg + (!responseBodyString.isEmpty() ? "\nError Body: "+responseBodyString : ""));
+                        callback.onError("Upload failed: " + response.code());
+                    }
+                }
+                @Override
+                public void onFailure(@NonNull Call<ImageUploadResponse> call, @NonNull Throwable t) {
+                    // --- SỬA ĐỔI: Kiểm tra Activity hợp lệ ---
+                    if (isFinishing() || isDestroyed()) {
+                        Log.w(TAG, "uploadImageToServer onFailure: Activity is finishing or destroyed. Ignoring callback.");
+                        return;
+                    }
+                    // --- SỬA ĐỔI: Kiểm tra xem có phải lỗi do call bị cancel không ---
+                    if (call.isCanceled()) {
+                        Log.d(TAG, "uploadImageToServer onFailure: Call was cancelled.");
+                    } else {
+                        Log.e(TAG, "Upload network failure: " + t.getMessage(), t);
+                        callback.onError("Network Error: " + t.getMessage());
+                    }
+                }
+            });
         } catch (IOException e) {
             Log.e(TAG, "IOException processing image URI: " + e.getMessage(), e);
             callback.onError("Error reading image file");
@@ -517,91 +563,130 @@ public class ProductRatingActivity extends AppCompatActivity {
                 currentUserId
         );
 
+        // Hủy call cũ nếu có
+        cancelCall(createCommentCall);
+        createCommentCall = ApiService.apiService.createComment(requestBody); // Gán call mới
+
         // Gọi API để tạo comment
-        ApiService.apiService.createComment(requestBody) // Đảm bảo ApiService có phương thức này
-                .enqueue(new Callback<Comment>() { // Đảm bảo Model Comment đúng
-                    @Override
-                    public void onResponse(@NonNull Call<Comment> call, @NonNull Response<Comment> response) {
-                        showLoading(false); // Tắt loading khi có response (thành công hoặc lỗi)
+        createCommentCall.enqueue(new Callback<Comment>() { // Đảm bảo Model Comment đúng
+            @Override
+            public void onResponse(@NonNull Call<Comment> call, @NonNull Response<Comment> response) {
+                // --- SỬA ĐỔI: Kiểm tra Activity hợp lệ ---
+                if (isFinishing() || isDestroyed()) {
+                    Log.w(TAG, "sendCommentData onResponse: Activity is finishing or destroyed. Ignoring callback.");
+                    return;
+                }
 
-                        if (response.isSuccessful() && response.body() != null) {
-                            // Tạo comment thành công
-                            Log.i(TAG, "Comment created successfully! ID: " + response.body().getCommentId());
-                            Toast.makeText(ProductRatingActivity.this, "Review submitted!", Toast.LENGTH_SHORT).show();
-                            // Reset lại UI nhập liệu
-                            if (etCommentInput != null) etCommentInput.setText("");
-                            if (ratingBar != null) ratingBar.setRating(0);
-                            clearSelectedImage();
-                            fetchComments(); // Tải lại danh sách comment để hiển thị comment mới
-                        } else {
-                            // Lỗi từ API khi tạo comment
-                            Log.e(TAG, "Failed to create comment API error: " + response.code() + " - " + response.message());
-                            String errorBody = "";
-                            try { if (response.errorBody() != null) errorBody = response.errorBody().string(); } catch (Exception e) { /* ignore */ }
-                            Log.e(TAG, "Create Comment Error Body: " + errorBody);
-                            Toast.makeText(ProductRatingActivity.this, "Failed to submit review: " + response.code(), Toast.LENGTH_LONG).show();
-                        }
-                        // Không cần gọi updateSendButtonState ở đây nữa, showLoading(false) đã gọi nó
-                    }
+                // Quan trọng: Chỉ ẩn loading nếu không có call nào khác đang chạy
+                // Hoặc đơn giản hóa: luôn ẩn ở đây nếu logic loading đơn giản
+                showLoading(false);
 
-                    @Override
-                    public void onFailure(@NonNull Call<Comment> call, @NonNull Throwable t) {
-                        showLoading(false); // Tắt loading khi có lỗi mạng
-                        Log.e(TAG, "Create comment NETWORK failure: " + t.getMessage(), t);
-                        Toast.makeText(ProductRatingActivity.this, "Network Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                });
+                if (response.isSuccessful() && response.body() != null) {
+                    // Tạo comment thành công
+                    Log.i(TAG, "Comment created successfully! ID: " + response.body().getCommentId());
+                    Toast.makeText(ProductRatingActivity.this, "Review submitted!", Toast.LENGTH_SHORT).show();
+                    // Reset lại UI nhập liệu (kiểm tra null trước khi dùng)
+                    if (etCommentInput != null) etCommentInput.setText("");
+                    if (ratingBar != null) ratingBar.setRating(0);
+                    clearSelectedImage();
+                    fetchComments(); // Tải lại danh sách comment để hiển thị comment mới
+                } else {
+                    // Lỗi từ API khi tạo comment
+                    Log.e(TAG, "Failed to create comment API error: " + response.code() + " - " + response.message());
+                    String errorBody = "";
+                    try { if (response.errorBody() != null) errorBody = response.errorBody().string(); } catch (Exception e) { /* ignore */ }
+                    Log.e(TAG, "Create Comment Error Body: " + errorBody);
+                    Toast.makeText(ProductRatingActivity.this, "Failed to submit review: " + response.code(), Toast.LENGTH_LONG).show();
+                }
+                // Cập nhật lại trạng thái nút gửi sau khi xử lý xong
+                updateSendButtonState();
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<Comment> call, @NonNull Throwable t) {
+                // --- SỬA ĐỔI: Kiểm tra Activity hợp lệ ---
+                if (isFinishing() || isDestroyed()) {
+                    Log.w(TAG, "sendCommentData onFailure: Activity is finishing or destroyed. Ignoring callback.");
+                    return;
+                }
+                // --- SỬA ĐỔI: Kiểm tra xem có phải lỗi do call bị cancel không ---
+                if (call.isCanceled()) {
+                    Log.d(TAG, "sendCommentData onFailure: Call was cancelled.");
+                } else {
+                    Log.e(TAG, "Create comment NETWORK failure: " + t.getMessage(), t);
+                    Toast.makeText(ProductRatingActivity.this, "Network Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+
+                showLoading(false); // Tắt loading khi có lỗi mạng
+                updateSendButtonState(); // Cập nhật nút sau lỗi
+            }
+        });
     }
 
     // Tải danh sách comment từ server
     private void fetchComments() {
         Log.d(TAG, "Fetching comments for product ID: " + productId);
-        // Không cần kiểm tra userId ở đây, luôn fetch comment
         showLoading(true); // Bật loading trước khi gọi API
 
-        ApiService.apiService.getCommentsByProduct(productId) // Đảm bảo ApiService có phương thức này
-                .enqueue(new Callback<List<Comment>>() { // Đảm bảo Model Comment đúng
-                    @Override
-                    public void onResponse(@NonNull Call<List<Comment>> call, @NonNull Response<List<Comment>> response) {
-                        // Quan trọng: Chỉ tắt loading nếu nó được bật bởi fetchComments
-                        // (tránh tắt loading nếu đang gửi comment)
-                        // Cách đơn giản là luôn tắt nếu không có cơ chế loading riêng biệt
-                        showLoading(false);
+        // Hủy call fetch cũ nếu có
+        cancelCall(fetchCommentsCall);
+        fetchCommentsCall = ApiService.apiService.getCommentsByProduct(productId); // Gán call mới
 
-                        if (response.isSuccessful() && response.body() != null) {
-                            List<Comment> comments = response.body();
-                            Log.d(TAG, "Successfully fetched " + comments.size() + " comments.");
-                            if (comments.isEmpty()) {
-                                // Hiển thị thông báo không có comment
-                                if(tvNoComments != null) { tvNoComments.setText("Be the first to review!"); tvNoComments.setVisibility(View.VISIBLE); }
-                                if (recyclerViewComments != null) recyclerViewComments.setVisibility(View.GONE);
-                            } else {
-                                // Hiển thị danh sách comment
-                                if(tvNoComments != null) tvNoComments.setVisibility(View.GONE);
-                                if (recyclerViewComments != null) recyclerViewComments.setVisibility(View.VISIBLE);
-                                if (commentAdapter != null) commentAdapter.setComments(comments); // Cập nhật adapter
-                            }
-                        } else {
-                            // Lỗi khi tải comment
-                            Log.e(TAG, "Failed to load comments: " + response.code() + " - " + response.message());
-                            if(tvNoComments != null) { tvNoComments.setText("Failed to load reviews."); tvNoComments.setVisibility(View.VISIBLE); }
-                            if (recyclerViewComments != null) recyclerViewComments.setVisibility(View.GONE);
-                            Toast.makeText(ProductRatingActivity.this, "Failed load: " + response.code(), Toast.LENGTH_SHORT).show();
-                        }
-                        // Luôn cập nhật trạng thái nút Send sau khi fetch xong (hàm này tự kiểm tra visibility)
-                        updateSendButtonState();
-                    }
+        fetchCommentsCall.enqueue(new Callback<List<Comment>>() { // Đảm bảo Model Comment đúng
+            @Override
+            public void onResponse(@NonNull Call<List<Comment>> call, @NonNull Response<List<Comment>> response) {
+                // --- SỬA ĐỔI: Kiểm tra Activity hợp lệ ---
+                if (isFinishing() || isDestroyed()) {
+                    Log.w(TAG, "fetchComments onResponse: Activity is finishing or destroyed. Ignoring callback.");
+                    return;
+                }
 
-                    @Override
-                    public void onFailure(@NonNull Call<List<Comment>> call, @NonNull Throwable t) {
-                        showLoading(false); // Tắt loading khi có lỗi mạng
-                        Log.e(TAG, "Error fetching comments (Network): " + t.getMessage(), t);
-                        if(tvNoComments != null) { tvNoComments.setText("Network error loading reviews."); tvNoComments.setVisibility(View.VISIBLE); }
+                showLoading(false); // Tắt loading khi có response
+
+                if (response.isSuccessful() && response.body() != null) {
+                    List<Comment> comments = response.body();
+                    Log.d(TAG, "Successfully fetched " + comments.size() + " comments.");
+                    // --- SỬA ĐỔI: Thêm kiểm tra null cho các View trước khi dùng ---
+                    if (comments.isEmpty()) {
+                        if(tvNoComments != null) { tvNoComments.setText("Be the first to review!"); tvNoComments.setVisibility(View.VISIBLE); }
                         if (recyclerViewComments != null) recyclerViewComments.setVisibility(View.GONE);
-                        Toast.makeText(ProductRatingActivity.this, "Network Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-                        updateSendButtonState(); // Cập nhật nút sau lỗi
+                    } else {
+                        if(tvNoComments != null) tvNoComments.setVisibility(View.GONE);
+                        if (recyclerViewComments != null) recyclerViewComments.setVisibility(View.VISIBLE);
+                        if (commentAdapter != null) commentAdapter.setComments(comments); // Cập nhật adapter
                     }
-                });
+                } else {
+                    // Lỗi khi tải comment
+                    Log.e(TAG, "Failed to load comments: " + response.code() + " - " + response.message());
+                    // --- SỬA ĐỔI: Thêm kiểm tra null cho các View trước khi dùng ---
+                    if(tvNoComments != null) { tvNoComments.setText("Failed to load reviews."); tvNoComments.setVisibility(View.VISIBLE); }
+                    if (recyclerViewComments != null) recyclerViewComments.setVisibility(View.GONE);
+                    Toast.makeText(ProductRatingActivity.this, "Failed load: " + response.code(), Toast.LENGTH_SHORT).show();
+                }
+                updateSendButtonState(); // Cập nhật nút sau khi fetch xong
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<List<Comment>> call, @NonNull Throwable t) {
+                // --- SỬA ĐỔI: Kiểm tra Activity hợp lệ ---
+                if (isFinishing() || isDestroyed()) {
+                    Log.w(TAG, "fetchComments onFailure: Activity is finishing or destroyed. Ignoring callback.");
+                    return;
+                }
+                // --- SỬA ĐỔI: Kiểm tra xem có phải lỗi do call bị cancel không ---
+                if (call.isCanceled()) {
+                    Log.d(TAG, "fetchComments onFailure: Call was cancelled.");
+                } else {
+                    Log.e(TAG, "Error fetching comments (Network): " + t.getMessage(), t);
+                    // --- SỬA ĐỔI: Thêm kiểm tra null cho các View trước khi dùng ---
+                    if(tvNoComments != null) { tvNoComments.setText("Network error loading reviews."); tvNoComments.setVisibility(View.VISIBLE); }
+                    if (recyclerViewComments != null) recyclerViewComments.setVisibility(View.GONE);
+                    Toast.makeText(ProductRatingActivity.this, "Network Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+                showLoading(false); // Tắt loading khi có lỗi mạng
+                updateSendButtonState(); // Cập nhật nút sau lỗi
+            }
+        });
     }
 
     // Hiển thị/ẩn ProgressBar và bật/tắt các input liên quan
@@ -609,9 +694,11 @@ public class ProductRatingActivity extends AppCompatActivity {
         Log.d(TAG, "Setting loading state to: " + isLoading);
         if (progressBar != null) {
             progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+        } else {
+            Log.w(TAG, "showLoading: progressBar is null!"); // Log cảnh báo nếu progressBar bị null
         }
 
-        // Chỉ enable/disable input nếu chúng đang hiển thị (tức là người dùng đã đăng nhập)
+        // Chỉ enable/disable input nếu chúng đang hiển thị và không null
         boolean isInputSectionVisible = (ratingBar != null && ratingBar.getVisibility() == View.VISIBLE);
 
         if (isInputSectionVisible) {
@@ -621,7 +708,6 @@ public class ProductRatingActivity extends AppCompatActivity {
             if (ivClearSelectedImage != null) ivClearSelectedImage.setEnabled(!isLoading); // Cũng tắt nút xóa ảnh khi loading
         }
         // Luôn gọi updateSendButtonState để nó tự quyết định trạng thái nút gửi
-        // Dựa trên isLoading VÀ trạng thái của các input (nếu chúng hiển thị)
         updateSendButtonState();
     }
 
@@ -629,20 +715,11 @@ public class ProductRatingActivity extends AppCompatActivity {
     // --- Xử lý nút Back trên Toolbar (Navigation Icon) ---
     @Override
     public boolean onSupportNavigateUp() {
-        // Kiểm tra nếu đang loading (ví dụ: đang gửi comment) thì không cho back
+        // Kiểm tra nếu đang loading thì không cho back
         if (progressBar != null && progressBar.getVisibility() == View.VISIBLE) {
             Toast.makeText(this, "Please wait...", Toast.LENGTH_SHORT).show();
             return true; // Đã xử lý (bằng cách chặn lại)
         }
-
-        // Hành vi mặc định là quay lại Activity trước đó trong stack
-        // Hoặc nếu muốn luôn về HomeActivity:
-        // Intent intent = new Intent(ProductRatingActivity.this, HomeActivity.class); // *** Thay HomeActivity ***
-        // intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        // startActivity(intent);
-        // finish(); // Đóng Activity hiện tại
-        // return true;
-
         // Sử dụng hành vi mặc định (finish activity hiện tại)
         onBackPressed(); // Gọi hành động back mặc định
         return true; // Báo rằng chúng ta đã xử lý sự kiện này
@@ -662,13 +739,26 @@ public class ProductRatingActivity extends AppCompatActivity {
     }
 
     // --- Xử lý các Item khác trên Menu (nếu có) ---
-    // Bỏ trống nếu không có menu item nào khác ngoài nút back
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        // Nếu bạn có các menu item khác, xử lý chúng ở đây
-        // ví dụ: if (item.getItemId() == R.id.action_settings) { ... }
-
         // Không cần xử lý android.R.id.home ở đây vì onSupportNavigateUp đã xử lý nó
         return super.onOptionsItemSelected(item);
+    }
+
+    // --- Hủy các cuộc gọi mạng khi Activity bị hủy ---
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy: Cancelling ongoing network calls.");
+        cancelCall(imageUploadCall);
+        cancelCall(createCommentCall);
+        cancelCall(fetchCommentsCall);
+    }
+
+    // Hàm tiện ích để hủy Retrofit Call nếu nó không null và chưa bị hủy
+    private void cancelCall(Call<?> call) {
+        if (call != null && !call.isCanceled() && !call.isExecuted()) {
+            call.cancel();
+        }
     }
 }

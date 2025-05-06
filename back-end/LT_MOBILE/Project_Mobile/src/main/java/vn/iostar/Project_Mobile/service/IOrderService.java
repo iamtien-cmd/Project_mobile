@@ -31,6 +31,7 @@ public interface IOrderService {
 	public static final CartRepository cartRepository = null;
 	Order getOrderDetailsById(Long orderId, User user);
 	public List<Order> getOrdersByUserId(Long userId);
+	 Order getOrderDetailsById(Long orderId) throws ResourceNotFoundException;
 	Order cancelOrder(Long orderId) throws ResourceNotFoundException, IllegalStateException;
 
 
