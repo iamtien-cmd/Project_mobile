@@ -23,12 +23,12 @@ import java.nio.file.Paths;
 
 @Controller
 @RequestMapping("/api") // Đường dẫn gốc cho các API phục vụ file (khớp với .path("/api") khi tạo URL)
-public class FileUploadController {
+public class FileUploadAvatarController {
 
     private final Path fileStorageLocation; // Nơi lưu trữ file (đọc từ cấu hình)
 
     @Autowired // Constructor Injection
-    public FileUploadController(StorageProperties storageProperties) {
+    public FileUploadAvatarController(StorageProperties storageProperties) {
         // Lấy đường dẫn gốc đã được chuẩn hóa từ cấu hình
         this.fileStorageLocation = Paths.get(storageProperties.getLocation()).toAbsolutePath().normalize();
         System.out.println("File serving configured for directory: " + this.fileStorageLocation);

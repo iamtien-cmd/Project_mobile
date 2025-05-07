@@ -176,7 +176,7 @@ public class OrderServiceImpl implements IOrderService {
             // - Tạo URL thanh toán VNPAY.
             // - Trả về DTO có URL.
 
-            newOrder.setStatus(OrderStatus.Pending);
+            newOrder.setStatus(OrderStatus.PENDING);
             logger.debug("Payment method is VNPAY. Setting status to PendingPayment for user {}.", currentUser.getUserId());
 
             // 9a. Lưu Order Pending Payment để lấy ID (cần ID để tạo OrderLine và URL VNPAY)
@@ -222,7 +222,7 @@ public class OrderServiceImpl implements IOrderService {
             // - THỰC HIỆN XÓA GIỎ HÀNG.
             // - Trả về DTO KHÔNG CÓ URL.
 
-            newOrder.setStatus(OrderStatus.Waiting); // Hoặc trạng thái ban đầu khác cho COD
+            newOrder.setStatus(OrderStatus.WAITING); // Hoặc trạng thái ban đầu khác cho COD
             logger.debug("Payment method is {}. Setting status to {} for user {}.", request.getPaymentMethod().name(), newOrder.getStatus().name(), currentUser.getUserId());
 
             // 9b. Lưu Order cho COD
@@ -345,7 +345,7 @@ public class OrderServiceImpl implements IOrderService {
              Order order = orderOpt.get();
 
              // Kiểm tra trạng thái đơn hàng: chỉ xử lý IPN cho đơn đang ở trạng thái chờ thanh toán
-             if (order.getStatus() != OrderStatus.Pending) {
+             if (order.getStatus() != OrderStatus.PENDING) {
                  logger.warn("VNPAY IPN received for order ID {} but status is {} (expected PendingPayment). Possibly duplicate IPN or wrong state.", orderId, order.getStatus());
                   // *** Ném Exception thay vì return false ***
                   throw new IllegalStateException("Đơn hàng " + orderId + " có trạng thái không hợp lệ: " + order.getStatus().name()); // Controller sẽ bắt và trả về RspCode 02
@@ -366,7 +366,7 @@ public class OrderServiceImpl implements IOrderService {
                  // Thanh toán THÀNH CÔNG
                  logger.info("VNPAY IPN: Payment successful for Order ID: {}", orderId);
                  // *** Cập nhật trạng thái: Sửa từ Waiting sang Processing ***
-                 order.setStatus(OrderStatus.Waiting);
+                 order.setStatus(OrderStatus.WAITING);
 
                  // --- THỰC HIỆN CÁC HÀNH ĐỘNG ĐÃ BỎ QUA Ở createOrder ---
                  // ... (code trừ tồn kho và xóa giỏ hàng - giữ nguyên) ...
@@ -377,7 +377,7 @@ public class OrderServiceImpl implements IOrderService {
              } else {
                  // Thanh toán THẤT BẠI hoặc HỦY (ResponseCode khác 00)
                  logger.warn("VNPAY IPN: Payment failed/cancelled for Order ID: {}. Response Code: {}", orderId, vnp_ResponseCode);
-                 order.setStatus(OrderStatus.Cancelled); // Giữ nguyên trạng thái Đã hủy/Thất bại
+                 order.setStatus(OrderStatus.CANCELLED); // Giữ nguyên trạng thái Đã hủy/Thất bại
                  // Không trừ tồn kho, không xóa giỏ hàng
              }
 
