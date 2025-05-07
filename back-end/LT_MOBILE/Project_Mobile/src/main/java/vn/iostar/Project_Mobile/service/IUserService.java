@@ -8,7 +8,7 @@ import vn.iostar.Project_Mobile.entity.User;
 
 @Service
 public interface IUserService {
-
+	 Optional<User> findById(Long id);
 
 	void saveOtp(User user, String otp);
 

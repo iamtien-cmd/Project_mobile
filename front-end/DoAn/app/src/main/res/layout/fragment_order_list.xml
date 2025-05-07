@@ -4,8 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".fragment.OrderListFragment"> // Đặt context đúng
-
+    tools:context=".fragment.OrderListFragment">
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view_orders_fragment"
         android:layout_width="0dp"
