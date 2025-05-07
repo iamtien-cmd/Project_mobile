@@ -1,89 +1,89 @@
-package vn.iostar.doan.adapter; // Đảm bảo đúng package
+package vn.iostar.doan.adapter; // <<<< ĐẢM BẢO ĐÚNG PACKAGE CỦA BẠN
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button; // Import Button
-import android.widget.LinearLayout; // Import LinearLayout
+import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat; // Import ContextCompat để lấy màu
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
-import java.text.NumberFormat; // Để định dạng tiền tệ
+
+import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale; // Để định dạng tiền tệ theo khu vực
+import java.util.Locale;
 
-import vn.iostar.doan.R; // Import R của project bạn
-import vn.iostar.doan.model.Order; // Import model Order của bạn
-import vn.iostar.doan.model.OrderLine; // Import OrderLine
-import vn.iostar.doan.model.OrderStatus; // Import Enum OrderStatus
-import vn.iostar.doan.model.Product; // Import Product
+import vn.iostar.doan.R; // <<<< Đảm bảo R đúng
+import vn.iostar.doan.model.Order;
+import vn.iostar.doan.model.OrderLine;
+import vn.iostar.doan.model.OrderStatus;
+import vn.iostar.doan.model.Product2;
 
 public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHolder> {
 
     private List<Order> orderList;
-    private Context context;
-    private NumberFormat currencyFormatter;
-    private OrderInteractionListener listener; // Listener để xử lý click nút
+    private final Context context;
+    private final NumberFormat currencyFormatter;
+    private final OrderInteractionListener listener;
+    private final SimpleDateFormat dateFormatter;
+    private final String currentAdapterTabStatus; // Lưu trạng thái của tab mà adapter này đang phục vụ
 
-    // --- Constructor ---
-    public OrderAdapter(Context context, OrderInteractionListener listener) {
-        this.context = context;
-        this.listener = listener;
-        this.orderList = new ArrayList<>();
-        this.currencyFormatter = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+    public interface OrderInteractionListener {
+        void onCancelOrderClicked(Order order);
+        void onReviewOrderClicked(Order order);
+        void onRepurchaseOrderClicked(Order order);
+        void onViewDetailsClicked(Order order);
     }
 
-    // --- Phương thức cập nhật dữ liệu ---
+    public OrderAdapter(Context context, OrderInteractionListener listener, String tabStatus) {
+        this.context = context;
+        this.listener = listener;
+        this.currentAdapterTabStatus = tabStatus; // Gán trạng thái tab
+        this.orderList = new ArrayList<>();
+        this.currencyFormatter = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+        this.dateFormatter = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
+    }
+
     @SuppressLint("NotifyDataSetChanged")
     public void setOrders(List<Order> orders) {
         this.orderList.clear();
         if (orders != null) {
             this.orderList.addAll(orders);
         }
-        notifyDataSetChanged(); // Cập nhật RecyclerView
+        notifyDataSetChanged();
     }
 
-    // --- Override các phương thức của RecyclerView.Adapter ---
     @NonNull
     @Override
     public OrderViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // Tạo View cho mỗi item từ layout XML
-        View view = LayoutInflater.from(context).inflate(R.layout.list_item_order, parent, false);
-        return new OrderViewHolder(view); // Trả về ViewHolder mới
+        View view = LayoutInflater.from(context).inflate(R.layout.list_item_order, parent, false); // Đảm bảo R.layout.list_item_order tồn tại
+        return new OrderViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull OrderViewHolder holder, int position) {
-        // Lấy dữ liệu tại vị trí hiện tại
         Order order = orderList.get(position);
-        // Gắn dữ liệu lên ViewHolder và truyền listener
-        holder.bind(order, currencyFormatter, listener);
+        holder.bind(order, currencyFormatter, dateFormatter, listener, currentAdapterTabStatus);
     }
 
     @Override
     public int getItemCount() {
-        // Trả về tổng số lượng item
         return orderList.size();
     }
 
-    // ==================== ViewHolder Inner Class ====================
-    // Giữ tham chiếu đến các View của một item và gắn dữ liệu vào chúng
     static class OrderViewHolder extends RecyclerView.ViewHolder {
-
-        // *** KHAI BÁO CÁC BIẾN VIEW ***
         TextView tvOrderId, tvOrderDate, tvOrderStatus, tvPredictDate, tvTotalPrice, tvPaymentMethod;
         LinearLayout llProductLines;
-        Button btnCancelOrder, btnReviewOrder, btnRepurchaseOrder;
+        Button btnCancelOrder, btnReviewOrder, btnRepurchaseOrder, btnViewDetails;
 
-        // --- Constructor của ViewHolder ---
         public OrderViewHolder(@NonNull View itemView) {
-            super(itemView); // Gọi constructor của lớp cha
-
-            // *** ÁNH XẠ CÁC VIEW TỪ LAYOUT BẰNG findViewById ***
+            super(itemView);
             tvOrderId = itemView.findViewById(R.id.tv_order_id);
             tvOrderDate = itemView.findViewById(R.id.tv_order_date);
             tvOrderStatus = itemView.findViewById(R.id.tv_order_status);
@@ -94,86 +94,48 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
             btnCancelOrder = itemView.findViewById(R.id.btn_cancel_order);
             btnReviewOrder = itemView.findViewById(R.id.btn_review_order);
             btnRepurchaseOrder = itemView.findViewById(R.id.btn_repurchase_order);
+            btnViewDetails = itemView.findViewById(R.id.btn_view_details);
         }
 
-        // --- Phương thức gắn dữ liệu (bind) ---
-        public void bind(final Order order, NumberFormat formatter, final OrderInteractionListener listener) {
-            // Kiểm tra null trước khi truy cập đối tượng order
+        @SuppressLint("SetTextI18n")
+        public void bind(final Order order, NumberFormat currencyFormatter, SimpleDateFormat dateFormatter, final OrderInteractionListener listener, final String currentTabStatus) {
             if (order == null) {
-                return; // Không làm gì nếu order null
+                Log.e("OrderViewHolder", "Order object is null in bind");
+                return;
             }
 
-            // --- Gắn dữ liệu cơ bản ---
             tvOrderId.setText("Mã ĐH: #" + order.getOrderId());
-            tvTotalPrice.setText("Tổng tiền: " + formatter.format(order.getTotalPrice()));
+            tvTotalPrice.setText("Tổng tiền: " + currencyFormatter.format(order.getTotalPrice()));
 
-            // --- Xử lý trạng thái (Màu và Text) ---
-            String statusString = (order.getStatus() != null) ? order.getStatus().name() : null;
-            tvOrderStatus.setText("Trạng thái: " + getStatusDisplayString(statusString)); // Sử dụng hàm helper đã cập nhật
-            // Đặt màu cho trạng thái
-            int statusColor;
-            switch (statusString != null ? statusString.toUpperCase() : "") {
-                case "RECEIVED": statusColor = ContextCompat.getColor(itemView.getContext(), R.color.my_green_success); break;
-                case "SHIPPING": statusColor = ContextCompat.getColor(itemView.getContext(), R.color.my_orange_processing); break;
-                case "ERROR": // ERROR bây giờ có nghĩa là Đã hủy
-                    statusColor = ContextCompat.getColor(itemView.getContext(), R.color.my_red_error); // Dùng màu đỏ
-                    break;
-                case "WAITING":
-                case "REVIEWED": // Trạng thái Reviewed cũng dùng màu mặc định
-                default:
-                    statusColor = ContextCompat.getColor(itemView.getContext(), R.color.my_grey_neutral); // Màu xám mặc định
-                    break;
-            }
-            tvOrderStatus.setTextColor(statusColor); // Áp dụng màu
+            OrderStatus status = order.getStatus();
+            String statusDisplayString = getStatusDisplayString(status);
+            tvOrderStatus.setText("Trạng thái: " + statusDisplayString);
+            int statusColor = getStatusColor(itemView.getContext(), status);
+            tvOrderStatus.setTextColor(statusColor);
 
-            // === XỬ LÝ HIỂN THỊ NGÀY THÁNG VÀ PHƯƠNG THỨC THANH TOÁN ===
-            boolean hideDates = false; // Cờ để quyết định ẩn ngày
-            if (order.getStatus() != null) {
-                switch (order.getStatus()) {
-                    case RECEIVED:
-                        if (order.isReviewed()) { // Chỉ ẩn khi RECEIVED và ĐÃ REVIEW
-                            hideDates = true;
-                        }
-                        break;
-                    case ERROR: // Luôn ẩn khi ERROR (Đã hủy)
-                        hideDates = true;
-                        break;
-                    // Các trạng thái khác hiển thị ngày
-                }
+            boolean hideDatesAndPayment = (status == OrderStatus.ERROR) || (status == OrderStatus.RECEIVED && order.isReviewed());
+
+            tvOrderDate.setVisibility(hideDatesAndPayment || order.getOrderDate() == null ? View.GONE : View.VISIBLE);
+            if (order.getOrderDate() != null && !hideDatesAndPayment) {
+                tvOrderDate.setText("Ngày đặt: " + dateFormatter.format(order.getOrderDate()));
             }
 
-            // Ẩn/hiện và đặt text cho Ngày đặt
-            if (hideDates) {
-                tvOrderDate.setVisibility(View.GONE);
-            } else {
-                tvOrderDate.setVisibility(View.VISIBLE);
-                // Cẩn thận với toString() của Date, có thể cần SimpleDateFormat nếu muốn định dạng cụ thể
-                tvOrderDate.setText("Ngày đặt: " + (order.getOrderDate() != null ? order.getOrderDate().toString() : "N/A"));
+            tvPredictDate.setVisibility(hideDatesAndPayment || order.getPredictReceiveDate() == null ? View.GONE : View.VISIBLE);
+            if (order.getPredictReceiveDate() != null && !hideDatesAndPayment) {
+                tvPredictDate.setText("Dự kiến: " + dateFormatter.format(order.getPredictReceiveDate()));
             }
 
-            // Ẩn/hiện và đặt text cho Ngày dự kiến
-            if (hideDates || order.getPredictReceiveDate() == null) {
-                tvPredictDate.setVisibility(View.GONE);
-            } else {
-                tvPredictDate.setVisibility(View.VISIBLE);
-                tvPredictDate.setText("Dự kiến nhận: " + order.getPredictReceiveDate().toString());
+            tvPaymentMethod.setVisibility(hideDatesAndPayment || order.getPaymentMethod() == null ? View.GONE : View.VISIBLE);
+            if (order.getPaymentMethod() != null && !hideDatesAndPayment) {
+                tvPaymentMethod.setText("Thanh toán: " + order.getPaymentMethod().toString()); // Đảm bảo enum PaymentMethod có toString() hợp lý
             }
 
-            // Ẩn/hiện và đặt text cho Phương thức thanh toán
-            if (order.getPaymentMethod() == null) {
-                tvPaymentMethod.setVisibility(View.GONE);
-            } else {
-                tvPaymentMethod.setVisibility(View.VISIBLE);
-                tvPaymentMethod.setText("Thanh toán: " + order.getPaymentMethod());
-            }
-            // ==========================================================
 
-            // --- Hiển thị danh sách sản phẩm ---
-            llProductLines.removeAllViews(); // Xóa view cũ
+            llProductLines.removeAllViews();
             if (order.getOrderLines() != null && !order.getOrderLines().isEmpty()) {
                 for (OrderLine line : order.getOrderLines()) {
-                    Product product = line.getProduct();
-                    if (product != null) {
+                    Product2 product = line.getProduct();
+                    if (product != null && product.getName() != null) { // Thêm kiểm tra product.getName()
                         TextView tvProduct = new TextView(itemView.getContext());
                         tvProduct.setText("- " + product.getName() + " (SL: " + line.getQuantity() + ")");
                         tvProduct.setTextSize(14);
@@ -183,26 +145,31 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
                         params.setMargins(0, 0, 0, 4);
                         tvProduct.setLayoutParams(params);
                         llProductLines.addView(tvProduct);
+                    } else {
+                        Log.w("OrderViewHolder", "OrderLine has null product or product name for order ID: " + order.getOrderId());
                     }
                 }
-            } else {
-                // Tùy chọn: Hiển thị thông báo nếu không có sản phẩm
-                TextView tvNoProduct = new TextView(itemView.getContext());
-                tvNoProduct.setText("(Không có thông tin sản phẩm)");
-                tvNoProduct.setTextSize(14);
-                tvNoProduct.setVisibility(View.GONE); // Nên ẩn đi
-                llProductLines.addView(tvNoProduct);
             }
 
-            // --- Xử lý hiển thị nút bấm và đặt Listener ---
-            // Reset visibility
+            // Reset visibility của tất cả các nút trước
             btnCancelOrder.setVisibility(View.GONE);
             btnReviewOrder.setVisibility(View.GONE);
             btnRepurchaseOrder.setVisibility(View.GONE);
+            btnViewDetails.setVisibility(View.GONE); // Mặc định ẩn nút Xem chi tiết
 
-            // Hiển thị nút dựa trên trạng thái
-            if (order.getStatus() != null) {
-                switch (order.getStatus()) {
+            // Xử lý hiển thị nút "Xem chi tiết"
+            if (!"RECEIVED".equalsIgnoreCase(currentTabStatus)) {
+                // Nếu không phải tab "RECEIVED", hiển thị nút "Xem chi tiết"
+                btnViewDetails.setVisibility(View.VISIBLE);
+                btnViewDetails.setOnClickListener(v -> {
+                    if (listener != null) listener.onViewDetailsClicked(order);
+                });
+            }
+            // Nếu là tab "RECEIVED", nút "Xem chi tiết" sẽ vẫn là GONE (đã set ở trên)
+
+            // Xử lý các nút khác dựa trên trạng thái của đơn hàng
+            if (status != null) {
+                switch (status) {
                     case WAITING:
                         btnCancelOrder.setVisibility(View.VISIBLE);
                         btnCancelOrder.setOnClickListener(v -> {
@@ -210,41 +177,63 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
                         });
                         break;
                     case RECEIVED:
-                        if (order.isReviewed()) { // Đã đánh giá -> Mua lại
+                        // Đối với đơn hàng "RECEIVED", nút "Xem chi tiết" đã bị ẩn nếu đang ở tab "RECEIVED"
+                        // Giờ chỉ hiển thị nút "Đánh giá" hoặc "Mua lại"
+                        if (order.isReviewed()) { // Đã đánh giá
                             btnRepurchaseOrder.setVisibility(View.VISIBLE);
                             btnRepurchaseOrder.setOnClickListener(v -> {
                                 if (listener != null) listener.onRepurchaseOrderClicked(order);
                             });
-                        } else { // Chưa đánh giá -> Đánh giá
+                        } else { // Chưa đánh giá
                             btnReviewOrder.setVisibility(View.VISIBLE);
                             btnReviewOrder.setOnClickListener(v -> {
                                 if (listener != null) listener.onReviewOrderClicked(order);
                             });
                         }
                         break;
-                    // Các trạng thái SHIPPING, REVIEWED, ERROR không hiển thị nút
+                    // Các trạng thái khác (SHIPPING, ERROR, REVIEWED (nếu là trạng thái riêng))
+                    // Nút "Xem chi tiết" sẽ được hiển thị nếu không phải tab "RECEIVED" (do logic ở trên)
+                    // Các nút hành động khác (Hủy, Đánh giá, Mua lại) không áp dụng cho các trạng thái này.
                     case SHIPPING:
-                    case REVIEWED:
-                    case ERROR: // Đã hủy (ERROR) cũng không hiển thị nút
+                        // Có thể vẫn muốn hiển thị nút Xem chi tiết (nếu không phải tab RECEIVED)
+                        break;
+                    case ERROR:
+                        // Có thể vẫn muốn hiển thị nút Xem chi tiết (nếu không phải tab RECEIVED)
+                        // hoặc nút Mua lại nếu logic cho phép
+                        break;
+                    case REVIEWED: // Nếu đây là trạng thái sau khi "Đã duyệt" đơn hàng, trước khi giao
+                        // Có thể vẫn muốn hiển thị nút Xem chi tiết (nếu không phải tab RECEIVED)
+                        break;
+
                     default:
-                        break; // Không làm gì, các nút đã GONE
+                        // Không có hành động cụ thể cho các trạng thái khác
+                        break;
                 }
             }
         }
 
-        // --- Hàm helper chuyển đổi trạng thái ---
-        private String getStatusDisplayString(String status) {
+        private String getStatusDisplayString(OrderStatus status) {
             if (status == null) return "N/A";
-            switch (status.toUpperCase()) {
-                case "WAITING": return "Đang chờ";
-                case "REVIEWED": return "Đã duyệt";
-                case "SHIPPING": return "Đang vận chuyển";
-                case "RECEIVED": return "Đã nhận hàng";
-                // *** CẬP NHẬT TEXT CHO ERROR ***
-                case "ERROR": return "Đã hủy"; // Hoặc ý nghĩa tương đương bạn muốn
-                default: return status; // Trả về trạng thái gốc nếu không khớp
+            switch (status) {
+                case WAITING: return "Đang chờ";
+                case REVIEWED: return "Đã duyệt";
+                case SHIPPING: return "Đang vận chuyển";
+                case RECEIVED: return "Đã nhận hàng";
+                case ERROR: return "Đã hủy";
+                default: return status.name();
+            }
+        }
+
+        private int getStatusColor(Context context, OrderStatus status) {
+            if (status == null) {
+                return ContextCompat.getColor(context, R.color.my_grey_neutral); // Đảm bảo có màu này
+            }
+            switch (status) {
+                case RECEIVED: return ContextCompat.getColor(context, R.color.my_green_success); // Đảm bảo có màu này
+                case SHIPPING: return ContextCompat.getColor(context, R.color.my_orange_processing); // Đảm bảo có màu này
+                case ERROR:    return ContextCompat.getColor(context, R.color.my_red_error); // Đảm bảo có màu này
+                default:       return ContextCompat.getColor(context, R.color.my_grey_neutral);
             }
         }
     }
-    // ==================== Kết thúc ViewHolder ====================
 }

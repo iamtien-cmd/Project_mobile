@@ -42,6 +42,10 @@
         <activity android:name=".activity.VerifyOtpForgetPasswordActivity"/>
         <activity
             android:name=".activity.ProductRatingActivity"/>
+        <activity
+            android:name=".activity.OrderHistoryActivity"/>
+        <activity
+            android:name=".activity.OrderDetailActivity"/>
 
     </application>
 </manifest>

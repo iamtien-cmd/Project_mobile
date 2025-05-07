@@ -40,11 +40,11 @@ public class OrdersPagerAdapter extends FragmentStateAdapter {
         // Ví dụ: Chuyển "PROCESSING" thành "Đang xử lý"
         String status = orderStatuses.get(position);
         switch (status.toUpperCase()) {
-            case "WAITING": return "Waiting";
-            case "SHIPPING": return "Shipping";
-            case "RECEIVED": return "Received";
-            case "REVIEWED": return "Reviewed";
-            case "ERROR": return "Cancelled";
+            case "WAITING": return "Đang chờ duyệt";
+            case "SHIPPING": return "Đang vận chuyển";
+            case "RECEIVED": return "Đã nhận hàng";
+            case "REVIEWED": return "Đã đánh giá";
+            case "ERROR": return "Đã hủy";
             default: return status; // Trả về tên gốc nếu không khớp
         }
     }

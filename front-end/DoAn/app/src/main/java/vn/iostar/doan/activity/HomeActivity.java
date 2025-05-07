@@ -39,9 +39,9 @@ public class HomeActivity extends AppCompatActivity {
     private RecyclerView rcCate, rclProduct;
     private CategoryAdapter categoryAdapter;
     private ProductAdapter productAdapter;
-    private List<Category> categoryList;
-    private List<Product> productList;
-    private List<Product> filteredProductList;
+    private List<Product> productList = new ArrayList<>();
+    private List<Product> filteredProductList = new ArrayList<>();
+    private List<Category> categoryList = new ArrayList<>();
     private SearchView searchView;
     private ViewFlipper viewFlipperMain;
     private ImageView imgUser;
@@ -213,16 +213,39 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void filterProducts(String keyword) {
-        if (viewFlipperMain.getVisibility() == View.VISIBLE) {
-            viewFlipperMain.setVisibility(View.GONE); // Ẩn flipper nếu đang hiện
+        // 1. Check if the main product list is even populated yet.
+        if (productList == null) {
+            Log.w("HomeActivity", "filterProducts called but productList is null. Filtering cannot proceed yet.");
+            // If the adapter *does* exist somehow, clear it. Otherwise, just return.
+            if (productAdapter != null) {
+                productAdapter.updateList(new ArrayList<>()); // Show empty list
+            }
+            return; // Exit early
         }
+
+        if (viewFlipperMain.getVisibility() == View.VISIBLE) {
+            viewFlipperMain.setVisibility(View.GONE); // Hide flipper if searching/filtering
+        }
+
         List<Product> filteredList = new ArrayList<>();
+        // Ensure keyword is not null before using toLowerCase() although SearchView usually provides empty string
+        String lowerCaseKeyword = (keyword == null) ? "" : keyword.toLowerCase();
+
         for (Product product : productList) {
-            if (product.getName().toLowerCase().contains(keyword.toLowerCase())) {
+            // Add null check for product name just in case
+            if (product.getName() != null && product.getName().toLowerCase().contains(lowerCaseKeyword)) {
                 filteredList.add(product);
             }
         }
-        productAdapter.updateList(filteredList);  // Viết thêm 1 hàm updateList trong adapter
+
+        // 2. *** The CRITICAL Fix ***: Check if productAdapter has been initialized.
+        if (productAdapter != null) {
+            productAdapter.updateList(filteredList); // Now it's safe to call updateList
+        } else {
+            // Log this situation. It's expected during initial state restoration before network response.
+            Log.w("HomeActivity", "filterProducts called but productAdapter is null. UI cannot be updated yet.");
+            // No action needed here, the adapter will be populated later when the network call finishes.
+        }
     }
     private void setupUserMenu() {
         imgUser.setOnClickListener(new View.OnClickListener() {

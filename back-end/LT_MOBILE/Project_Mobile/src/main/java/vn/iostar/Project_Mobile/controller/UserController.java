@@ -96,6 +96,7 @@ public class UserController {
 
 	        User user = userOpt.get();
 	        Map<String, Object> response = new HashMap<>();
+			response.put("userId", user.getUserId());
 	        response.put("email", user.getEmail());
 	        response.put("fullName", user.getFullName());
 	        response.put("phone", user.getPhone());

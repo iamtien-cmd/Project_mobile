@@ -2,4 +2,6 @@
 <resources>
     <dimen name="comment_content_margin_with_image">8dp</dimen>
     <!-- Bạn có thể thêm các định nghĩa dimension khác ở đây -->
+    <dimen name="divider_height">1dp</dimen>
+    <dimen name="divider_margin">8dp</dimen>
 </resources>

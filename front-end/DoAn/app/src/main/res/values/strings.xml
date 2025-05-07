@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Handy</string>
     <string name="fab_action_description">Google Action</string>
+    <string name="order_status_tabs_description">Các tab trạng thái đơn hàng</string>
 </resources>

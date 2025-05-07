@@ -40,6 +40,25 @@ public class OrderController2 {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null); // Trả về lỗi server
         }
     }
+    @GetMapping("/{orderId}") // Endpoint mới để lấy chi tiết theo ID
+    public ResponseEntity<?> getOrderDetailById(@PathVariable Long orderId) {
+        try {
+            System.out.println("Fetching detail for OrderID: " + orderId); // <<< Dùng logger
+            Order orderDetail = orderService.getOrderDetailsById(orderId);
+            // Trả về 200 OK cùng với đối tượng Order chi tiết
+            return ResponseEntity.ok(orderDetail);
+        } catch (ResourceNotFoundException e) {
+            // Trả về 404 Not Found nếu service ném ra lỗi này
+            System.out.println("Order not found: " + orderId); // <<< Dùng logger
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            // Bắt các lỗi không mong muốn khác (ví dụ: lỗi database khi truy vấn)
+             System.err.println("Error fetching order detail " + orderId + ": " + e.getMessage()); // <<< Dùng logger
+             // Log stack trace đầy đủ
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                 .body("Đã xảy ra lỗi không mong muốn khi lấy chi tiết đơn hàng.");
+        }
+    }
 
     // === API MỚI: Hủy đơn hàng ===
     @PutMapping("/{orderId}/cancel")

@@ -60,7 +60,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Your profile"
+                        android:text="Hồ sơ"
                         android:textColor="#FFFFFF"
                         android:textSize="32sp"
                         android:textStyle="bold"
@@ -157,7 +157,7 @@
                     android:paddingStart="20dp"
                     android:paddingEnd="20dp"
                     android:backgroundTint="#2C2C2C"
-                    android:text="Order History"
+                    android:text="Theo dõi trạng thái đơn hàng"
                     android:textColor="#E0E0E0" />
 
                 <Button
@@ -171,7 +171,7 @@
                     android:paddingStart="20dp"
                     android:paddingEnd="20dp"
                     android:backgroundTint="#2C2C2C"
-                    android:text="Shipping Address"
+                    android:text="Địa chỉ vận chuyển"
                     android:textColor="#E0E0E0" />
 
                 <Button
@@ -185,7 +185,7 @@
                     android:paddingStart="20dp"
                     android:paddingEnd="20dp"
                     android:backgroundTint="#2C2C2C"
-                    android:text="Credit Cards"
+                    android:text="Thẻ thanh toán"
                     android:textColor="#E0E0E0" />
 
             </LinearLayout>

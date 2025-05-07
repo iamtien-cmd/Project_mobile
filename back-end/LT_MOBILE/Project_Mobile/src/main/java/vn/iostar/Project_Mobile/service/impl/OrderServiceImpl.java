@@ -14,6 +14,7 @@ import java.sql.Date; // Hoặc java.time.LocalDate nếu dùng kiểu mới
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit; // Ví dụ tính ngày giao hàng
 
 @Service
@@ -146,6 +147,35 @@ public class OrderServiceImpl implements IOrderService {
               throw e; // Ném lại exception nếu có lỗi
           }
     }
+    @Override
+    @Transactional(readOnly = true) // <<< THÊM Transactional (readOnly=true cho hiệu suất tốt hơn khi chỉ đọc)
+    public Order getOrderDetailsById(Long orderId) throws ResourceNotFoundException {
+		// Sử dụng findById của JpaRepository, trả về Optional
+		Optional<Order> optionalOrder = orderRepository.findById(orderId);
+
+		// Kiểm tra xem Optional có chứa giá trị không
+		if (optionalOrder.isPresent()) {
+			Order order = optionalOrder.get();
+			// Quan trọng: Truy cập các collection lazy-loaded bên trong transaction
+			// để tránh LazyInitializationException khi trả về response
+			order.getOrderLines().size(); // Truy cập size để trigger load OrderLines
+			// Nếu cần cả thông tin Product trong OrderLine:
+			for (OrderLine line : order.getOrderLines()) {
+				if (line.getProduct() != null) {
+					line.getProduct().getName(); // Truy cập một thuộc tính của Product để trigger load
+				}
+			}
+			// Nếu cần thông tin User (dù đã LAZY, nhưng nếu muốn chắc chắn)
+			// if(order.getUser() != null) {
+			//    order.getUser().getFullName(); // Trigger load User
+			// }
+
+			return order; // Trả về đối tượng Order
+		} else {
+			// Nếu không tìm thấy, ném Exception
+			throw new ResourceNotFoundException("Không tìm thấy đơn hàng với ID: " + orderId);
+		}
+	}
     @Override
     @Transactional // Đảm bảo thao tác cập nhật là một transaction
     public Order cancelOrder(Long orderId) throws ResourceNotFoundException, IllegalStateException {

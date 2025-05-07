@@ -169,6 +169,9 @@ public class ProfileActivity extends AppCompatActivity {
     private void updateUI(User userInfo) {
         // Kiểm tra null trước khi setText để tránh crash
         currentUserId = userInfo.getUserId();
+        Log.d("tab", "Current User ID: " + currentUserId);
+// Hoặc đơn giản hơn nếu chỉ muốn log giá trị:
+        Log.d("tab", "" + currentUserId); // Nối với chuỗi rỗng
         if (userInfo.getEmail() != null) {
             emailTextView.setText(userInfo.getEmail());
         } else {
