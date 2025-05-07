@@ -197,6 +197,62 @@ END //
 
 DELIMITER ;
 
+# Trigger kiểm tra khi đơn hàng đã được thanh toán và được nhận xét thì tổng giá trị đơn hàng sẽ không thay đổi
+CREATE TRIGGER trg_freeze_order_prices_on_status_change
+BEFORE UPDATE ON orders
+FOR EACH ROW
+BEGIN
+    -- Khai báo tất cả biến ở đầu BEGIN
+    DECLARE v_order_id BIGINT;
+    DECLARE v_product_id_cursor BIGINT;
+    DECLARE v_quantity_cursor INT;
+    DECLARE v_current_product_price DECIMAL(10,2);
+    DECLARE v_order_line_id_cursor BIGINT;
+    DECLARE v_new_items_subtotal DECIMAL(10,2) DEFAULT 0;
+    DECLARE done INT DEFAULT FALSE;
+
+    DECLARE cur_order_lines CURSOR FOR
+        SELECT ol.order_line_id, ol.product_id, ol.quantity
+        FROM order_line ol
+        WHERE ol.order_id = NEW.order_id;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    -- Bắt đầu xử lý logic
+    IF (NEW.status IN ('RECEIVED', 'REVIEWED')) AND (OLD.status NOT IN ('RECEIVED', 'REVIEWED')) THEN
+        SET v_order_id = NEW.order_id;
+
+        OPEN cur_order_lines;
+        read_loop: LOOP
+            FETCH cur_order_lines INTO v_order_line_id_cursor, v_product_id_cursor, v_quantity_cursor;
+            IF done THEN
+                LEAVE read_loop;
+            END IF;
+
+            SELECT p.price INTO v_current_product_price
+            FROM product p
+            WHERE p.product_id = v_product_id_cursor;
+
+            UPDATE order_line
+            SET price_at_purchase = v_current_product_price,
+                line_total_at_purchase = v_current_product_price * v_quantity_cursor
+            WHERE order_line_id = v_order_line_id_cursor;
+
+            SET v_new_items_subtotal = v_new_items_subtotal + (v_current_product_price * v_quantity_cursor);
+        END LOOP;
+        CLOSE cur_order_lines;
+
+        SET NEW.items_subtotal = v_new_items_subtotal;
+
+        IF OLD.items_subtotal IS NOT NULL AND OLD.total_price IS NOT NULL THEN
+            SET NEW.total_price = NEW.items_subtotal + (OLD.total_price - OLD.items_subtotal);
+        ELSE
+            SET NEW.total_price = NEW.items_subtotal;
+        END IF;
+    END IF;
+END;
+
+
 #Frontend trang home
 ![image](https://github.com/user-attachments/assets/6f61a17a-5f87-4e18-974b-5cc441778b6b)
 
