@@ -74,6 +74,7 @@ Nếu gõ những từ khóa chưa được biết nó sẽ trả lời "xin l�
 ![image](https://github.com/user-attachments/assets/8af698cf-c85d-4457-9a98-986c35c5a6a8)
 ![image](https://github.com/user-attachments/assets/d6de670c-8c43-4c0c-8ba0-d9fd195c6fa5)
 # Tạo trigger ràng buộc khi nhập vào số lượng sản phẩm ở orderline, cột orderline.price = product.price * quantity
+
 CREATE TRIGGER trg_order_line_before_update
 BEFORE UPDATE ON order_line
 FOR EACH ROW
@@ -114,6 +115,73 @@ BEGIN
 END //
 
 DELIMITER ;
+# Tạo Trigger, Produce để khi cột items_subtotal sẽ được tự động tính bằng tổng các orderline có order_id giống nhau
+
+CREATE PROCEDURE sp_update_order_items_subtotal(IN p_order_id BIGINT)
+BEGIN
+    DECLARE v_total_subtotal DOUBLE;
+
+    -- Tính tổng giá của tất cả order_line cho order_id đã cho
+    SELECT COALESCE(SUM(price), 0) -- COALESCE để trả về 0 nếu không có order_line nào (SUM là NULL)
+    INTO v_total_subtotal
+    FROM order_line
+    WHERE order_id = p_order_id;
+
+    -- Cập nhật cột items_subtotal trong bảng orders
+    UPDATE orders
+    SET items_subtotal = v_total_subtotal
+    WHERE order_id = p_order_id;
+END //
+
+DELIMITER ;
+DELIMITER //
+
+CREATE TRIGGER trg_order_line_after_insert
+AFTER INSERT ON order_line
+FOR EACH ROW
+BEGIN
+    -- Gọi stored procedure để cập nhật items_subtotal cho order_id của dòng mới được chèn
+    CALL sp_update_order_items_subtotal(NEW.order_id);
+END //
+
+DELIMITER ;
+DELIMITER //
+
+CREATE TRIGGER trg_order_line_after_update
+AFTER UPDATE ON order_line
+FOR EACH ROW
+BEGIN
+    -- Nếu price thay đổi hoặc order_id của order_line thay đổi
+    IF NEW.price <> OLD.price OR NEW.order_id <> OLD.order_id THEN
+        -- Cập nhật items_subtotal cho order_id mới (hoặc order_id hiện tại nếu nó không đổi)
+        CALL sp_update_order_items_subtotal(NEW.order_id);
+
+        -- Nếu order_id thực sự đã thay đổi (order_line được chuyển sang order khác)
+        -- thì cũng cần cập nhật items_subtotal cho order_id cũ
+        IF NEW.order_id <> OLD.order_id THEN
+            CALL sp_update_order_items_subtotal(OLD.order_id);
+        END IF;
+    END IF;
+END //
+
+DELIMITER ;
+DELIMITER //
+
+CREATE TRIGGER trg_order_line_after_delete
+AFTER DELETE ON order_line
+FOR EACH ROW
+BEGIN
+    -- Gọi stored procedure để cập nhật items_subtotal cho order_id của dòng đã bị xóa
+    CALL sp_update_order_items_subtotal(OLD.order_id);
+END //
+
+DELIMITER ;
+UPDATE orders o
+SET items_subtotal = (
+    SELECT COALESCE(SUM(ol.price), 0)
+    FROM order_line ol
+    WHERE ol.order_id = o.order_id
+);
 
 #Frontend trang home
 ![image](https://github.com/user-attachments/assets/6f61a17a-5f87-4e18-974b-5cc441778b6b)
