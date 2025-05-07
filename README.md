@@ -117,49 +117,59 @@ END //
 DELIMITER ;
 # Tạo Trigger, Produce để khi cột items_subtotal sẽ được tự động tính bằng tổng các orderline có order_id giống nhau
 
-CREATE PROCEDURE sp_update_order_items_subtotal(IN p_order_id BIGINT)
-BEGIN
-    DECLARE v_total_subtotal DOUBLE;
-
-    -- Tính tổng giá của tất cả order_line cho order_id đã cho
-    SELECT COALESCE(SUM(price), 0) -- COALESCE để trả về 0 nếu không có order_line nào (SUM là NULL)
-    INTO v_total_subtotal
-    FROM order_line
-    WHERE order_id = p_order_id;
-
-    -- Cập nhật cột items_subtotal trong bảng orders
-    UPDATE orders
-    SET items_subtotal = v_total_subtotal
-    WHERE order_id = p_order_id;
-END //
-
-DELIMITER ;
 DELIMITER //
 
-CREATE TRIGGER trg_order_line_after_insert
+CREATE TRIGGER trg_ol_after_insert_upd_subtotal
 AFTER INSERT ON order_line
 FOR EACH ROW
 BEGIN
-    -- Gọi stored procedure để cập nhật items_subtotal cho order_id của dòng mới được chèn
-    CALL sp_update_order_items_subtotal(NEW.order_id);
+    DECLARE v_new_items_subtotal DOUBLE;
+
+    -- Tính lại tổng items_subtotal cho order_id của dòng mới được chèn
+    SELECT COALESCE(SUM(price), 0)
+    INTO v_new_items_subtotal
+    FROM order_line
+    WHERE order_id = NEW.order_id;
+
+    -- Cập nhật items_subtotal trong bảng orders
+    UPDATE orders
+    SET items_subtotal = v_new_items_subtotal
+    WHERE order_id = NEW.order_id;
 END //
 
-DELIMITER ;
+DELIMITER ; 
 DELIMITER //
 
-CREATE TRIGGER trg_order_line_after_update
+CREATE TRIGGER trg_ol_after_update_upd_subtotal
 AFTER UPDATE ON order_line
 FOR EACH ROW
 BEGIN
-    -- Nếu price thay đổi hoặc order_id của order_line thay đổi
-    IF NEW.price <> OLD.price OR NEW.order_id <> OLD.order_id THEN
-        -- Cập nhật items_subtotal cho order_id mới (hoặc order_id hiện tại nếu nó không đổi)
-        CALL sp_update_order_items_subtotal(NEW.order_id);
+    DECLARE v_updated_items_subtotal DOUBLE;
 
-        -- Nếu order_id thực sự đã thay đổi (order_line được chuyển sang order khác)
-        -- thì cũng cần cập nhật items_subtotal cho order_id cũ
+    -- Nếu giá (price) hoặc order_id của order_line thay đổi
+    IF NEW.price <> OLD.price OR NEW.order_id <> OLD.order_id THEN
+
+        -- Cập nhật items_subtotal cho order_id MỚI (hoặc order_id hiện tại nếu nó không đổi)
+        SELECT COALESCE(SUM(price), 0)
+        INTO v_updated_items_subtotal
+        FROM order_line
+        WHERE order_id = NEW.order_id;
+
+        UPDATE orders
+        SET items_subtotal = v_updated_items_subtotal
+        WHERE order_id = NEW.order_id;
+
+        -- Nếu order_id thực sự đã thay đổi (order_line được chuyển sang order khác),
+        -- thì cũng cần cập nhật items_subtotal cho order_id CŨ
         IF NEW.order_id <> OLD.order_id THEN
-            CALL sp_update_order_items_subtotal(OLD.order_id);
+            SELECT COALESCE(SUM(price), 0)
+            INTO v_updated_items_subtotal -- Có thể dùng lại biến
+            FROM order_line
+            WHERE order_id = OLD.order_id;
+
+            UPDATE orders
+            SET items_subtotal = v_updated_items_subtotal
+            WHERE order_id = OLD.order_id;
         END IF;
     END IF;
 END //
@@ -167,21 +177,25 @@ END //
 DELIMITER ;
 DELIMITER //
 
-CREATE TRIGGER trg_order_line_after_delete
+CREATE TRIGGER trg_ol_after_delete_upd_subtotal
 AFTER DELETE ON order_line
 FOR EACH ROW
 BEGIN
-    -- Gọi stored procedure để cập nhật items_subtotal cho order_id của dòng đã bị xóa
-    CALL sp_update_order_items_subtotal(OLD.order_id);
+    DECLARE v_remaining_items_subtotal DOUBLE;
+
+    -- Tính lại tổng items_subtotal cho order_id của dòng đã bị xóa
+    SELECT COALESCE(SUM(price), 0)
+    INTO v_remaining_items_subtotal
+    FROM order_line
+    WHERE order_id = OLD.order_id; -- OLD.order_id là order_id của dòng vừa bị xóa
+
+    -- Cập nhật items_subtotal trong bảng orders
+    UPDATE orders
+    SET items_subtotal = v_remaining_items_subtotal
+    WHERE order_id = OLD.order_id;
 END //
 
 DELIMITER ;
-UPDATE orders o
-SET items_subtotal = (
-    SELECT COALESCE(SUM(ol.price), 0)
-    FROM order_line ol
-    WHERE ol.order_id = o.order_id
-);
 
 #Frontend trang home
 ![image](https://github.com/user-attachments/assets/6f61a17a-5f87-4e18-974b-5cc441778b6b)
