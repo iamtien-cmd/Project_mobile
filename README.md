@@ -213,6 +213,30 @@ END;
 //
 
 DELIMITER ;
+# Trigger kiểm tra khi trạng thái đơn hàng là RECEIVED và REVIEWED thì giá tiền Orderline sẽ không được thay đổi
+DELIMITER //
+
+CREATE TRIGGER trg_prevent_orderline_update_after_received
+BEFORE UPDATE ON order_line
+FOR EACH ROW
+BEGIN
+    DECLARE v_order_status VARCHAR(20);
+
+    -- Lấy trạng thái của đơn hàng tương ứng
+    SELECT status INTO v_order_status
+    FROM orders
+    WHERE order_id = OLD.order_id;
+
+    -- Nếu trạng thái là RECEIVED hoặc REVIEWED thì chặn cập nhật
+    IF v_order_status IN ('RECEIVED', 'REVIEWED') THEN
+        -- Giữ nguyên giá và số lượng (chặn cập nhật)
+        SET NEW.price = OLD.price;
+        SET NEW.quantity = OLD.quantity;
+    END IF;
+END;
+//
+
+DELIMITER ;
 
 
 
