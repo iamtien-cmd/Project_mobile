@@ -73,8 +73,47 @@ Nếu gõ những từ khóa đã được train nó sẽ trả lời
 Nếu gõ những từ khóa chưa được biết nó sẽ trả lời "xin lỗi..."
 ![image](https://github.com/user-attachments/assets/8af698cf-c85d-4457-9a98-986c35c5a6a8)
 ![image](https://github.com/user-attachments/assets/d6de670c-8c43-4c0c-8ba0-d9fd195c6fa5)
+# Tạo trigger ràng buộc khi nhập vào số lượng sản phẩm ở orderline, cột orderline.price = product.price * quantity
+CREATE TRIGGER trg_order_line_before_update
+BEFORE UPDATE ON order_line
+FOR EACH ROW
+BEGIN
+    DECLARE product_unit_price DOUBLE;
 
+    -- Chỉ tính toán lại nếu quantity hoặc product_id thay đổi
+    -- Hoặc nếu ai đó cố tình cập nhật cột price trực tiếp (trigger này sẽ ghi đè)
+    IF NEW.quantity <> OLD.quantity OR NEW.product_id <> OLD.product_id THEN
+        -- Lấy giá của sản phẩm mới (nếu product_id thay đổi) hoặc sản phẩm hiện tại
+        SELECT price INTO product_unit_price
+        FROM product
+        WHERE product_id = NEW.product_id;
 
+        -- Kiểm tra nếu không tìm thấy giá sản phẩm
+        IF product_unit_price IS NULL THEN
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'Không thể cập nhật giá: Giá sản phẩm không tồn tại hoặc NULL.';
+        END IF;
+
+        -- Tính toán và gán giá trị mới cho cột price
+        -- NEW.price tham chiếu đến giá trị SẮP được cập nhật của cột 'price'
+        SET NEW.price = product_unit_price * NEW.quantity;
+    END IF;
+    -- Nếu bạn muốn LUÔN LUÔN ghi đè giá trị price mỗi khi có update, kể cả khi chỉ cột price được update
+    -- thì có thể bỏ điều kiện IF ở trên và thực hiện tính toán trực tiếp:
+    /*
+    SELECT price INTO product_unit_price
+    FROM product
+    WHERE product_id = NEW.product_id;
+
+    IF product_unit_price IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Không thể cập nhật giá: Giá sản phẩm không tồn tại hoặc NULL.';
+    END IF;
+    SET NEW.price = product_unit_price * NEW.quantity;
+    */
+END //
+
+DELIMITER ;
 
 #Frontend trang home
 ![image](https://github.com/user-attachments/assets/6f61a17a-5f87-4e18-974b-5cc441778b6b)
