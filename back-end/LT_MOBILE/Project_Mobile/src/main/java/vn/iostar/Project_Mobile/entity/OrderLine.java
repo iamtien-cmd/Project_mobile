@@ -20,6 +20,7 @@ public class OrderLine {
     private long orderLineId;
 
     private int quantity;
+    private double price;
 
     // === THÊM @JsonBackReference VÀ FetchType.LAZY CHO Order ===
     @ManyToOne(fetch = FetchType.LAZY) // <<< Tải trễ Order
