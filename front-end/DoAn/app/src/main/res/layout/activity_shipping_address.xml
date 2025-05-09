@@ -29,7 +29,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Shipping Addresses"
+            android:text="Địa chỉ giao hàng "
             android:textColor="#FFFFFF"
             android:textSize="20sp"
             android:textStyle="bold"
@@ -46,7 +46,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
-        android:text="+ Add New Address"
+        android:text="+ Thêm địa chỉ mới"
         android:backgroundTint="#2C2C2C"
         android:textColor="#E0E0E0"/>
 
@@ -54,7 +54,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Your Saved Addresses"
+        android:text="Địa chỉ đã lưu của bạn"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
@@ -79,7 +79,7 @@
         android:id="@+id/noAddressesTextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="No addresses found."
+        android:text="Không tìm thấy địa chỉ nào."
         android:gravity="center"
         android:textSize="16sp"
         android:textColor="#666666"

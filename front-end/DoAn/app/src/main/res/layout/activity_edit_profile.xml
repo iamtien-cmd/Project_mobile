@@ -26,7 +26,7 @@
         android:id="@+id/textViewClickToChange"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Click image to change avatar"
+        android:text="Nhấn vào ảnh đại diện để thay đổi"
         android:textSize="12sp"
         app:layout_constraintTop_toBottomOf="@id/editAvatarImageView"
         app:layout_constraintStart_toStartOf="@id/editAvatarImageView"
@@ -49,7 +49,7 @@
         android:id="@+id/editFullNameEditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Full Name"
+        android:hint="Họ và tên"
         android:inputType="textPersonName" />
 
 </com.google.android.material.textfield.TextInputLayout>
@@ -69,7 +69,7 @@ app:layout_constraintEnd_toEndOf="parent">
     android:id="@+id/editPhoneEditText"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:hint="Phone Number"
+    android:hint="Số điện thoại"
     android:inputType="phone" />
 
 </com.google.android.material.textfield.TextInputLayout>
@@ -79,7 +79,7 @@ android:id="@+id/saveProfileButton"
 android:layout_width="0dp"
 android:layout_height="wrap_content"
 android:layout_marginTop="32dp"
-android:text="Save Changes"
+android:text="Lưu thay đổi"
 app:layout_constraintTop_toBottomOf="@id/phoneInputLayout"
 app:layout_constraintStart_toStartOf="parent"
 app:layout_constraintEnd_toEndOf="parent"/>

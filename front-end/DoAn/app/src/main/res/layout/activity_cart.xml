@@ -18,7 +18,7 @@
     <TextView
         android:layout_marginTop="10dp"
         android:paddingStart="20dp"
-        android:text="YOUR CART:"
+        android:text="GIỎ HÀNG CỦA BẠN:"
         android:textStyle="bold"
         android:textColor="@color/blue"
         android:textSize="28dp"
@@ -88,7 +88,7 @@ android:id="@+id/checkboxSelectAll"
 android:layout_width="wrap_content"
 android:layout_height="wrap_content"
 android:buttonTint="#EEEEEE"
-android:text="Select All"
+android:text="Chọn tất cả"
 android:textColor="#EEEEEE" />
 
     <!-- Bỏ LinearLayout chứa Thuế và Phí vận chuyển -->

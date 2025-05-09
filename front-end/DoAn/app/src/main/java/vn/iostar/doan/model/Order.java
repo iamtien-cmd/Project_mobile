@@ -1,6 +1,8 @@
 package vn.iostar.doan.model;
 
 import com.google.gson.annotations.SerializedName;
+
+import java.util.Date;
 import java.util.List;
 public class Order {
 
@@ -14,10 +16,10 @@ public class Order {
     private boolean reviewed;
 
     @SerializedName("orderDate")
-    private String orderDate; // Nhận là String
+    private Date orderDate; // Nhận là String
 
     @SerializedName("predictReceiveDate")
-    private String predictReceiveDate;
+    private Date predictReceiveDate;
 
     @SerializedName("itemsSubtotal")
     private Double itemsSubtotal;
@@ -45,7 +47,10 @@ public class Order {
     @SerializedName("orderLines")
     private List<OrderLine> orderLines;
 
-    public Order(Long orderId, Double totalPrice, String orderDate, String predictReceiveDate, Double itemsSubtotal, PaymentMethod paymentMethod, OrderStatus status, String shippingAddress, User user, List<OrderLine> orderLines) {
+    public Order() {
+    }
+
+    public Order(Long orderId, Double totalPrice, Date orderDate, Date predictReceiveDate, Double itemsSubtotal, PaymentMethod paymentMethod, OrderStatus status, String shippingAddress, User user, List<OrderLine> orderLines) {
         this.orderId = orderId;
         this.totalPrice = totalPrice;
         this.orderDate = orderDate;
@@ -56,6 +61,38 @@ public class Order {
         this.shippingAddress = shippingAddress;
         this.user = user;
         this.orderLines = orderLines;
+    }
+
+    public boolean isReviewed() {
+        return reviewed;
+    }
+
+    public void setReviewed(boolean reviewed) {
+        this.reviewed = reviewed;
+    }
+
+    public double getShippingFee() {
+        return shippingFee;
+    }
+
+    public void setShippingFee(double shippingFee) {
+        this.shippingFee = shippingFee;
+    }
+
+    public double getDiscountAmount() {
+        return discountAmount;
+    }
+
+    public void setDiscountAmount(double discountAmount) {
+        this.discountAmount = discountAmount;
+    }
+
+    public String getVoucherCode() {
+        return voucherCode;
+    }
+
+    public void setVoucherCode(String voucherCode) {
+        this.voucherCode = voucherCode;
     }
 
     public Long getOrderId() {
@@ -74,19 +111,19 @@ public class Order {
         this.totalPrice = totalPrice;
     }
 
-    public String getOrderDate() {
+    public Date getOrderDate() {
         return orderDate;
     }
 
-    public void setOrderDate(String orderDate) {
+    public void setOrderDate(Date orderDate) {
         this.orderDate = orderDate;
     }
 
-    public String getPredictReceiveDate() {
+    public Date getPredictReceiveDate() {
         return predictReceiveDate;
     }
 
-    public void setPredictReceiveDate(String predictReceiveDate) {
+    public void setPredictReceiveDate(Date predictReceiveDate) {
         this.predictReceiveDate = predictReceiveDate;
     }
 

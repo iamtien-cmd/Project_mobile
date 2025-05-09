@@ -37,6 +37,8 @@ public class Product {
         this.productId = id;
     }
 
+    public Product() {
+    }
 
     public Product(long productId, String image, String name, Double price, String description, Category category) {
         this.productId = productId;

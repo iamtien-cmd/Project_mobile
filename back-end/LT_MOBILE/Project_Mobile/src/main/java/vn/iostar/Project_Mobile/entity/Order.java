@@ -60,6 +60,6 @@ public class Order {
     private PaymentMethod paymentMethod;
 
     @Column(name = "reviewed") 
-    private boolean reviewed = false;
+    private Boolean reviewed = false;
 
 }

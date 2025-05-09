@@ -144,21 +144,21 @@ public class VNPAYPaymentActivity extends AppCompatActivity {
                     if (order != null && order.getStatus() != null) {
                         // *** Xử lý dựa trên trạng thái từ Backend (đã được cập nhật bởi IPN) ***
                         // So sánh trạng thái với các giá trị trong Enum OrderStatus của Mobile
-                        if (order.getStatus() == OrderStatus.Reviewed || // Trạng thái Backend set khi IPN thành công
-                                order.getStatus() == OrderStatus.Waiting || // Hoặc Waiting nếu Backend set Waiting
-                                order.getStatus() == OrderStatus.Shipping||
-                                order.getStatus() == OrderStatus.Delivered) {
+                        if (order.getStatus() == OrderStatus.REVIEWED || // Trạng thái Backend set khi IPN thành công
+                                order.getStatus() == OrderStatus.WAITING || // Hoặc Waiting nếu Backend set Waiting
+                                order.getStatus() == OrderStatus.SHIPPING||
+                                order.getStatus() == OrderStatus.DELIVERED) {
 
                             Toast.makeText(VNPAYPaymentActivity.this, "Thanh toán VNPAY thành công! Mã đơn: " + order.getOrderId(), Toast.LENGTH_LONG).show();
                             // Chuyển hướng đến màn hình thành công hoặc trang chủ
                             navigateAfterPayment(true);
 
-                        } else if (order.getStatus() == OrderStatus.Cancelled || order.getStatus() == OrderStatus.Cancelled) {
+                        } else if (order.getStatus() == OrderStatus.CANCELLED ) {
                             Toast.makeText(VNPAYPaymentActivity.this, "Thanh toán VNPAY thất bại hoặc đã bị hủy cho đơn " + order.getOrderId() + ".", Toast.LENGTH_LONG).show();
                             // Chuyển hướng đến màn hình thông báo thất bại hoặc lịch sử đơn hàng
                             navigateAfterPayment(false);
 
-                        } else if (order.getStatus() == OrderStatus.Pending) {
+                        } else if (order.getStatus() == OrderStatus.PENDING) {
                             // IPN có thể bị trễ. Đơn hàng vẫn PendingPayment.
                             Toast.makeText(VNPAYPaymentActivity.this, "Đơn hàng đang chờ xác nhận thanh toán. Vui lòng kiểm tra lại sau.", Toast.LENGTH_LONG).show();
                             // Chuyển hướng đến lịch sử đơn hàng hoặc trang chủ

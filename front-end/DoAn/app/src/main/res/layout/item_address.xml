@@ -37,7 +37,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:background="@drawable/ic_launcher_background"
+                android:background="@drawable/ic_location_default"
                 android:paddingStart="8dp"
                 android:paddingTop="2dp"
                 android:paddingEnd="8dp"
@@ -72,7 +72,7 @@
                 style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Set Default"
+                android:text="Thiết lập mặc định"
                 android:textColor="#007BFF"
                 android:textSize="12sp" />
 
@@ -81,7 +81,7 @@
                 style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Edit"
+                android:text="Chỉnh sửa"
                 android:textColor="#007BFF"
                 android:textSize="12sp"
                 android:layout_marginStart="8dp"/>
@@ -91,7 +91,7 @@
                 style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Delete"
+                android:text="Xóa"
                 android:textColor="#DC3545"
                 android:textSize="12sp"
                 android:layout_marginStart="8dp"/>

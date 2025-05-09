@@ -3,6 +3,8 @@ package vn.iostar.doan.model;
 import com.google.gson.annotations.SerializedName;
 
 public class OrderLine {
+
+
     @SerializedName("orderLineId")
     private Long orderLineId;
 
@@ -16,7 +18,12 @@ public class OrderLine {
 
     @SerializedName("product")
     private Product product;
+    public OrderLine() {
+    }
 
+    public OrderLine(Long orderLineId) {
+        this.orderLineId = orderLineId;
+    }
     public OrderLine(Long orderLineId, Integer quantity, Double price, Product product) {
         this.orderLineId = orderLineId;
         this.quantity = quantity;

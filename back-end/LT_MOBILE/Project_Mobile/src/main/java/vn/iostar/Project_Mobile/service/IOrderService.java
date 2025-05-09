@@ -19,7 +19,7 @@ import vn.iostar.Project_Mobile.repository.AddressRepository;
 import vn.iostar.Project_Mobile.repository.CartItemRepository;
 import vn.iostar.Project_Mobile.repository.CartRepository;
 import vn.iostar.Project_Mobile.repository.OrderLineRepository;
-import vn.iostar.Project_Mobile.repository.OrderRepository;
+import vn.iostar.Project_Mobile.repository.IOrderRepository;
 import vn.iostar.Project_Mobile.repository.ProductRepository;
 
 

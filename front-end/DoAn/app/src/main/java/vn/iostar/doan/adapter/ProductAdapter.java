@@ -29,7 +29,6 @@ import vn.iostar.doan.model.Product;
 public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHolder> {
 
     private static final String TAG = "ProductAdapter"; // Thêm TAG để log
-
     private Context context;
     private List<Product> productList;
     private String token; // Lưu token
@@ -38,21 +37,39 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
     private NumberFormat currencyFormatter;
 
     // --- Constructor duy nhất nhận tất cả dữ liệu cần thiết ---
-    public ProductAdapter(Context context, List<Product> productList, String token, long userId) {
+    public ProductAdapter(Context context, List<Product> productList) {
         this.context = context;
         this.productList = productList;
+        this.currencyFormatter = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+
     }
     public ProductAdapter(Context context, List<Product> productList, String token) {
         this.context = context;
         this.productList = productList;
         this.token = token; // <<< Lưu token
+        this.currencyFormatter = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+
     }
+    public ProductAdapter(Context context, List<Product> productList, String token, long userId) {
+        this.context = context;
+        // Khởi tạo productList nếu nó null để tránh lỗi ở getItemCount hoặc onBindViewHolder
+        this.productList = (productList != null) ? productList : new ArrayList<>();
+        this.token = token;
+        this.userId = userId;
+        // KHỞI TẠO currencyFormatter
+        this.currencyFormatter = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+    }
+
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         // Sử dụng context đã lưu để lấy LayoutInflater
         View view = LayoutInflater.from(context).inflate(R.layout.item_product, parent, false);
         return new ViewHolder(view);
+    }
+    public void updateList(List<Product> newList) {
+        productList = newList;
+        notifyDataSetChanged();
     }
 
     @Override
@@ -135,7 +152,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
                     // Nếu chỉ là tên file, ghép với Base URL ảnh
                     // *** THAY ĐỔI URL NÀY CHO ĐÚNG VỚI BACKEND CỦA BẠN ***
                     // Đây là URL ví dụ, bạn cần lấy URL chính xác từ cấu hình ứng dụng hoặc API
-                    String BASE_IMAGE_URL = "http://192.168.1.7:8080/api/v1/images/";
+                    String BASE_IMAGE_URL = "http://10.0.2.2:8080/api/v1/images/";
                     finalImageUrl = BASE_IMAGE_URL + imageUrlOrPath;
                 }
 

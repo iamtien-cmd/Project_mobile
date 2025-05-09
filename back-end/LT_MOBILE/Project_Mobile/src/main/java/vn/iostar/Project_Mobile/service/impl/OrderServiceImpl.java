@@ -45,7 +45,7 @@ public class OrderServiceImpl implements IOrderService {
 
     private final AddressRepository addressRepository;
     private final CartItemRepository cartItemRepository;
-    private final OrderRepository orderRepository;
+    private final IOrderRepository orderRepository;
     private final OrderLineRepository orderLineRepository;
     private final ProductRepository productRepository;
     private final CartRepository cartRepository; // Thêm CartRepository
@@ -53,7 +53,7 @@ public class OrderServiceImpl implements IOrderService {
     
     public OrderServiceImpl(AddressRepository addressRepository,
                             CartItemRepository cartItemRepository,
-                            OrderRepository orderRepository,
+                            IOrderRepository orderRepository,
                             OrderLineRepository orderLineRepository,
                             ProductRepository productRepository,
                             CartRepository cartRepository, 
@@ -406,7 +406,7 @@ public class OrderServiceImpl implements IOrderService {
      public List<Order> getOrdersByUserId(Long userId) {
     	  try {
               // Kiểm tra xem userId có tồn tại không
-              List<Order> orders = orderRepository.findByUserId(userId);
+              List<Order> orders = orderRepository.findByUser_UserId(userId);
               System.err.println("Lấy đơn hàng: " + orders);
               return orders;
           } catch (Exception e) {

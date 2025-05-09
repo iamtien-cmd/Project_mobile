@@ -56,8 +56,6 @@
         <activity
             android:name=".activity.OrderHistoryActivity"/>
         <activity
-            android:name=".activity.OrderDetailActivity"/>
-        <activity
             android:name=".activity.VNPAYPaymentActivity"
             android:exported="true"
             android:launchMode="singleTask"

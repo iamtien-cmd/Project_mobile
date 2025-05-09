@@ -345,16 +345,6 @@ public class HomeActivity extends AppCompatActivity {
             }
         });
 
-        // ImageView ivLocation = findViewById(R.id.ivLocation); // ID trong XML là ivLocation
-        // if (ivLocation != null) {
-        //    ivLocation.setOnClickListener(v -> {
-        //        // Mở màn hình liên quan đến vị trí/bản đồ
-        //        // Intent locationIntent = new Intent(HomeActivity.this, LocationActivity.class);
-        //        // locationIntent.putExtra("token", authToken);
-        //        // startActivity(locationIntent);
-        //         Toast.makeText(this, "Chức năng Vị trí sắp ra mắt", Toast.LENGTH_SHORT).show();
-        //    });
-        // }
         ImageView ivAboutUs = findViewById(R.id.ivaboutus); // ID trong XML là ivaboutus
         if (ivAboutUs != null) {
             ivAboutUs.setOnClickListener(v -> {

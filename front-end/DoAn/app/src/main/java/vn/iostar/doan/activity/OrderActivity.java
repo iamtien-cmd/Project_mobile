@@ -114,21 +114,21 @@ public class OrderActivity extends AppCompatActivity {
 
                         if (order != null && order.getStatus() != null) {
                             // *** SỬA LOGIC KIỂM TRA TRẠNG THÁI DỰA TRÊN ENUM ĐỒNG BỘ ***
-                            if (order.getStatus() == OrderStatus.Reviewed || order.getStatus() == OrderStatus.Shipping || order.getStatus() == OrderStatus.Delivered) { // Các trạng thái thành công sau thanh toán
+                            if (order.getStatus() == OrderStatus.REVIEWED || order.getStatus() == OrderStatus.SHIPPING || order.getStatus() == OrderStatus.DELIVERED) { // Các trạng thái thành công sau thanh toán
                                 Toast.makeText(OrderActivity.this, "Thanh toán VNPAY thành công! Mã đơn: " + order.getOrderId(), Toast.LENGTH_LONG).show();
                                 Intent successIntent = new Intent(OrderActivity.this, HomeActivity.class); // Hoặc OrderHistoryActivity
                                 successIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                                 startActivity(successIntent);
                                 finish();
-                            } else if (order.getStatus() == OrderStatus.Cancelled || order.getStatus() == OrderStatus.Cancelled) { // Trạng thái thất bại/hủy
+                            } else if (order.getStatus() == OrderStatus.CANCELLED ) { // Trạng thái thất bại/hủy
                                 Toast.makeText(OrderActivity.this, "Thanh toán VNPAY thất bại hoặc đã bị hủy cho đơn " + order.getOrderId() + ". Vui lòng thử lại.", Toast.LENGTH_LONG).show();
                                 binding.btnPlaceOrder.setEnabled(true);
                                 pendingVnpayOrderId = null; // Reset state
-                            } else if (order.getStatus() == OrderStatus.Pending) { // Vẫn chờ xác nhận (IPN chưa tới?)
+                            } else if (order.getStatus() == OrderStatus.PENDING) { // Vẫn chờ xác nhận (IPN chưa tới?)
                                 Toast.makeText(OrderActivity.this, "Trạng thái đơn hàng VNPAY chưa được xác nhận. Vui lòng kiểm tra lại sau.", Toast.LENGTH_LONG).show();
                                 binding.btnPlaceOrder.setEnabled(true);
                                 pendingVnpayOrderId = null; // Reset state
-                            } else if (order.getStatus() == OrderStatus.Waiting) { // Trạng thái Waiting (Ban đầu cho COD)
+                            } else if (order.getStatus() == OrderStatus.WAITING) { // Trạng thái Waiting (Ban đầu cho COD)
                                 // Nếu Backend chuyển PendingPayment -> Waiting khi thành công VNPAY,
                                 // thì Mobile coi Waiting là thành công (không khuyến khích, nên dùng Processing).
                                 Toast.makeText(OrderActivity.this, "Đơn hàng VNPAY đã được xác nhận. Mã đơn: " + order.getOrderId(), Toast.LENGTH_LONG).show();

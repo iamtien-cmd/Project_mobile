@@ -35,6 +35,4 @@ public class OrderLine {
     @JsonIgnoreProperties({"orderLines", "category", /* các trường khác nếu có */ "hibernateLazyInitializer", "handler"})
     private Product product;
 
-    
-     private double price;
-}
+    }

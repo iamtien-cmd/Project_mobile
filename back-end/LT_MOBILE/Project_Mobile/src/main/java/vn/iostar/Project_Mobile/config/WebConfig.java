@@ -27,7 +27,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 .allowedOrigins("http://localhost:8080")  // Ví dụ frontend của bạn
-                .allowedMethods("GET", "POST", "PUT", "DELETE","PATCH");
+                .allowedMethods("GET", "POST", "PUT", "DELETE","PATCH");}
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // Lấy đường dẫn tuyệt đối của thư mục upload

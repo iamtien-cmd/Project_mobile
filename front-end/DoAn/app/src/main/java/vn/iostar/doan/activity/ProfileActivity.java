@@ -44,7 +44,6 @@ public class ProfileActivity extends AppCompatActivity {
     private ActivityResultLauncher<Intent> editProfileLauncher;
     private ActivityResultLauncher<Intent> shippingAddressLauncher;
     private ActivityResultLauncher<Intent> orderHistoryLauncher; // Launcher cho Order History
-    private ActivityResultLauncher<Intent> creditCardsLauncher; // Launcher cho Credit Cards
     // --- HẾT KHAI BÁO LAUNCHER ---
 
 
@@ -116,14 +115,6 @@ public class ProfileActivity extends AppCompatActivity {
                     Log.d(TAG, "OrderHistoryLauncher callback received. ResultCode: " + result.getResultCode());
                 });
 
-        // Credit Cards Launcher
-        creditCardsLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    // Similarly, Credit Cards screen usually doesn't affect the profile UI directly on return.
-                    Log.d(TAG, "CreditCardsLauncher callback received. ResultCode: " + result.getResultCode());
-                });
-        // --- End Register Launchers ---
 
 
         // Lấy thông tin người dùng bằng token sau khi đã đăng ký launchers
@@ -142,14 +133,12 @@ public class ProfileActivity extends AppCompatActivity {
         orderHistoryButton = findViewById(R.id.orderHistoryButton);
         editProfileButton = findViewById(R.id.editProfileButton);
         shippingAddressButton = findViewById(R.id.shippingAddressButton);
-        creditCardsButton = findViewById(R.id.creditCardsButton);
     }
 
     private void setupButtonClickListeners() {
         editProfileButton.setOnClickListener(v -> navigateToEditProfile());
         shippingAddressButton.setOnClickListener(v -> navigateToShippingAddress());
         orderHistoryButton.setOnClickListener(v -> navigateToOrderHistory()); // Sử dụng phương thức mới
-        creditCardsButton.setOnClickListener(v -> navigateToCreditCards()); // Sử dụng phương thức mới
     }
 
     private void getUserInfo(String token) {
@@ -314,26 +303,5 @@ public class ProfileActivity extends AppCompatActivity {
         orderHistoryLauncher.launch(intent); // Use the Order History launcher
     }
 
-    private void navigateToCreditCards() {
-         // Check if user data is loaded and user ID is valid (assuming Credit Cards needs user ID/token)
-        if (currentUser == null || currentUser.getUserId() <= 0) {
-            Toast.makeText(this, "User information not loaded yet or invalid.", Toast.LENGTH_SHORT).show();
-            Log.w(TAG, "navigateToCreditCards called but currentUser or User ID is invalid: " + (currentUser != null ? currentUser.getUserId() : "null"));
-            return;
-        }
-         if (token == null || token.isEmpty()) {
-             Toast.makeText(this, "Authentication error, cannot view credit cards.", Toast.LENGTH_SHORT).show();
-              Log.w(TAG, "navigateToCreditCards called but token is null or empty.");
-             return;
-         }
 
-        Intent intent = new Intent(ProfileActivity.this, CreditCardActivity.class);
-         // Pass user ID and token to the credit cards screen
-        intent.putExtra("userId", currentUser.getUserId());
-        intent.putExtra("token", token); // Pass token if CreditCardActivity needs it
-
-        Log.i(TAG, "Launching CreditCardActivity using launcher with User ID: " + currentUser.getUserId());
-        creditCardsLauncher.launch(intent); // Use the Credit Cards launcher
-    }
-    // --- HẾT CÁC PHƯƠNG THỨC ĐIỀU HƯỚNG ---
 }
