@@ -18,4 +18,8 @@
     <color name="my_green_success">#4CAF50</color> <!-- Màu xanh lá cho thành công (ví dụ: RECEIVED) -->
     <color name="my_orange_processing">#FF9800</color>
     <color name="yellow">#FFD700</color>
+    <color name="red">#F45000</color>
+    <color name="grey_dark">#616161</color>
+    <color name="grey_darker">#424242</color>
+    <!-- Thêm các màu khác nếu bạn dùng tên khác -->
 </resources>

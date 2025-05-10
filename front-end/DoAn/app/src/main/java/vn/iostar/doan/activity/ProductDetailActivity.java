@@ -98,8 +98,8 @@ public class ProductDetailActivity extends AppCompatActivity {
         // Lấy dữ liệu từ Intent
         Intent intent = getIntent();
         if (intent != null) {
-            currentProductId = intent.getLongExtra("product_id", -1L);
-            userId = intent.getLongExtra("user_id", -1L);
+            currentProductId = intent.getLongExtra("productId", -1L);
+            userId = intent.getLongExtra("userId", -1L);
             Log.d(TAG, "Received from Intent - Product ID: " + currentProductId + ", User ID: " + userId);
 
             // Nếu có Product ID hợp lệ thì fetch dữ liệu
