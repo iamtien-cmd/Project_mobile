@@ -6,8 +6,7 @@ Link: https://drive.google.com/file/d/1GVgKhK26V8Z96uTEEyROwZ1zyFLVAPKq/view?usp
 
 
 # usecase diagram
-![image](https://github.com/user-attachments/assets/905ca45d-ae93-489a-89dc-d4e0b28ee625)
-
+![Uploading image.png…]()
 
 # ERD
 ![image](https://github.com/user-attachments/assets/23a250bc-ab81-46d0-999e-accf25a1aabe)
