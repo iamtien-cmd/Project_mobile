@@ -47,5 +47,7 @@ public class Comment {
     @JoinColumn(name = "productId", nullable = false)
     @JsonIgnore
     private Product product;
+    
+    private boolean reviewed = false;
 
 }

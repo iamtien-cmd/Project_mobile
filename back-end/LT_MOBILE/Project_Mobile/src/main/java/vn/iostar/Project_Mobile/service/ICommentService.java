@@ -6,8 +6,12 @@ import vn.iostar.Project_Mobile.DTO.CommentResponse;
 import vn.iostar.Project_Mobile.entity.Comment;
 import vn.iostar.Project_Mobile.entity.Product;
 
+import vn.iostar.Project_Mobile.entity.User;
+
 public interface ICommentService {
     Comment save(Comment comment);
     List<CommentResponse> getCommentsByProduct(Product product);
     void deleteComment(Long id);
+
+    boolean hasUserReviewedProduct(User user, Product product);
 }
