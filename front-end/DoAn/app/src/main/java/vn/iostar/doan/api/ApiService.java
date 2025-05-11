@@ -90,7 +90,7 @@ public interface ApiService {
     Call<User1> resetPassword(@Body ForgotPasswordRequest forgotPasswordRequest);
 
     @POST("/api/comments")
-    Call<Comment> createComment(@Body CommentRequest commentRequest);
+    Call<Comment> createComment(@Header("Authorization") String token, @Body CommentRequest commentRequest);
 
     @GET("/api/comments/product/{productId}")
     Call<List<Comment>> getCommentsByProduct(@Path("productId") long productId);
