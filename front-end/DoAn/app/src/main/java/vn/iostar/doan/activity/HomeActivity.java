@@ -35,6 +35,7 @@ import vn.iostar.doan.model.Product;
 import vn.iostar.doan.model.User;
 import vn.iostar.doan.model.User1;
 import vn.iostar.doan.model.User; // Import User model
+import vn.iostar.doan.utils.SharedPreferencesUtils;
 
 public class HomeActivity extends AppCompatActivity {
     private static final String TAG = "HomeActivity"; // Thêm TAG
@@ -99,6 +100,7 @@ public class HomeActivity extends AppCompatActivity {
         if (tokenFromIntent != null && !tokenFromIntent.isEmpty()) {
             this.authToken = tokenFromIntent;
             // Lưu lại token vào SharedPreferences nếu muốn
+            SharedPreferencesUtils.saveString(this, "token", authToken);
             prefs.edit().putString("token", authToken).apply();
         } else {
             // Lấy token từ SharedPreferences nếu không có trong Intent
