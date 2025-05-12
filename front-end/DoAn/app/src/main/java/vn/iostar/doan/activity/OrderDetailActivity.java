@@ -222,9 +222,8 @@ public class OrderDetailActivity extends AppCompatActivity {
 
                 if (product != null) {
                     tvName.setText(product.getName());
-                    // Giả định Product2 có getImageUrl() trả về URL ảnh
                     Glide.with(this)
-                            .load(product.getImages())
+                            .load(product.getImage())
                             .placeholder(R.drawable.placeholder_image)
                             .error(R.drawable.error_image)
                             .into(ivProduct);

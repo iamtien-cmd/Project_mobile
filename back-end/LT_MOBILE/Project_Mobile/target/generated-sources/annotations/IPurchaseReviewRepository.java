@@ -1,4 +1,3 @@
-// src/main/java/vn/iostar/Project_Mobile/repository/PurchaseReviewRepository.java
 package vn.iostar.Project_Mobile.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -239,14 +239,7 @@ public class ProductDetailActivity extends AppCompatActivity {
             showError("Lỗi: Dữ liệu sản phẩm không hợp lệ.");
             return;
         }
-
-        // --- Hiển thị thông tin cơ bản ---
         textViewProductName.setText(product.getName());
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle(product.getName());
-            getSupportActionBar().setDisplayShowTitleEnabled(true);
-        }
-
         NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
         textViewProductPrice.setText(currencyFormatter.format(product.getPrice()));
         textViewProductQuantity.setText("Còn lại: " + product.getQuantity()); // Giả sử có getQuantity()
@@ -408,8 +401,7 @@ public class ProductDetailActivity extends AppCompatActivity {
             progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
         }
         if (isLoading) {
-            showContent(false); // Ẩn nội dung khi đang tải
-            showError(null);    // Ẩn lỗi cũ
+            showError(null);
         }
         // Việc hiển thị lại nội dung sẽ do onResponse xử lý
     }

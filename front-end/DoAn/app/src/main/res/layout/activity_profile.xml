@@ -22,6 +22,18 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             tools:srcCompat="@tools:sample/backgrounds/scenic" />
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbarProfile"
+            android:layout_width="0dp"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@android:color/transparent"
+            app:navigationIcon="@drawable/ic_back"
+            app:title=""
+            app:layout_constraintTop_toTopOf="@id/headerImageView"
+            app:layout_constraintStart_toStartOf="@id/headerImageView"
+            app:layout_constraintEnd_toEndOf="@id/headerImageView"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+            android:elevation="4dp"/>
 
         <!-- Profile Content Card -->
         <androidx.cardview.widget.CardView

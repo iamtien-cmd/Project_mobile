@@ -21,5 +21,6 @@
     <color name="red">#F45000</color>
     <color name="grey_dark">#616161</color>
     <color name="grey_darker">#424242</color>
+    <color name="beige_background_edit_profile">#FFF8E1</color>
     <!-- Thêm các màu khác nếu bạn dùng tên khác -->
 </resources>

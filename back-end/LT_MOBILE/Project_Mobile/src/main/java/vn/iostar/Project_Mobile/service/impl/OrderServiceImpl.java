@@ -311,10 +311,6 @@ public class OrderServiceImpl implements IOrderService {
              // Kiểm tra xem đơn hàng đã được xử lý IPN trước đó chưa
              if (order.getStatus() != OrderStatus.PENDING) {
                  logger.warn("VNPAY IPN: Order ID {} already processed or in invalid state. Current status: {}. Expected PENDING.", orderId, order.getStatus());
-                 // Nếu đã WAITING hoặc DELIVERED... nghĩa là đã xử lý thành công trước đó.
-                 // Không nên ném lỗi ở đây nếu đây là IPN trùng lặp cho giao dịch đã thành công.
-                 // Thay vào đó, nên kiểm tra vnp_TransactionNo (mã giao dịch VNPAY) xem đã lưu chưa.
-                 // Hoặc, nếu bạn muốn đơn giản, chỉ xử lý khi PENDING.
                  throw new IllegalStateException("Đơn hàng " + orderId + " không ở trạng thái chờ thanh toán: " + order.getStatus().name()); // RspCode 02
              }
 

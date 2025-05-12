@@ -16,7 +16,10 @@
         <item name="android:backgroundTint">@android:color/white</item>
         <item name="android:textColor">@color/black</item>
     </style>
-
+    <style name="ShapeAppearanceOverlay.App.EditProfile.CornerSize50Percent" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
     <!-- Style cho RatingBar -->
     <style name="RatingBar" parent="Widget.AppCompat.RatingBar.Small">
         <item name="colorControlNormal">@color/grey_400</item>
