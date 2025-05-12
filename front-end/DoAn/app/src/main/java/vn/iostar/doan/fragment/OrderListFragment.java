@@ -102,6 +102,7 @@ public class OrderListFragment extends Fragment implements OrderAdapter.OrderInt
         return inflater.inflate(R.layout.fragment_order_list, container, false);
     }
 
+
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);

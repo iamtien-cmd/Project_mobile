@@ -12,6 +12,6 @@ public interface ICommentService {
     Comment save(Comment comment);
     List<CommentResponse> getCommentsByProduct(Product product);
     void deleteComment(Long id);
-
+    Comment createComment(Comment comment);
     boolean hasUserReviewedProduct(User user, Product product);
 }
