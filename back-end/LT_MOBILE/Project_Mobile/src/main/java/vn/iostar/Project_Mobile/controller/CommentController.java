@@ -40,46 +40,60 @@ public class CommentController {
     // Client cần gửi userId trong DTO này.
     // Cân nhắc: Endpoint này có nên yêu cầu xác thực không? Nếu có, userId trong DTO có thể không cần thiết.
 
-     @PostMapping
-     public ResponseEntity<?> createGeneralComment(@Valid @RequestBody CommentRequestDTO commentRequestDTO) {
-         try {
-             // Lấy User từ userId trong DTO
-             User user = userService.findById(commentRequestDTO.getUserId())
-                     .orElseThrow(() -> new UserNotFoundException("User not found with id: " + commentRequestDTO.getUserId()));
+    @PostMapping
+    public ResponseEntity<?> createGeneralComment(
+            // *** CÂN NHẮC: Lấy user từ token thay vì DTO nếu endpoint này yêu cầu xác thực ***
+            // @RequestHeader("Authorization") String authHeader, // Ví dụ
+            @Valid @RequestBody CommentRequestDTO commentRequestDTO) {
+        try {
+            // *** CÂN NHẮC LẠI LOGIC LẤY USER ***
+            // Nếu yêu cầu xác thực, lấy user từ token sẽ an toàn hơn
+            // String token = authHeader.replace("Bearer ", "").trim();
+            // User user = userService.findByToken(token).orElseThrow(...);
+            // Nếu không yêu cầu xác thực và tin tưởng userId từ DTO:
+            User user = userService.findById(commentRequestDTO.getUserId())
+                    .orElseThrow(() -> new UserNotFoundException("User not found with id: " + commentRequestDTO.getUserId()));
 
-             // Lấy Product từ productId trong DTO
-             Product product = productService.findById(commentRequestDTO.getProductId())
-                     .orElseThrow(() -> new RuntimeException("Product not found with id: " + commentRequestDTO.getProductId())); // Có thể tạo ProductNotFoundException
-             if (commentService.hasUserReviewedProduct(user, product)) {
-                 return ResponseEntity.status(HttpStatus.CONFLICT) // Hoặc HttpStatus.BAD_REQUEST
-                         .body("You have already reviewed this product.");
-             }
-             Comment newComment = new Comment();
-             newComment.setContent(commentRequestDTO.getContent());
-             newComment.setRating(commentRequestDTO.getRating());
-             newComment.setImage(commentRequestDTO.getImage());
-             newComment.setUser(user);
-             newComment.setAvatar(user.getAvatar()); // Lấy avatar từ user đã load
-             newComment.setProduct(product);
-             newComment.setReviewed(true);
+            // Lấy Product
+            Product product = productService.findById(commentRequestDTO.getProductId())
+                    .orElseThrow(() -> new RuntimeException("Product not found with id: " + commentRequestDTO.getProductId())); // Nên dùng ProductNotFoundException
 
-             Comment savedComment = commentService.save(newComment);
-             return new ResponseEntity<>(savedComment, HttpStatus.CREATED);
-         } catch (RuntimeException e) { // Bắt tất cả các RuntimeException, bao gồm UserNotFoundException
-                                       // và RuntimeException bạn ném khi không tìm thấy Product.
-             // UserNotFoundException sẽ tự động trả về 404 do @ResponseStatus.
-             // Các RuntimeException khác (như khi Product không tìm thấy) sẽ trả về 400 ở đây.
-             // Bạn có thể làm cho nó nhất quán hơn bằng cách tạo ProductNotFoundException với @ResponseStatus(HttpStatus.NOT_FOUND)
-             // và để Spring xử lý, hoặc kiểm tra instanceof ở đây.
-             if (e instanceof UserNotFoundException) { // Mặc dù @ResponseStatus sẽ xử lý, bạn vẫn có thể log hoặc tùy chỉnh ở đây
-                  return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage()); // Hoặc để Spring tự xử lý 404
+            // Kiểm tra đã review chưa (Logic này có thể giữ lại hoặc chuyển vào service)
+            // if (commentService.hasUserReviewedProduct(user, product)) { // hasUserReviewedProduct cần được định nghĩa đúng
+            //     return ResponseEntity.status(HttpStatus.CONFLICT).body("You have already reviewed this product.");
+            // }
+
+            // Tạo đối tượng Comment Entity
+            Comment commentEntity = new Comment();
+            commentEntity.setContent(commentRequestDTO.getContent());
+            commentEntity.setRating(commentRequestDTO.getRating());
+            commentEntity.setImage(commentRequestDTO.getImage());
+            commentEntity.setUser(user);
+            // commentEntity.setAvatar(user.getAvatar()); // Không cần set ở đây nếu bạn lấy từ user trong CommentResponse
+            commentEntity.setProduct(product);
+            // commentEntity.setReviewed(true); // Không cần set ở đây nữa, vì mục đích của nó là đánh dấu comment đã xử lý trong Order logic
+
+            // *** THAY ĐỔI CHÍNH Ở ĐÂY ***
+            // Comment savedComment = commentService.save(commentEntity); // <<< KHÔNG DÙNG CÁI NÀY
+            Comment savedComment = commentService.createComment(commentEntity); // <<< GỌI PHƯƠNG THỨC ĐÚNG CÓ CHECK ORDER
+
+            // Trả về response
+            return new ResponseEntity<>(savedComment, HttpStatus.CREATED); // Có thể trả về DTO response thay vì entity
+
+        } catch (RuntimeException e) { // Bắt các lỗi cụ thể hơn
+             if (e.getMessage().contains("Product not found")) {
+                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+             } else if (e instanceof UserNotFoundException) {
+                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+             } else {
+                // Các lỗi khác như đã review...
+                return ResponseEntity.badRequest().body(e.getMessage());
              }
-             // Cho các RuntimeException khác (ví dụ: Product not found)
-             return ResponseEntity.badRequest().body(e.getMessage());
-         } catch (Exception e) { // Bắt các checked exceptions
-             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
-         }
-     }
+        } catch (Exception e) {
+             System.err.println("Unexpected error creating comment: " + e.getMessage()); // Log lỗi
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
+        }
+    }
 
     // GET: Lấy bình luận theo sản phẩm
     // Endpoint này có thể không cần xác thực nếu bạn muốn mọi người xem được bình luận
