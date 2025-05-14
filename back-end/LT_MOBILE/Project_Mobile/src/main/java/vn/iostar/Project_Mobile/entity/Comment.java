@@ -49,5 +49,9 @@ public class Comment {
     private Product product;
     
     private boolean reviewed = false;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id") // Liên kết đến đơn hàng
+    @JsonIgnore
+    private Order order;
 
 }

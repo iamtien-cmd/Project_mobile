@@ -68,30 +68,32 @@ public class CommentServiceImpl implements ICommentService {
 	}
 
 	@Override
-	public boolean hasUserReviewedProduct(User user, Product product) {
+	public boolean hasUserReviewedProduct(User user, Product product, Order order) {
 		return commentRepository.existsByUserAndProductAndReviewedIsTrue(user, product);
 	}
 	 private static final List<OrderStatus> ELIGIBLE_STATUSES_FOR_REVIEW =
 	            List.of(OrderStatus.RECEIVED, OrderStatus.DELIVERED);
 
 
-	    @Transactional // Ensure atomicity
-	    public Comment createComment(Comment comment) {
-	        // 1. Basic validation (ensure user and product exist, etc.)
-	        if (comment.getUser() == null || comment.getProduct() == null) {
-	            throw new IllegalArgumentException("Comment must have a user and a product.");
-	        }
-	        // Check if user already reviewed this product for a specific order? (Optional, depends on requirements)
-	        // Consider preventing duplicate reviews for the *same product* by the *same user* if needed.
+	 @Transactional
+	 public Comment createComment(Comment comment) {
+	     if (comment.getOrder() != null) {
+	         Order order = orderRepository.findById(comment.getOrder().getOrderId())
+	                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + comment.getOrder().getOrderId()));
 
-	        // 2. Save the comment
-	        Comment savedComment = commentRepository.save(comment);
+	         if (order.getReviewed() != null && order.getReviewed()) {
+	             comment.setReviewed(true);
+	         }
+	     }
 
-	        // 3. Trigger the check for order review status update
-	        checkAndUpdateOrderStatusIfAllReviewed(savedComment.getUser(), savedComment.getProduct());
+	     // Lưu bình luận
+	     Comment savedComment = commentRepository.save(comment);
 
-	        return savedComment;
-	    }
+	     // Gọi kiểm tra và cập nhật trạng thái đơn hàng
+	     checkAndUpdateOrderStatusIfAllReviewed(comment.getUser(), comment.getProduct());
+
+	     return savedComment;
+	 }
 
 	    private void checkAndUpdateOrderStatusIfAllReviewed(User user, Product commentedProduct) {
 	        // 4. Find candidate orders
@@ -106,7 +108,7 @@ public class CommentServiceImpl implements ICommentService {
 	                    .collect(Collectors.toSet());
 
 	            // 7. Count how many of these products the user has reviewed
-	            long reviewedProductCount = commentRepository.countDistinctReviewedProductsByUserInList(user, productIdsInOrder);
+	            long reviewedProductCount = commentRepository.countByUserAndProductInAndReviewedTrue(user, productIdsInOrder);
 
 	            // 8. Check if all products in the order have been reviewed
 	            if (reviewedProductCount == productIdsInOrder.size()) {
@@ -119,5 +121,14 @@ public class CommentServiceImpl implements ICommentService {
 	            }
 	        }
 	    }
+	    @Override
+	    public void resetReviewStatus(User user, Product product) {
+	        List<Comment> comments = commentRepository.findByUserAndProduct(user, product);
+	        for (Comment comment : comments) {
+	            comment.setReviewed(false);
+	            commentRepository.save(comment);
+	        }
+	    }
+
 
 }

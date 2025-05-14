@@ -75,7 +75,7 @@ public class OrderHistoryActivity extends AppCompatActivity {
         toolbar = findViewById(R.id.toolbar); // Đảm bảo ID toolbar đúng trong layout
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle("Lịch sử đơn hàng"); // Đặt tiêu đề
+            getSupportActionBar().setTitle("Theo dõi đơn hàng"); // Đặt tiêu đề
             getSupportActionBar().setDisplayHomeAsUpEnabled(true); // Hiển thị nút back
             getSupportActionBar().setDisplayShowHomeEnabled(true);
         }

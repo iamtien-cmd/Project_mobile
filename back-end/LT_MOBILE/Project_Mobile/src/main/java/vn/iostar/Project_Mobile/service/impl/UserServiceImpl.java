@@ -86,13 +86,13 @@ public class UserServiceImpl implements IUserService { // Đảm bảo implement
         return user.getOtpCode() != null && user.getOtpCode().equals(otp) && user.getOtpExpiration().isAfter(LocalDateTime.now());
     }
 
+   
     @Override
-    public boolean resetPassword(String email, String newPassword) {
+    public boolean resetPassword(String email, String newPassword) { // newPassword ở đây giờ là plain text
         Optional<User> userOpt = userRepository.findByEmail(email);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            // LUÔN MÃ HÓA MẬT KHẨU MỚI TRƯỚC KHI LƯU
-            user.setPassword(passwordEncoder.encode(newPassword));
+            user.setPassword(passwordEncoder.encode(newPassword)); // Mật khẩu được mã hóa MỘT LẦN ở đây
             user.setOtpCode(null);
             user.setOtpExpiration(null);
             userRepository.save(user);
