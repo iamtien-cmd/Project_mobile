@@ -16,13 +16,15 @@ import jakarta.validation.Valid;
 import vn.iostar.Project_Mobile.DTO.CommentRequestDTO;
 import vn.iostar.Project_Mobile.DTO.CommentResponse;
 import vn.iostar.Project_Mobile.entity.Comment;
+import vn.iostar.Project_Mobile.entity.Order;
 import vn.iostar.Project_Mobile.entity.Product;
 import vn.iostar.Project_Mobile.entity.User;
 import vn.iostar.Project_Mobile.exception.UserNotFoundException; // Ví dụ một custom exception
+import vn.iostar.Project_Mobile.repository.IOrderRepository;
 import vn.iostar.Project_Mobile.service.ICommentService;
 import vn.iostar.Project_Mobile.service.IProductService;
 import vn.iostar.Project_Mobile.service.IUserService;
-
+import vn.iostar.Project_Mobile.service.IOrderService;
 @RestController
 @RequestMapping("/api/comments")
 public class CommentController {
@@ -35,65 +37,58 @@ public class CommentController {
 
     @Autowired
     private IProductService productService;
+    @Autowired
+    private IOrderRepository orderService;
 
     // Endpoint cho bình luận chung
     // Client cần gửi userId trong DTO này.
     // Cân nhắc: Endpoint này có nên yêu cầu xác thực không? Nếu có, userId trong DTO có thể không cần thiết.
 
     @PostMapping
-    public ResponseEntity<?> createGeneralComment(
-            // *** CÂN NHẮC: Lấy user từ token thay vì DTO nếu endpoint này yêu cầu xác thực ***
-            // @RequestHeader("Authorization") String authHeader, // Ví dụ
-            @Valid @RequestBody CommentRequestDTO commentRequestDTO) {
+    public ResponseEntity<?> createGeneralComment(@Valid @RequestBody CommentRequestDTO commentRequestDTO) {
         try {
-            // *** CÂN NHẮC LẠI LOGIC LẤY USER ***
-            // Nếu yêu cầu xác thực, lấy user từ token sẽ an toàn hơn
-            // String token = authHeader.replace("Bearer ", "").trim();
-            // User user = userService.findByToken(token).orElseThrow(...);
-            // Nếu không yêu cầu xác thực và tin tưởng userId từ DTO:
             User user = userService.findById(commentRequestDTO.getUserId())
                     .orElseThrow(() -> new UserNotFoundException("User not found with id: " + commentRequestDTO.getUserId()));
 
-            // Lấy Product
             Product product = productService.findById(commentRequestDTO.getProductId())
-                    .orElseThrow(() -> new RuntimeException("Product not found with id: " + commentRequestDTO.getProductId())); // Nên dùng ProductNotFoundException
+                    .orElseThrow(() -> new RuntimeException("Product not found with id: " + commentRequestDTO.getProductId()));
 
-            // Kiểm tra đã review chưa (Logic này có thể giữ lại hoặc chuyển vào service)
-            // if (commentService.hasUserReviewedProduct(user, product)) { // hasUserReviewedProduct cần được định nghĩa đúng
-            //     return ResponseEntity.status(HttpStatus.CONFLICT).body("You have already reviewed this product.");
-            // }
+            Order order = orderService.findById(commentRequestDTO.getOrderId())
+                    .orElseThrow(() -> new RuntimeException("Order not found with id: " + commentRequestDTO.getOrderId()));
 
-            // Tạo đối tượng Comment Entity
+
+            if (commentService.hasUserReviewedProduct(user, product, order)) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body("You have already reviewed this product.");
+            }
+
             Comment commentEntity = new Comment();
             commentEntity.setContent(commentRequestDTO.getContent());
             commentEntity.setRating(commentRequestDTO.getRating());
             commentEntity.setImage(commentRequestDTO.getImage());
             commentEntity.setUser(user);
-            // commentEntity.setAvatar(user.getAvatar()); // Không cần set ở đây nếu bạn lấy từ user trong CommentResponse
             commentEntity.setProduct(product);
-            // commentEntity.setReviewed(true); // Không cần set ở đây nữa, vì mục đích của nó là đánh dấu comment đã xử lý trong Order logic
+            commentEntity.setOrder(order);
+            // Set reviewed to true based on order review logic in service
+            commentEntity.setReviewed(true);
 
-            // *** THAY ĐỔI CHÍNH Ở ĐÂY ***
-            // Comment savedComment = commentService.save(commentEntity); // <<< KHÔNG DÙNG CÁI NÀY
-            Comment savedComment = commentService.createComment(commentEntity); // <<< GỌI PHƯƠNG THỨC ĐÚNG CÓ CHECK ORDER
+            // Save the comment (the service will check the order review status)
+            Comment savedComment = commentService.createComment(commentEntity);
 
-            // Trả về response
-            return new ResponseEntity<>(savedComment, HttpStatus.CREATED); // Có thể trả về DTO response thay vì entity
+            return new ResponseEntity<>(savedComment, HttpStatus.CREATED);
 
-        } catch (RuntimeException e) { // Bắt các lỗi cụ thể hơn
-             if (e.getMessage().contains("Product not found")) {
-                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-             } else if (e instanceof UserNotFoundException) {
-                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-             } else {
-                // Các lỗi khác như đã review...
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("Product not found")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            } else if (e instanceof UserNotFoundException) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            } else {
                 return ResponseEntity.badRequest().body(e.getMessage());
-             }
+            }
         } catch (Exception e) {
-             System.err.println("Unexpected error creating comment: " + e.getMessage()); // Log lỗi
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
         }
     }
+
 
     // GET: Lấy bình luận theo sản phẩm
     // Endpoint này có thể không cần xác thực nếu bạn muốn mọi người xem được bình luận

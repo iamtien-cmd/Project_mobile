@@ -158,27 +158,29 @@ public class UserController {
 	        return ResponseEntity.ok(userOpt.get()); // Return the user object
 	    }
 
+	  
 	    @PostMapping("/reset-password")
 	    public ResponseEntity<User> resetPassword(@RequestBody ForgotPasswordRequest resetRequest) {
 	        String email = resetRequest.getEmail();
-	        String newPassword = resetRequest.getNewPassword();
+	        String newPassword = resetRequest.getNewPassword(); // Đây là mật khẩu plain text
 	        String confirmPassword = resetRequest.getConfirmPassword();
 
 	        if (!newPassword.equals(confirmPassword)) {
-	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); // Return empty response if passwords do not match
+	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 	        }
 
-	        String encodedPassword = passwordEncoder.encode(newPassword);
+	        // String encodedPassword = passwordEncoder.encode(newPassword); // << BỎ DÒNG NÀY HOẶC COMMENT LẠI
 
-	        // Cập nhật mật khẩu
-	        boolean isReset = userService.resetPassword(email, encodedPassword);
+	        // Cập nhật mật khẩu: truyền mật khẩu plain text (newPassword) cho service
+	        boolean isReset = userService.resetPassword(email, newPassword); // << THAY ĐỔI Ở ĐÂY
 	        if (isReset) {
 	            Optional<User> userOpt = userService.findByEmail(email);
-	            return userOpt.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)); // Return updated user object
+	            return userOpt.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null));
 	        } else {
-	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); // Return empty response if reset failed
+	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 	        }
 	    }
+
 
 	    @PostMapping("/verifyOtpForgotPassword")
 	    public ResponseEntity<User> verifyOtpForgotPassword(@RequestBody ForgotPasswordRequest otpRequest) {
