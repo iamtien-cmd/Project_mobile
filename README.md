@@ -199,7 +199,17 @@ DELIMITER ;
 # Trigger kiểm tra khi đơn hàng đã được thanh toán và được nhận xét thì tổng giá trị đơn hàng sẽ không thay đổi
 DELIMITER //
 
-CREATE TRIGGER trg_prevent_subtotal_change_after_received BEFORE UPDATE ON orders FOR EACH ROW BEGIN -- Nếu trạng thái đã là RECEIVED hoặc REVIEWED thì không cho thay đổi subtotal và total IF OLD.status IN ('RECEIVED', 'REVIEWED', 'WAITING', 'SHIPPING', 'ERROR', 'CANCELLED') THEN SET NEW.items_subtotal = OLD.items_subtotal; SET NEW.total_price = OLD.total_price; END IF; END; // 
+CREATE TRIGGER trg_prevent_subtotal_change_after_received
+BEFORE UPDATE ON orders
+FOR EACH ROW
+BEGIN
+    -- Nếu trạng thái đã là RECEIVED hoặc REVIEWED thì không cho thay đổi subtotal và total
+    IF OLD.status IN ('RECEIVED', 'REVIEWED') THEN
+        SET NEW.items_subtotal = OLD.items_subtotal;
+        SET NEW.total_price = OLD.total_price;
+    END IF;
+END;
+//
 
 DELIMITER ;
 # Trigger kiểm tra khi trạng thái đơn hàng là RECEIVED và REVIEWED thì giá tiền Orderline sẽ không được thay đổi

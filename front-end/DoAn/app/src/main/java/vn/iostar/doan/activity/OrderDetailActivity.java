@@ -369,7 +369,7 @@ public class OrderDetailActivity extends AppCompatActivity {
         if (status == null) return "Không xác định";
         switch (status) {
             case WAITING: return "Đang chờ xử lý";
-            case REVIEWED: return "Đã đánh giá";
+            case REVIEWED: return "Đã xác nhận";
             case SHIPPING: return "Đang vận chuyển";
             case RECEIVED: return "Đã giao thành công";
             case CANCELLED: return "Đã hủy";
