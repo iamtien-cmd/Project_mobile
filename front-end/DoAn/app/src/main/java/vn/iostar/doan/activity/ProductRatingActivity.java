@@ -1,6 +1,7 @@
 package vn.iostar.doan.activity; // <<<< THAY ĐỔI CHO ĐÚNG PACKAGE CỦA BẠN
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -17,6 +18,7 @@ import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.EditText;
 import android.widget.ImageView;
+// import android.widget.LinearLayout; // <<<< XÓA HOẶC COMMENT DÒNG NÀY
 import android.widget.ProgressBar;
 import android.widget.RatingBar;
 import android.widget.TextView;
@@ -28,12 +30,13 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.Group; // <<<< THÊM IMPORT NÀY
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
-import com.google.gson.Gson; // <<<< THÊM IMPORT GSON
+import com.google.gson.Gson;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -43,15 +46,14 @@ import java.util.List;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import vn.iostar.doan.R; // <<<< Đảm bảo R đúng
+import vn.iostar.doan.R;
 import vn.iostar.doan.adapter.CommentAdapter;
 import vn.iostar.doan.api.ApiService;
 import vn.iostar.doan.model.Comment;
-import vn.iostar.doan.modelRequest.CommentRequest; // Đảm bảo có constructor phù hợp
+import vn.iostar.doan.modelRequest.CommentRequest;
 import vn.iostar.doan.modelResponse.ImageUploadResponse;
 import vn.iostar.doan.utils.SharedPreferencesUtils;
 
@@ -68,11 +70,15 @@ public class ProductRatingActivity extends AppCompatActivity {
     private ImageView ivSelectedImagePreview;
     private ImageView ivClearSelectedImage;
     private RatingBar ratingBar;
+    // private LinearLayout layoutRatingInputSection; // <<<< XÓA HOẶC COMMENT DÒNG NÀY
+    private Group layoutRatingInputSection;        // <<<< THAY ĐỔI THÀNH Group
 
     private long productId = -1L;
     private long currentUserId = 0L;
-    private long orderId = -1L; // <<<< THÊM BIẾN ĐỂ LƯU ORDER ID
+    private long orderId = -1L;
     private Uri selectedImageUri = null;
+
+    private boolean canUserSubmitComment = false;
 
     private ActivityResultLauncher<String> requestPermissionLauncher;
     private ActivityResultLauncher<PickVisualMediaRequest> pickMediaLauncher;
@@ -86,8 +92,7 @@ public class ProductRatingActivity extends AppCompatActivity {
     private Call<Comment> createCommentCall;
     private Call<List<Comment>> fetchCommentsCall;
 
-    // Cờ để xác định xem orderId có bắt buộc hay không (thay đổi dựa trên logic backend của bạn)
-    private static final boolean IS_ORDER_ID_MANDATORY = true; // <<<< THAY ĐỔI NẾU CẦN
+    private static final boolean IS_ORDER_ID_MANDATORY_FOR_CREATION = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,24 +111,12 @@ public class ProductRatingActivity extends AppCompatActivity {
             Log.i(TAG, "User ID retrieved from SharedPreferences: " + currentUserId);
         }
 
-        // <<<< LẤY ORDER ID TỪ INTENT >>>>
-        if (intent.hasExtra("order_id")) {
-            orderId = intent.getLongExtra("order_id", -1L);
-            Log.i(TAG, "Order ID received from Intent: " + orderId);
-        } else {
-            Log.w(TAG, "Order ID not received from Intent.");
-            // Xử lý nếu orderId không được truyền nhưng lại bắt buộc
-            if (IS_ORDER_ID_MANDATORY) {
-                Toast.makeText(this, "Thiếu thông tin đơn hàng để đánh giá.", Toast.LENGTH_LONG).show();
-                Log.e(TAG, "Mandatory Order ID is missing.");
-                finish();
-                return;
-            }
-        }
+        orderId = intent.getLongExtra("order_id", -1L);
+        Log.i(TAG, "Order ID received from Intent: " + orderId);
 
         if (productId == -1L) {
             Toast.makeText(this, "Invalid Product ID.", Toast.LENGTH_LONG).show();
-            Log.e(TAG, "Invalid Product ID: " + productId);
+            Log.e(TAG, "Invalid Product ID: " + productId + ". Cannot proceed.");
             finish();
             return;
         }
@@ -134,6 +127,7 @@ public class ProductRatingActivity extends AppCompatActivity {
         recyclerViewComments = findViewById(R.id.recyclerViewComments);
         progressBar = findViewById(R.id.progressBar);
         tvNoComments = findViewById(R.id.tvNoComments);
+        layoutRatingInputSection = findViewById(R.id.layoutRatingInputSection); // Sẽ tìm thấy <Group>
         ivAttachComment = findViewById(R.id.ivAttachComment);
         etCommentInput = findViewById(R.id.etCommentInput);
         btnSendComment = findViewById(R.id.btnSendComment);
@@ -142,8 +136,10 @@ public class ProductRatingActivity extends AppCompatActivity {
         ratingBar = findViewById(R.id.ratingBar);
 
         if (toolbar == null || recyclerViewComments == null || progressBar == null || tvNoComments == null ||
-                ivAttachComment == null || etCommentInput == null || btnSendComment == null ||
-                ivSelectedImagePreview == null || ivClearSelectedImage == null || ratingBar == null) {
+                layoutRatingInputSection == null || // Kiểm tra Group
+                ivAttachComment == null || etCommentInput == null ||
+                btnSendComment == null || ivSelectedImagePreview == null ||
+                ivClearSelectedImage == null || ratingBar == null) {
             Log.e(TAG, "CRITICAL ERROR: One or more essential views not found! Check XML IDs.");
             Toast.makeText(this, "UI Error. Cannot continue.", Toast.LENGTH_LONG).show();
             finish();
@@ -154,38 +150,42 @@ public class ProductRatingActivity extends AppCompatActivity {
         setupToolbar();
         setupRecyclerView();
 
-        if (currentUserId <= 0) {
-            Log.i(TAG, "User not logged in or invalid User ID. Hiding rating/comment input section.");
-            hideRatingInputSection();
-        } else if (IS_ORDER_ID_MANDATORY && orderId <= 0) {
-            Log.i(TAG, "Order ID is mandatory and invalid or missing. Hiding rating/comment input section.");
-            Toast.makeText(this, "Không thể đánh giá sản phẩm này nếu không có thông tin đơn hàng hợp lệ.", Toast.LENGTH_LONG).show();
-            hideRatingInputSection();
+        if (currentUserId > 0) {
+            if (IS_ORDER_ID_MANDATORY_FOR_CREATION) {
+                canUserSubmitComment = (orderId > 0);
+            } else {
+                canUserSubmitComment = true;
+            }
+        } else {
+            canUserSubmitComment = false;
         }
-        else {
-            Log.i(TAG, "User logged in and conditions met. Showing rating/comment input section.");
+
+        if (canUserSubmitComment) {
+            Log.i(TAG, "User is eligible to submit new comment.");
             showRatingInputSection();
-            setupClickListeners();
-            updateSendButtonState();
+            setupClickListenersForSubmit();
+        } else {
+            Log.i(TAG, "User is NOT eligible to submit new comment. Hiding input section.");
+            hideRatingInputSection();
         }
+        updateSendButtonState();
+
         fetchComments();
     }
 
     private void hideRatingInputSection() {
-        if (ratingBar != null) ratingBar.setVisibility(View.GONE);
-        if (etCommentInput != null) etCommentInput.setVisibility(View.GONE);
-        if (ivAttachComment != null) ivAttachComment.setVisibility(View.GONE);
-        if (btnSendComment != null) btnSendComment.setVisibility(View.GONE);
-        if (ivSelectedImagePreview != null) ivSelectedImagePreview.setVisibility(View.GONE);
-        if (ivClearSelectedImage != null) ivClearSelectedImage.setVisibility(View.GONE);
+        if (layoutRatingInputSection != null) {
+            layoutRatingInputSection.setVisibility(View.GONE);
+        }
+        if (btnSendComment != null) {
+            btnSendComment.setEnabled(false);
+        }
     }
 
     private void showRatingInputSection() {
-        if (ratingBar != null) ratingBar.setVisibility(View.VISIBLE);
-        if (etCommentInput != null) etCommentInput.setVisibility(View.VISIBLE);
-        if (ivAttachComment != null) ivAttachComment.setVisibility(View.VISIBLE);
-        if (btnSendComment != null) btnSendComment.setVisibility(View.VISIBLE);
-        // Preview image sẽ tự hiện khi ảnh được chọn
+        if (layoutRatingInputSection != null) {
+            layoutRatingInputSection.setVisibility(View.VISIBLE);
+        }
     }
 
     private void initActivityResultLaunchers() {
@@ -205,7 +205,7 @@ public class ProductRatingActivity extends AppCompatActivity {
             if (uri != null) {
                 Log.d(TAG, "Media selected: " + uri.toString());
                 selectedImageUri = uri;
-                if (ivSelectedImagePreview != null && ivClearSelectedImage != null && ratingBar != null && ratingBar.getVisibility() == View.VISIBLE) {
+                if (canUserSubmitComment && ivSelectedImagePreview != null && ivClearSelectedImage != null) {
                     ivSelectedImagePreview.setImageURI(selectedImageUri);
                     ivSelectedImagePreview.setVisibility(View.VISIBLE);
                     ivClearSelectedImage.setVisibility(View.VISIBLE);
@@ -222,7 +222,7 @@ public class ProductRatingActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle("Đánh giá sản phẩm"); // Hoặc tiêu đề khác
+            getSupportActionBar().setTitle("Đánh giá sản phẩm");
         } else {
             Log.e(TAG, "SupportActionBar is null after setting toolbar!");
         }
@@ -234,7 +234,7 @@ public class ProductRatingActivity extends AppCompatActivity {
         recyclerViewComments.setAdapter(commentAdapter);
     }
 
-    private void setupClickListeners() {
+    private void setupClickListenersForSubmit() {
         if (ivAttachComment != null) {
             ivAttachComment.setOnClickListener(v -> checkPermissionAndPickImage());
         }
@@ -259,31 +259,39 @@ public class ProductRatingActivity extends AppCompatActivity {
     }
 
     private void updateSendButtonState() {
-        if (btnSendComment == null || ratingBar == null) {
-            Log.w(TAG, "updateSendButtonState: Button or RatingBar is null. Cannot update state.");
+        if (btnSendComment == null) {
+            Log.w(TAG, "updateSendButtonState: Button Send is null.");
             return;
         }
-        if (ratingBar.getVisibility() == View.GONE) { // Nếu phần nhập liệu bị ẩn
-            btnSendComment.setEnabled(false);
+
+        if (!canUserSubmitComment) {
+            if (btnSendComment.isEnabled()){
+                Log.d(TAG, "Disabling Send Button because canUserSubmitComment is false.");
+                btnSendComment.setEnabled(false);
+            }
             return;
         }
-        if (etCommentInput == null) {
-            Log.e(TAG, "updateSendButtonState: etCommentInput is null unexpectedly!");
-            btnSendComment.setEnabled(false);
+
+        if (ratingBar == null || etCommentInput == null) {
+            Log.w(TAG, "updateSendButtonState: RatingBar or EditText is null. Cannot update for submit.");
+            if (btnSendComment.isEnabled()) btnSendComment.setEnabled(false);
             return;
         }
+
         boolean hasRating = ratingBar.getRating() > 0;
         boolean hasText = !etCommentInput.getText().toString().trim().isEmpty();
         boolean isLoading = progressBar != null && progressBar.getVisibility() == View.VISIBLE;
         boolean shouldBeEnabled = hasRating && hasText && !isLoading;
 
         if (btnSendComment.isEnabled() != shouldBeEnabled) {
-            Log.d(TAG, "Updating Send Button state. Should be enabled: " + shouldBeEnabled);
+            Log.d(TAG, "Updating Send Button state. Should be enabled: " + shouldBeEnabled +
+                    " (HasRating: " + hasRating + ", HasText: " + hasText + ", IsLoading: " + isLoading + ")");
             btnSendComment.setEnabled(shouldBeEnabled);
         }
     }
 
     private void checkPermissionAndPickImage() {
+        if (!canUserSubmitComment) return;
         if (progressBar != null && progressBar.getVisibility() == View.VISIBLE) {
             Toast.makeText(this, "Vui lòng đợi...", Toast.LENGTH_SHORT).show();
             return;
@@ -324,19 +332,14 @@ public class ProductRatingActivity extends AppCompatActivity {
     }
 
     private void attemptSendComment() {
-        if (currentUserId <= 0) {
-            Log.e(TAG, "AttemptSendComment: User not logged in (ID=" + currentUserId + ").");
-            Toast.makeText(this, "Vui lòng đăng nhập để đánh giá.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (IS_ORDER_ID_MANDATORY && orderId <= 0) {
-            Log.e(TAG, "AttemptSendComment: Order ID is mandatory but invalid or missing (ID=" + orderId + ").");
-            Toast.makeText(this, "Không thể gửi đánh giá nếu thiếu thông tin đơn hàng.", Toast.LENGTH_SHORT).show();
+        if (!canUserSubmitComment) {
+            Log.e(TAG, "AttemptSendComment: Submission not allowed (canUserSubmitComment=false).");
+            Toast.makeText(this, "Bạn không thể gửi đánh giá lúc này.", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        if (ratingBar == null || etCommentInput == null || btnSendComment == null) {
-            Log.e(TAG,"AttemptSendComment: Critical views for input are null!");
+        if (ratingBar == null || etCommentInput == null) {
+            Log.e(TAG,"AttemptSendComment: RatingBar or EditText for input are null!");
             return;
         }
         int ratingValue = (int) ratingBar.getRating();
@@ -362,9 +365,8 @@ public class ProductRatingActivity extends AppCompatActivity {
                 @Override
                 public void onSuccess(String uploadedImageUrl) {
                     if (isFinishing() || isDestroyed()) {
-                        Log.w(TAG, "uploadImageToServer onSuccess: Activity is finishing/destroyed. Aborting sendCommentData.");
-                        showLoading(false);
-                        return;
+                        Log.w(TAG, "uploadImageToServer onSuccess: Activity finishing. Aborting.");
+                        showLoading(false); return;
                     }
                     Log.i(TAG, "Image upload successful. Sending comment data with URL: " + uploadedImageUrl);
                     sendCommentData(commentText, ratingValue, uploadedImageUrl);
@@ -372,12 +374,12 @@ public class ProductRatingActivity extends AppCompatActivity {
                 @Override
                 public void onError(String error) {
                     if (isFinishing() || isDestroyed()) {
-                        Log.w(TAG, "uploadImageToServer onError: Activity is finishing/destroyed. Ignoring error display.");
+                        Log.w(TAG, "uploadImageToServer onError: Activity finishing.");
                         return;
                     }
                     Log.e(TAG, "Image upload failed: " + error);
                     Toast.makeText(ProductRatingActivity.this, "Tải ảnh thất bại: " + error, Toast.LENGTH_LONG).show();
-                    showLoading(false); // Quan trọng: phải tắt loading khi upload lỗi
+                    showLoading(false);
                 }
             });
         } else {
@@ -402,7 +404,7 @@ public class ProductRatingActivity extends AppCompatActivity {
         if (mimeType == null) {
             String fileExtension = MimeTypeMap.getFileExtensionFromUrl(imageUri.toString());
             mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension);
-            mimeType = (mimeType == null) ? "image/jpeg" : mimeType; // Mặc định là jpeg
+            mimeType = (mimeType == null) ? "image/jpeg" : mimeType;
         }
         Log.d(TAG, "Using MIME type: " + mimeType);
 
@@ -429,12 +431,12 @@ public class ProductRatingActivity extends AppCompatActivity {
 
             Log.d(TAG, "Calling uploadImage API endpoint...");
             cancelCall(imageUploadCall);
-            imageUploadCall = ApiService.apiService.uploadImage(body); // Giả sử endpoint này tồn tại
+            imageUploadCall = ApiService.apiService.uploadImage(body);
             imageUploadCall.enqueue(new Callback<ImageUploadResponse>() {
                 @Override
                 public void onResponse(@NonNull Call<ImageUploadResponse> call, @NonNull Response<ImageUploadResponse> response) {
                     if (isFinishing() || isDestroyed()) {
-                        Log.w(TAG, "uploadImageToServer onResponse: Activity is finishing/destroyed.");
+                        Log.w(TAG, "uploadImageToServer onResponse: Activity finishing.");
                         return;
                     }
                     if (response.isSuccessful() && response.body() != null && response.body().getImageUrl() != null && !response.body().getImageUrl().isEmpty()) {
@@ -452,7 +454,7 @@ public class ProductRatingActivity extends AppCompatActivity {
                 @Override
                 public void onFailure(@NonNull Call<ImageUploadResponse> call, @NonNull Throwable t) {
                     if (isFinishing() || isDestroyed()) {
-                        Log.w(TAG, "uploadImageToServer onFailure: Activity is finishing/destroyed.");
+                        Log.w(TAG, "uploadImageToServer onFailure: Activity finishing.");
                         return;
                     }
                     if (call.isCanceled()) {
@@ -491,13 +493,11 @@ public class ProductRatingActivity extends AppCompatActivity {
         if (result == null && uri != null) result = uri.getLastPathSegment();
 
         if (result != null) {
-            // Loại bỏ các ký tự không hợp lệ và thay thế bằng dấu gạch dưới
             result = result.replaceAll("[^a-zA-Z0-9.\\-_]", "_");
-            // Giới hạn độ dài tên file nếu cần (ví dụ: 100 ký tự)
             if (result.length() > 100) {
                 String extension = "";
                 int lastDot = result.lastIndexOf('.');
-                if (lastDot > 0 && result.length() - lastDot < 10) { // Giả sử extension hợp lệ < 10 ký tự
+                if (lastDot > 0 && result.length() - lastDot < 10) {
                     extension = result.substring(lastDot);
                     result = result.substring(0, Math.min(result.length(), 100 - extension.length()));
                     result += extension;
@@ -506,13 +506,13 @@ public class ProductRatingActivity extends AppCompatActivity {
                 }
             }
         }
-        return (result != null && !result.isEmpty()) ? result : ("upload_" + System.currentTimeMillis() + ".jpg"); // Thêm extension mặc định
+        return (result != null && !result.isEmpty()) ? result : ("upload_" + System.currentTimeMillis() + ".jpg");
     }
 
     private void sendCommentData(String text, int rating, String imageUrl) {
         Log.d(TAG, "Preparing to send comment: Text=" + text + ", Rating=" + rating +
                 ", ImageUrl=" + imageUrl + ", UserID=" + currentUserId +
-                ", ProductID=" + productId + ", OrderID=" + orderId);
+                ", ProductID=" + productId + ", OrderID=" + this.orderId);
 
         String authToken = SharedPreferencesUtils.getString(this, "token", null);
         if (authToken == null || authToken.isEmpty()) {
@@ -524,28 +524,23 @@ public class ProductRatingActivity extends AppCompatActivity {
         }
         String authHeader = "Bearer " + authToken;
 
-        // <<<< TẠO COMMENT REQUEST VỚI ORDER ID >>>>
-        // Đảm bảo CommentRequest có constructor (String, int, String, long, long, long)
         CommentRequest requestBody;
-        if (IS_ORDER_ID_MANDATORY) {
-            if (orderId <= 0) { // Kiểm tra lại lần nữa cho chắc
+        long orderIdToSend = 0L;
+
+        if (IS_ORDER_ID_MANDATORY_FOR_CREATION) {
+            if (this.orderId <= 0) {
                 showLoading(false);
-                Toast.makeText(this, "Thiếu thông tin đơn hàng hợp lệ.", Toast.LENGTH_LONG).show();
-                Log.e(TAG, "Mandatory Order ID is " + orderId + ". Cannot send comment.");
+                Toast.makeText(this, "Lỗi: Thiếu thông tin đơn hàng hợp lệ để gửi đánh giá.", Toast.LENGTH_LONG).show();
+                Log.e(TAG, "Mandatory Order ID is " + this.orderId + ". Cannot send. This should be caught by canUserSubmitComment.");
                 updateSendButtonState();
                 return;
             }
-            requestBody = new CommentRequest(text, rating, imageUrl, currentUserId, productId, orderId);
+            orderIdToSend = this.orderId;
         } else {
-            // Nếu orderId không bắt buộc, bạn có thể dùng constructor cũ hoặc truyền 0/một giá trị mặc định
-            // Ví dụ: truyền orderId hiện tại (có thể là -1L nếu không có)
-            requestBody = new CommentRequest(text, rating, imageUrl, currentUserId, productId, (orderId > 0 ? orderId : 0) );
-            // Hoặc dùng constructor không có orderId nếu CommentRequest cho phép
-            // requestBody = new CommentRequest(text, rating, imageUrl, currentUserId, productId);
+            orderIdToSend = this.orderId > 0 ? this.orderId : 0L;
         }
+        requestBody = new CommentRequest(text, rating, imageUrl, currentUserId, productId, orderIdToSend);
 
-
-        // <<<< LOG JSON REQUEST BODY >>>>
         String jsonRequestBody = new Gson().toJson(requestBody);
         Log.d(TAG, "Gửi đi JSON: " + jsonRequestBody);
 
@@ -555,7 +550,7 @@ public class ProductRatingActivity extends AppCompatActivity {
             @Override
             public void onResponse(@NonNull Call<Comment> call, @NonNull Response<Comment> response) {
                 if (isFinishing() || isDestroyed()) {
-                    Log.w(TAG, "createComment onResponse: Activity is finishing/destroyed.");
+                    Log.w(TAG, "createComment onResponse: Activity finishing.");
                     return;
                 }
                 showLoading(false);
@@ -565,7 +560,8 @@ public class ProductRatingActivity extends AppCompatActivity {
                     if (etCommentInput != null) etCommentInput.setText("");
                     if (ratingBar != null) ratingBar.setRating(0);
                     clearSelectedImage();
-                    fetchComments(); // Tải lại danh sách comment
+                    setResult(Activity.RESULT_OK);
+                    fetchComments();
                 } else {
                     Log.e(TAG, "Tạo comment thất bại - API error: " + response.code() + " - " + response.message());
                     String errorBody = "";
@@ -577,16 +573,15 @@ public class ProductRatingActivity extends AppCompatActivity {
                         userFriendlyError = "Bạn không có quyền. Vui lòng đăng nhập lại.";
                     } else if (response.code() == 400) {
                         userFriendlyError = "Dữ liệu gửi đi không hợp lệ.";
-                        if (!errorBody.isEmpty()) { // Cố gắng hiển thị thông tin chi tiết hơn từ server nếu có
-                            // Bạn có thể parse errorBody (nếu nó là JSON) để lấy message cụ thể
-                            // Ví dụ đơn giản: userFriendlyError += "\n" + errorBody;
-                            // Hoặc nếu errorBody là "Trường orderId là bắt buộc" thì hiển thị nó
-                            if (errorBody.toLowerCase().contains("orderid") || errorBody.toLowerCase().contains("order_id")) {
-                                userFriendlyError = "Lỗi: Thiếu thông tin đơn hàng hoặc đơn hàng không hợp lệ.";
+                        if (!errorBody.isEmpty()) {
+                            if (errorBody.toLowerCase().contains("orderid") || errorBody.toLowerCase().contains("order_id") || errorBody.toLowerCase().contains("đơn hàng")) {
+                                userFriendlyError = "Lỗi: Thiếu thông tin đơn hàng hoặc đơn hàng không hợp lệ cho đánh giá này.";
+                            } else if (errorBody.toLowerCase().contains("đã đánh giá") || errorBody.toLowerCase().contains("already rated")) {
+                                userFriendlyError = "Bạn đã đánh giá sản phẩm này trong đơn hàng này rồi.";
                             }
                         }
                     } else if (!errorBody.isEmpty()) {
-                        userFriendlyError += " - " + errorBody.substring(0, Math.min(errorBody.length(), 100)); // Giới hạn độ dài lỗi
+                        userFriendlyError += " - " + errorBody.substring(0, Math.min(errorBody.length(), 100));
                     }
                     Toast.makeText(ProductRatingActivity.this, userFriendlyError, Toast.LENGTH_LONG).show();
                 }
@@ -595,7 +590,7 @@ public class ProductRatingActivity extends AppCompatActivity {
             @Override
             public void onFailure(@NonNull Call<Comment> call, @NonNull Throwable t) {
                 if (isFinishing() || isDestroyed()) {
-                    Log.w(TAG, "createComment onFailure: Activity is finishing/destroyed.");
+                    Log.w(TAG, "createComment onFailure: Activity finishing.");
                     return;
                 }
                 if (call.isCanceled()) {
@@ -612,22 +607,25 @@ public class ProductRatingActivity extends AppCompatActivity {
 
     private void fetchComments() {
         Log.d(TAG, "Fetching comments for product ID: " + productId);
-        showLoading(true); // Hiện loading
+        showLoading(true);
         cancelCall(fetchCommentsCall);
-        fetchCommentsCall = ApiService.apiService.getCommentsByProduct(productId); // Giả sử endpoint này tồn tại
+        fetchCommentsCall = ApiService.apiService.getCommentsByProduct(productId);
         fetchCommentsCall.enqueue(new Callback<List<Comment>>() {
             @Override
             public void onResponse(@NonNull Call<List<Comment>> call, @NonNull Response<List<Comment>> response) {
                 if (isFinishing() || isDestroyed()) {
-                    Log.w(TAG, "fetchComments onResponse: Activity is finishing/destroyed.");
+                    Log.w(TAG, "fetchComments onResponse: Activity finishing.");
                     return;
                 }
-                showLoading(false); // Ẩn loading
+                showLoading(false);
                 if (response.isSuccessful() && response.body() != null) {
                     List<Comment> comments = response.body();
-                    Log.d(TAG, "Successfully fetched " + comments.size() + " comments.");
+                    Log.d(TAG, "Successfully fetched " + comments.size() + " comments for product " + productId);
                     if (comments.isEmpty()) {
-                        if(tvNoComments != null) { tvNoComments.setText("Hãy là người đầu tiên đánh giá!"); tvNoComments.setVisibility(View.VISIBLE); }
+                        if(tvNoComments != null) {
+                            tvNoComments.setText(canUserSubmitComment ? "Hãy là người đầu tiên đánh giá!" : "Chưa có đánh giá nào cho sản phẩm này.");
+                            tvNoComments.setVisibility(View.VISIBLE);
+                        }
                         if (recyclerViewComments != null) recyclerViewComments.setVisibility(View.GONE);
                     } else {
                         if(tvNoComments != null) tvNoComments.setVisibility(View.GONE);
@@ -636,6 +634,10 @@ public class ProductRatingActivity extends AppCompatActivity {
                     }
                 } else {
                     Log.e(TAG, "Tải comments thất bại: " + response.code() + " - " + response.message());
+                    String errorBody = "";
+                    try { if (response.errorBody() != null) errorBody = response.errorBody().string(); } catch (Exception e) { /* ignore */ }
+                    Log.e(TAG, "Fetch Comments Error Body: " + errorBody);
+
                     if(tvNoComments != null) { tvNoComments.setText("Không thể tải đánh giá."); tvNoComments.setVisibility(View.VISIBLE); }
                     if (recyclerViewComments != null) recyclerViewComments.setVisibility(View.GONE);
                     Toast.makeText(ProductRatingActivity.this, "Lỗi tải đánh giá: " + response.code(), Toast.LENGTH_SHORT).show();
@@ -645,7 +647,7 @@ public class ProductRatingActivity extends AppCompatActivity {
             @Override
             public void onFailure(@NonNull Call<List<Comment>> call, @NonNull Throwable t) {
                 if (isFinishing() || isDestroyed()) {
-                    Log.w(TAG, "fetchComments onFailure: Activity is finishing/destroyed.");
+                    Log.w(TAG, "fetchComments onFailure: Activity finishing.");
                     return;
                 }
                 if (call.isCanceled()) {
@@ -654,9 +656,9 @@ public class ProductRatingActivity extends AppCompatActivity {
                     Log.e(TAG, "Lỗi tải comments (Mạng): " + t.getMessage(), t);
                     if(tvNoComments != null) { tvNoComments.setText("Lỗi mạng khi tải đánh giá."); tvNoComments.setVisibility(View.VISIBLE); }
                     if (recyclerViewComments != null) recyclerViewComments.setVisibility(View.GONE);
-                    Toast.makeText(ProductRatingActivity.this, "Lỗi Mạng: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ProductRatingActivity.this, "Lỗi Mạng khi tải đánh giá", Toast.LENGTH_SHORT).show();
                 }
-                showLoading(false); // Ẩn loading
+                showLoading(false);
                 updateSendButtonState();
             }
         });
@@ -667,24 +669,23 @@ public class ProductRatingActivity extends AppCompatActivity {
         if (progressBar != null) progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
         else Log.w(TAG, "showLoading: progressBar is null!");
 
-        // Chỉ enable/disable phần nhập liệu nếu nó đang hiển thị
-        boolean isInputSectionVisible = (ratingBar != null && ratingBar.getVisibility() == View.VISIBLE);
-        if (isInputSectionVisible) {
+        if (canUserSubmitComment && layoutRatingInputSection != null && layoutRatingInputSection.getVisibility() == View.VISIBLE) {
             if (ivAttachComment != null) ivAttachComment.setEnabled(!isLoading);
             if (etCommentInput != null) etCommentInput.setEnabled(!isLoading);
-            if (ratingBar != null) ratingBar.setEnabled(!isLoading); // Hoặc ratingBar.setIsIndicator(isLoading);
+            if (ratingBar != null) ratingBar.setEnabled(!isLoading);
             if (ivClearSelectedImage != null) ivClearSelectedImage.setEnabled(!isLoading);
         }
-        updateSendButtonState(); // Cập nhật trạng thái nút gửi dựa trên isLoading
+        updateSendButtonState();
     }
 
     @Override
     public boolean onSupportNavigateUp() {
         if (progressBar != null && progressBar.getVisibility() == View.VISIBLE) {
             Toast.makeText(this, "Vui lòng đợi...", Toast.LENGTH_SHORT).show();
-            return true; // Chặn hành động back nếu đang loading
+            return true;
         }
-        onBackPressed();
+        setResult(Activity.RESULT_CANCELED);
+        finish();
         return true;
     }
 
@@ -692,14 +693,11 @@ public class ProductRatingActivity extends AppCompatActivity {
     public void onBackPressed() {
         if (progressBar != null && progressBar.getVisibility() == View.VISIBLE) {
             Toast.makeText(this, "Vui lòng đợi...", Toast.LENGTH_SHORT).show();
-            // Không gọi super.onBackPressed() để chặn back
         } else {
+            setResult(Activity.RESULT_CANCELED);
             super.onBackPressed();
         }
     }
-
-    // Không cần override onOptionsItemSelected nếu chỉ xử lý nút back trên toolbar
-    // vì onSupportNavigateUp đã xử lý.
 
     @Override
     protected void onDestroy() {

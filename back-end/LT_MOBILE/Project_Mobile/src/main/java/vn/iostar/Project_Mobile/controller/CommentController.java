@@ -38,12 +38,14 @@ public class CommentController {
     @Autowired
     private IProductService productService;
     @Autowired
-    private IOrderRepository orderService;
+    private IOrderRepository orderRepository;
+    
 
     // Endpoint cho bình luận chung
     // Client cần gửi userId trong DTO này.
     // Cân nhắc: Endpoint này có nên yêu cầu xác thực không? Nếu có, userId trong DTO có thể không cần thiết.
 
+ // Trong CommentController.java
     @PostMapping
     public ResponseEntity<?> createGeneralComment(@Valid @RequestBody CommentRequestDTO commentRequestDTO) {
         try {
@@ -53,12 +55,12 @@ public class CommentController {
             Product product = productService.findById(commentRequestDTO.getProductId())
                     .orElseThrow(() -> new RuntimeException("Product not found with id: " + commentRequestDTO.getProductId()));
 
-            Order order = orderService.findById(commentRequestDTO.getOrderId())
+            Order order = orderRepository.findById(commentRequestDTO.getOrderId()) // Sử dụng orderRepository thay vì orderService
                     .orElseThrow(() -> new RuntimeException("Order not found with id: " + commentRequestDTO.getOrderId()));
 
-
+            // Kiểm tra xem user đã review sản phẩm này TRONG đơn hàng này chưa
             if (commentService.hasUserReviewedProduct(user, product, order)) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body("You have already reviewed this product.");
+                return ResponseEntity.status(HttpStatus.CONFLICT).body("Bạn đã đánh giá sản phẩm này trong đơn hàng này rồi.");
             }
 
             Comment commentEntity = new Comment();
@@ -68,24 +70,30 @@ public class CommentController {
             commentEntity.setUser(user);
             commentEntity.setProduct(product);
             commentEntity.setOrder(order);
-            // Set reviewed to true based on order review logic in service
-            commentEntity.setReviewed(true);
+            commentEntity.setReviewed(true); // Đánh dấu comment này là đã review
 
-            // Save the comment (the service will check the order review status)
-            Comment savedComment = commentService.createComment(commentEntity);
+            Comment savedComment = commentService.createComment(commentEntity); // Service sẽ xử lý việc cập nhật trạng thái Order
 
             return new ResponseEntity<>(savedComment, HttpStatus.CREATED);
 
-        } catch (RuntimeException e) {
-            if (e.getMessage().contains("Product not found")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-            } else if (e instanceof UserNotFoundException) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-            } else {
-                return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (RuntimeException e) { // Bắt lỗi chung chung hơn trước
+            String errorMessage = e.getMessage();
+            // Log lỗi chi tiết ở đây
+            System.err.println("SERVER CONTROLLER: Exception during comment creation - " + errorMessage);
+            e.printStackTrace(); // In stack trace đầy đủ
+
+            if (e instanceof UserNotFoundException ||
+                (errorMessage != null && (errorMessage.contains("User not found") || errorMessage.contains("Product not found") || errorMessage.contains("Order not found")))) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMessage);
+            } else if (errorMessage != null && errorMessage.contains("You have already reviewed this product")) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(errorMessage);
             }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
+            // Các lỗi RuntimeException khác, bao gồm cả lỗi reflection nếu nó nổi lên đến đây
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi xử lý phía máy chủ: " + errorMessage);
+        } catch (Exception e) { // Bắt các lỗi Exception không phải RuntimeException
+            System.err.println("SERVER CONTROLLER: Unexpected general Exception during comment creation!");
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Đã xảy ra lỗi không mong muốn.");
         }
     }
 
@@ -98,12 +106,23 @@ public class CommentController {
             Product productEntity = productService.findById(productId)
                   .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
             List<CommentResponse> responses = commentService.getCommentsByProduct(productEntity);
-            if (responses.isEmpty()) {
-                return ResponseEntity.ok("No comments found for this product."); // Hoặc trả về danh sách rỗng
-            }
+
+            // SỬA Ở ĐÂY:
+            // Luôn trả về danh sách responses, dù nó có rỗng hay không.
+            // Spring Boot (với Jackson hoặc Gson làm serializer mặc định) sẽ tự động
+            // chuyển đổi danh sách rỗng thành một JSON array rỗng: []
             return ResponseEntity.ok(responses);
+
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            // Kiểm tra cụ thể hơn nếu là lỗi "Product not found"
+            if (e.getMessage() != null && e.getMessage().contains("Product not found with id: " + productId)) {
+                // Bạn có thể trả về 404 và một JSON error object nếu muốn
+                // Hoặc một danh sách rỗng nếu logic của bạn cho phép (nghĩa là sản phẩm không tồn tại thì cũng không có comment)
+                // Ở đây, nếu sản phẩm không tồn tại, trả về 404 là hợp lý.
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            }
+            // Các lỗi RuntimeException khác
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while fetching comments: " + e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
         }
