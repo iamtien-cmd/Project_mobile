@@ -80,6 +80,7 @@ public class AddressController {
         Long userId = currentUser.getUserId(); // Lấy userId từ User tìm được
 
         AddressDTO newAddress = addressService.addAddress(userId, addressInputDTO); // Gọi Service với userId
+        System.out.println("Received AddressInputDTO with isDefault: " + addressInputDTO.getIsDefault());
         return ResponseEntity.status(HttpStatus.CREATED).body(newAddress);
     }
 

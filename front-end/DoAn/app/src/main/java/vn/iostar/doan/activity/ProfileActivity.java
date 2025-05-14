@@ -47,7 +47,7 @@ public class ProfileActivity extends AppCompatActivity {
     private ActivityResultLauncher<Intent> orderHistoryLauncher; // Launcher cho Order History
     // --- HẾT KHAI BÁO LAUNCHER ---
 
-
+    private boolean userInfoHasChanged = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -81,6 +81,7 @@ public class ProfileActivity extends AppCompatActivity {
                         Log.i(TAG, "EditProfileActivity finished with RESULT_OK. Refreshing user info.");
                         if (token != null && !token.isEmpty()) {
                             getUserInfo(token);
+                            userInfoHasChanged = true;
                         } else {
                             Log.e(TAG, "Token is null during edit profile activity result. Cannot refresh user info.");
                         }
@@ -97,6 +98,7 @@ public class ProfileActivity extends AppCompatActivity {
                         Log.i(TAG, "ShippingAddressActivity finished with RESULT_OK. Refreshing user info.");
                         if (token != null && !token.isEmpty()) {
                             getUserInfo(token);
+                            userInfoHasChanged = true;
                         } else {
                             Log.e(TAG, "Token is null during address activity result. Cannot refresh user info.");
                         }
@@ -120,7 +122,10 @@ public class ProfileActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
-            finish(); // Close activity
+            if (userInfoHasChanged) {
+                setResult(RESULT_OK);
+            }
+            finish();
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -287,5 +292,11 @@ public class ProfileActivity extends AppCompatActivity {
         orderHistoryLauncher.launch(intent);
     }
 
-
+    @Override
+    public void finish() {
+        if (userInfoHasChanged) {
+            setResult(RESULT_OK);
+        }
+        super.finish();
+    }
 }

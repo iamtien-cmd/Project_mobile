@@ -339,7 +339,6 @@ public class ProductDetailActivity extends AppCompatActivity {
     // Hàm xử lý khi nhấn nút Add to Cart
     private void handleAddToCartClick() {
         if (currentProductId != -1) {
-            Toast.makeText(this, "Thêm sản phẩm " + currentProductId + " vào giỏ", Toast.LENGTH_SHORT).show();
             int quantityToAdd = 1;
             addProductToCart(currentProductId, quantityToAdd);
         } else {
@@ -456,6 +455,9 @@ public class ProductDetailActivity extends AppCompatActivity {
                         showLoading(false);
                         if (response.isSuccessful()) {
                             Toast.makeText(ProductDetailActivity.this, "Đã thêm vào giỏ hàng!", Toast.LENGTH_SHORT).show();
+                            Intent intent = new Intent(ProductDetailActivity.this, CartActivity.class);
+                            intent.putExtra("token", authToken);
+                            startActivity(intent);
                             Log.i(TAG, "Product added to cart successfully.");
                         } else {
                             String errorMsg = "Lỗi khi thêm vào giỏ hàng.";

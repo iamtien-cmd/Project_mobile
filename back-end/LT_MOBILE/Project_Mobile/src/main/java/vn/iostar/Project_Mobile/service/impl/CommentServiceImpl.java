@@ -113,7 +113,7 @@ public class CommentServiceImpl implements ICommentService {
 	                // 9. Update the order status (Recommended)
 	                order.setStatus(OrderStatus.REVIEWED);
 	                // OR update the boolean flag (Alternative)
-	                // order.setReviewed(true);
+	                 order.setReviewed(true);
 
 	                orderRepository.save(order); // Persist the change
 	            }
