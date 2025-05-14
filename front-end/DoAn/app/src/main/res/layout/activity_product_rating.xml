@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_card"
+    android:background="#F5F5DC"
     tools:context=".activity.ProductRatingActivity">
 
     <!-- Toolbar -->
@@ -23,12 +23,21 @@
             android:layout_height="?attr/actionBarSize"
             app:titleTextColor="@color/white"
             android:backgroundTint="@color/black"
-        android:background="?attr/colorPrimary"
-        app:title="Comment &amp; Rating"
-        app:navigationIcon="?attr/homeAsUpIndicator" />
-
+            android:background="?attr/colorPrimary"
+            app:title="Đánh giá &amp; bình luận"
+            app:navigationIcon="?attr/homeAsUpIndicator" />
     </com.google.android.material.appbar.AppBarLayout>
 
+    <!-- Group để kiểm soát visibility của previewAreaLayout và inputAreaLayout -->
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/layoutRatingInputSection"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="visible"
+    app:constraint_referenced_ids="previewAreaLayout,inputAreaLayout" />
+    <!-- Quan trọng: constraint_referenced_ids liệt kê các ID của View bạn muốn nhóm -->
+
+    <!-- previewAreaLayout và inputAreaLayout vẫn giữ nguyên vị trí và constraints của chúng -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/previewAreaLayout"
         android:layout_width="0dp"
@@ -38,161 +47,150 @@
         android:paddingTop="8dp"
         android:paddingBottom="8dp"
         android:background="@color/white"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintBottom_toTopOf="@+id/inputAreaLayout">
-    <ImageView
-        android:id="@+id/ivSelectedImagePreview"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:scaleType="centerCrop"
-        android:visibility="gone"
-    tools:src="@tools:sample/avatars"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toTopOf="parent"
-    app:layout_constraintBottom_toBottomOf="parent"/>
-
-    <ImageView
-        android:id="@+id/ivClearSelectedImage"
-        android:layout_width="24dp"
-    android:layout_height="24dp"
-    android:src="@drawable/ic_close_circle"
-    android:background="?attr/selectableItemBackgroundBorderless"
-    android:clickable="true"
-    android:focusable="true"
-    android:visibility="gone"
-    app:layout_constraintTop_toTopOf="@+id/ivSelectedImagePreview"
-    app:layout_constraintStart_toEndOf="@+id/ivSelectedImagePreview"
-    android:layout_marginStart="-12dp"
-    android:layout_marginTop="-8dp"
-    android:contentDescription="Clear selected image" />
-
-
-    <RatingBar
-        android:id="@+id/ratingBar"
-        style="?android:attr/ratingBarStyleSmall"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:numStars="5"
-    android:stepSize="1.0"
-    android:isIndicator="false"
-    android:theme="@style/RatingBar"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintTop_toTopOf="parent"
-    app:layout_constraintBottom_toBottomOf="parent"/>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
-
-
-
-<androidx.constraintlayout.widget.ConstraintLayout
-android:id="@+id/inputAreaLayout"
-android:layout_width="0dp"
-android:layout_height="wrap_content"
-android:paddingTop="8dp"
-android:paddingBottom="8dp"
-android:background="@color/white"
-app:layout_constraintBottom_toBottomOf="parent"
-app:layout_constraintStart_toStartOf="parent"
-app:layout_constraintEnd_toEndOf="parent">
-
-    <ImageView
-    android:id="@+id/ivAttachComment"
-    android:layout_width="48dp"
-android:layout_height="48dp"
-android:src="@drawable/dinhkem"
-android:contentDescription="Attach file"
-android:padding="12dp"
-android:background="?attr/selectableItemBackgroundBorderless"
-android:clickable="true"
-android:focusable="true"
-app:layout_constraintStart_toStartOf="parent"
-app:layout_constraintBottom_toBottomOf="@+id/etCommentInput"
-app:layout_constraintTop_toTopOf="@+id/etCommentInput"
-android:layout_marginStart="8dp"/>
-
-<EditText
-    android:id="@+id/etCommentInput"
-    android:layout_width="0dp"
-    android:layout_height="wrap_content"
-    android:minHeight="48dp"
-
-android:paddingTop="10dp"
-android:paddingBottom="10dp"
-android:paddingStart="16dp"
-android:paddingEnd="16dp"
-android:hint="Write a comment..."
-android:inputType="textMultiLine"
-
-app:layout_constraintStart_toEndOf="@+id/ivAttachComment"
-app:layout_constraintEnd_toStartOf="@+id/btnSendComment"
-app:layout_constraintTop_toTopOf="parent"
-app:layout_constraintBottom_toBottomOf="parent"
-android:layout_marginStart="8dp"
-android:layout_marginEnd="12dp"/>
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnSendComment"
-        style="@style/Widget.MaterialComponents.Button.Icon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:minWidth="48dp"
-        android:minHeight="48dp"
-        app:icon="@drawable/sendcomment1"
-        app:iconPadding="0dp"
-        app:iconGravity="textStart"
-        android:insetLeft="0dp"
-        android:insetTop="0dp"
-        android:insetRight="0dp"
-        android:insetBottom="0dp"
-        app:shapeAppearanceOverlay="@style/ShapeAppearance.MaterialComponents.SmallComponent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/inputAreaLayout">
 
-        android:layout_marginEnd="8dp"
-        android:contentDescription="Send comment"
-    app:layout_constraintBottom_toBottomOf="@+id/etCommentInput"
-app:layout_constraintTop_toTopOf="@+id/etCommentInput" />
+        <ImageView
+            android:id="@+id/ivSelectedImagePreview"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:scaleType="centerCrop"
+            android:visibility="gone"
+            tools:src="@tools:sample/avatars"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
 
+        <ImageView
+            android:id="@+id/ivClearSelectedImage"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_close_circle"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:visibility="gone"
+            app:layout_constraintTop_toTopOf="@+id/ivSelectedImagePreview"
+            app:layout_constraintStart_toEndOf="@+id/ivSelectedImagePreview"
+            android:layout_marginStart="-12dp"
+            android:layout_marginTop="-8dp"
+            android:contentDescription="Clear selected image" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <RatingBar
+            android:id="@+id/ratingBar"
+            style="?android:attr/ratingBarStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:numStars="5"
+            android:stepSize="1.0"
+            android:isIndicator="false"
+            android:theme="@style/RatingBar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/inputAreaLayout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:background="@color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-<androidx.recyclerview.widget.RecyclerView
-android:id="@+id/recyclerViewComments"
-android:layout_width="0dp"
-android:layout_height="0dp"
-    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-    app:layout_constraintTop_toBottomOf="@+id/appBarLayout"
-    app:layout_constraintBottom_toTopOf="@+id/previewAreaLayout"
+        <ImageView
+            android:id="@+id/ivAttachComment"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/dinhkem"
+            android:contentDescription="Attach file"
+            android:padding="12dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="@+id/etCommentInput"
+            app:layout_constraintTop_toTopOf="@+id/etCommentInput"
+            android:layout_marginStart="8dp"/>
+
+        <EditText
+            android:id="@+id/etCommentInput"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:hint="Write a comment..."
+            android:inputType="textMultiLine"
+            app:layout_constraintStart_toEndOf="@+id/ivAttachComment"
+            app:layout_constraintEnd_toStartOf="@+id/btnSendComment"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="12dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSendComment"
+            style="@style/Widget.MaterialComponents.Button.Icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="48dp"
+            android:minHeight="48dp"
+            app:icon="@drawable/sendcomment1"
+            app:iconPadding="0dp"
+            app:iconGravity="textStart"
+            android:insetLeft="0dp"
+            android:insetTop="0dp"
+            android:insetRight="0dp"
+            android:insetBottom="0dp"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.MaterialComponents.SmallComponent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginEnd="8dp"
+            android:contentDescription="Send comment"
+            app:layout_constraintBottom_toBottomOf="@+id/etCommentInput"
+            app:layout_constraintTop_toTopOf="@+id/etCommentInput" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewComments"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintTop_toBottomOf="@+id/appBarLayout"
+        app:layout_constraintBottom_toTopOf="@+id/previewAreaLayout"
     app:layout_constraintStart_toStartOf="parent"
     app:layout_constraintEnd_toEndOf="parent"
     tools:listitem="@layout/item_comment"
     android:clipToPadding="false"
     android:paddingBottom="8dp"/>
 
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@+id/recyclerViewComments"
+        app:layout_constraintBottom_toBottomOf="@+id/recyclerViewComments"
+        app:layout_constraintStart_toStartOf="@+id/recyclerViewComments"
+        app:layout_constraintEnd_toEndOf="@+id/recyclerViewComments" />
 
-<ProgressBar
-android:id="@+id/progressBar"
-style="?android:attr/progressBarStyle"
-android:layout_width="wrap_content"
-android:layout_height="wrap_content"
-android:visibility="gone"
-app:layout_constraintTop_toBottomOf="@+id/appBarLayout"
-app:layout_constraintBottom_toTopOf="@+id/previewAreaLayout"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintEnd_toEndOf="parent" />
+    <TextView
+        android:id="@+id/tvNoComments"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="No reviews yet."
+        android:visibility="gone"
+        android:textSize="16sp"
+        app:layout_constraintTop_toTopOf="@+id/recyclerViewComments"
+        app:layout_constraintBottom_toBottomOf="@+id/recyclerViewComments"
+        app:layout_constraintStart_toStartOf="@+id/recyclerViewComments"
+        app:layout_constraintEnd_toEndOf="@+id/recyclerViewComments"/>
 
-
-<TextView
-android:id="@+id/tvNoComments"
-android:layout_width="wrap_content"
-android:layout_height="wrap_content"
-android:text="No reviews yet."
-android:visibility="gone"
-android:textSize="16sp"
-app:layout_constraintTop_toBottomOf="@+id/appBarLayout"
-app:layout_constraintBottom_toTopOf="@+id/previewAreaLayout"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintEnd_toEndOf="parent"/>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

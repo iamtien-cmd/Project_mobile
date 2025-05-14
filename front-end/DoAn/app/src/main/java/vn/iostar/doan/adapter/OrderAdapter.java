@@ -217,7 +217,7 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
             if (status == null) return "N/A";
             switch (status) {
                 case WAITING: return "Đang chờ";
-                case REVIEWED: return "Đã duyệt";
+                case REVIEWED: return "Đã đánh giá";
                 case SHIPPING: return "Đang vận chuyển";
                 case RECEIVED: return "Đã nhận hàng";
                 case CANCELLED: return "Đã hủy";
