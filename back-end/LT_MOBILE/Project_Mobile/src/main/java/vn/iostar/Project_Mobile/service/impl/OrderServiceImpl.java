@@ -3,11 +3,14 @@ package vn.iostar.Project_Mobile.service.impl;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.iostar.Project_Mobile.DTO.CreateOrderRequest;
 import vn.iostar.Project_Mobile.DTO.CreateOrderResponseDTO;
 import vn.iostar.Project_Mobile.entity.*;
+import vn.iostar.Project_Mobile.event.OrderStatusChangedEvent;
 import vn.iostar.Project_Mobile.exception.ResourceNotFoundException;
 import vn.iostar.Project_Mobile.repository.*;
 import vn.iostar.Project_Mobile.service.IOrderService;
@@ -37,7 +40,10 @@ public class OrderServiceImpl implements IOrderService {
     private final CartRepository cartRepository;
     private final VnpayService vnpayService;
     private final ICommentRepository commentRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
+
+    @Autowired
     public OrderServiceImpl(AddressRepository addressRepository,
                             CartItemRepository cartItemRepository,
                             IOrderRepository orderRepository,
@@ -45,7 +51,9 @@ public class OrderServiceImpl implements IOrderService {
                             ProductRepository productRepository,
                             CartRepository cartRepository,
                             VnpayService vnpayService,
-                            ICommentRepository commentRepository) {
+                            ICommentRepository commentRepository,
+                            ApplicationEventPublisher eventPublisher
+                           ) {
         this.addressRepository = addressRepository;
         this.cartItemRepository = cartItemRepository;
         this.orderRepository = orderRepository;
@@ -54,6 +62,7 @@ public class OrderServiceImpl implements IOrderService {
         this.cartRepository = cartRepository;
         this.vnpayService = vnpayService;
         this.commentRepository = commentRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -71,17 +80,14 @@ public class OrderServiceImpl implements IOrderService {
         }
         logger.debug("Input validation passed for user {}. Payment method: {}", currentUser.getUserId(), request.getPaymentMethod().name());
 
-        Address defaultAddress = addressRepository.findByUser_UserIdAndIsDefaultTrue(currentUser.getUserId())
+        Address shippingAddressEntity = addressRepository.findByUser_UserIdAndIsDefaultTrue(currentUser.getUserId())
                 .orElseThrow(() -> {
                     logger.error("User {} does not have a default shipping address set.", currentUser.getUserId());
                     return new IllegalStateException("Vui lòng thiết lập địa chỉ giao hàng mặc định trước khi đặt hàng.");
                 });
-
-        // Cập nhật dòng logger này
-        logger.debug("Default address found for user {}. Recipient Name: '{}', Recipient Phone: '{}'. This info will be used for the order's shippingAddress field.",
-                currentUser.getUserId(),
-                defaultAddress.getRecipientName(),
-                defaultAddress.getRecipientPhone());
+        logger.debug("Default address entity found for user {}: Address ID {}. Recipient: '{}', Phone: '{}', Street: '{}'",
+                currentUser.getUserId(), shippingAddressEntity.getAddressId(),
+                shippingAddressEntity.getRecipientName(), shippingAddressEntity.getRecipientPhone(), shippingAddressEntity.getStreetAddress());
 
         Optional<Cart> userCartOpt = cartRepository.findByUser_UserId(currentUser.getUserId());
         if (userCartOpt.isEmpty()) {
@@ -114,18 +120,19 @@ public class OrderServiceImpl implements IOrderService {
                         product.getProductId(), product.getName(), item.getQuantity(), product.getQuantity());
                 throw new IllegalStateException("Sản phẩm '" + product.getName() + "' không đủ số lượng tồn kho (yêu cầu " + item.getQuantity() + ", còn " + product.getQuantity() + ").");
             }
-            double productPrice = product.getPrice();
-            itemsSubtotal += productPrice * item.getQuantity();
+            double productPriceAtOrderTime = product.getPrice();
+            itemsSubtotal += productPriceAtOrderTime * item.getQuantity();
+
             OrderLine line = new OrderLine();
             line.setProduct(product);
             line.setQuantity(item.getQuantity());
-            line.setPrice(productPrice);
+            line.setPrice(productPriceAtOrderTime);
             tempOrderLines.add(line);
         }
         logger.debug("Calculated itemsSubtotal for user {}: {}", currentUser.getUserId(), itemsSubtotal);
 
         int totalItemsCount = selectedCartItems.stream().mapToInt(CartItem::getQuantity).sum();
-        double calculatedShippingFee = calculateShippingFee(defaultAddress, totalItemsCount, itemsSubtotal);
+        double calculatedShippingFee = calculateShippingFee(shippingAddressEntity, totalItemsCount, itemsSubtotal);
         logger.debug("Calculated shipping fee for user {}: {}", currentUser.getUserId(), calculatedShippingFee);
         double finalTotalPrice = itemsSubtotal + calculatedShippingFee;
         logger.debug("Calculated finalTotalPrice for user {}: {}", currentUser.getUserId(), finalTotalPrice);
@@ -134,22 +141,23 @@ public class OrderServiceImpl implements IOrderService {
         newOrder.setUser(currentUser);
         newOrder.setItemsSubtotal(itemsSubtotal);
         newOrder.setTotalPrice(finalTotalPrice);
-        // Sử dụng phương thức formatShippingAddress đã được sửa đổi
-        newOrder.setShippingAddress(formatShippingAddress(defaultAddress));
+        newOrder.setShippingAddress(formatShippingAddressToString(shippingAddressEntity));
         Instant now = Instant.now();
-        newOrder.setOrderDate(new java.sql.Date(Date.from(now).getTime()));
+        newOrder.setOrderDate(Date.from(now));
         Instant predictDate = now.plus(5, ChronoUnit.DAYS);
-        newOrder.setPredictReceiveDate(new java.sql.Date(Date.from(predictDate).getTime()));
+        newOrder.setPredictReceiveDate(Date.from(predictDate));
         newOrder.setPaymentMethod(request.getPaymentMethod());
+        newOrder.setReviewed(false);
 
         String paymentUrl = null;
         Order savedOrder;
+        String statusMessageForEvent;
 
         if (request.getPaymentMethod() == PaymentMethod.VNPAY) {
             newOrder.setStatus(OrderStatus.PENDING);
             logger.debug("Payment method is VNPAY. Setting status to PENDING for user {}.", currentUser.getUserId());
             savedOrder = orderRepository.save(newOrder);
-            logger.info("PENDING Order saved successfully with ID: {} for user {}", savedOrder.getOrderId(), currentUser.getUserId());
+            logger.info("PENDING Order (VNPAY) initially saved with ID: {} for user {}", savedOrder.getOrderId(), currentUser.getUserId());
 
             List<OrderLine> finalOrderLines = new ArrayList<>();
             for (OrderLine line : tempOrderLines) {
@@ -157,7 +165,7 @@ public class OrderServiceImpl implements IOrderService {
                 OrderLine savedLine = orderLineRepository.save(line);
                 finalOrderLines.add(savedLine);
             }
-            savedOrder.setOrderLines(finalOrderLines);
+            savedOrder.setOrderLines(finalOrderLines); // Quan trọng để event có thể truy cập nếu cần
 
             try {
                 paymentUrl = vnpayService.createPaymentUrl(savedOrder, httpServletRequest);
@@ -165,7 +173,12 @@ public class OrderServiceImpl implements IOrderService {
             } catch (Exception e) {
                 logger.error("Error generating VNPAY URL for order {}: {}", savedOrder.getOrderId(), e.getMessage(), e);
             }
-        } else {
+
+            statusMessageForEvent = "đang chờ thanh toán";
+            logger.info("PUBLISHING OrderStatusChangedEvent for VNPAY Order ID: {} with message: '{}'", savedOrder.getOrderId(), statusMessageForEvent);
+            eventPublisher.publishEvent(new OrderStatusChangedEvent(this, savedOrder, statusMessageForEvent));
+
+        } else { // COD hoặc các phương thức thanh toán khác
             newOrder.setStatus(OrderStatus.WAITING);
             logger.debug("Payment method is {}. Setting status to {} for user {}.", request.getPaymentMethod().name(), newOrder.getStatus().name(), currentUser.getUserId());
             savedOrder = orderRepository.save(newOrder);
@@ -180,21 +193,34 @@ public class OrderServiceImpl implements IOrderService {
                 Product productToUpdate = line.getProduct();
                 int newStock = productToUpdate.getQuantity() - line.getQuantity();
                 if (newStock < 0) {
-                    logger.error("Stock calculation error after saving OrderLine! Product ID: {}, New Stock calculated: {}", productToUpdate.getProductId(), newStock);
-                    throw new IllegalStateException("Lỗi nghiêm trọng: Số lượng tồn kho âm sau khi cập nhật cho sản phẩm ID " + productToUpdate.getProductId());
+                    logger.error("Stock calculation error after saving OrderLine! Product ID: {}, New Stock calculated: {}. Order creation will be rolled back.", productToUpdate.getProductId(), newStock);
+                    throw new IllegalStateException("Lỗi nghiêm trọng: Số lượng tồn kho không đủ cho sản phẩm '" + productToUpdate.getName() + "' sau khi kiểm tra lại.");
                 }
                 productToUpdate.setQuantity(newStock);
                 productRepository.save(productToUpdate);
+                logger.debug("Updated stock for Product ID: {}. New stock: {}", productToUpdate.getProductId(), newStock);
             }
-            savedOrder.setOrderLines(finalOrderLines);
+            savedOrder.setOrderLines(finalOrderLines); // Quan trọng
+
             cartItemRepository.deleteAll(selectedCartItems);
             logger.info("Deleted {} cart items for user {} after order creation (ID: {}).", selectedCartItems.size(), currentUser.getUserId(), savedOrder.getOrderId());
 
             resetPreviousProductReviews(currentUser, savedOrder);
-        }
 
+            statusMessageForEvent = "đã được xác nhận và đang chờ xử lý";
+            logger.info("PUBLISHING OrderStatusChangedEvent for COD Order ID: {} with message: '{}'", savedOrder.getOrderId(), statusMessageForEvent);
+            eventPublisher.publishEvent(new OrderStatusChangedEvent(this, savedOrder, statusMessageForEvent));
+        }
+        logger.info("PUBLISHING OrderStatusChangedEvent for Order ID: {}, Status: {}, TotalPrice: {}, CustomerEmail: {}, CustomerName: {}",
+                savedOrder.getOrderId(),
+                savedOrder.getStatus(),
+                savedOrder.getTotalPrice(),
+                (savedOrder.getUser() != null ? savedOrder.getUser().getEmail() : "N/A"),
+                (savedOrder.getUser() != null ? savedOrder.getUser().getFullName() : "N/A")
+        );
         return new CreateOrderResponseDTO(savedOrder, paymentUrl);
     }
+
 
     private void resetPreviousProductReviews(User user, Order order) {
         if (order != null && order.getOrderLines() != null) {
@@ -221,6 +247,7 @@ public class OrderServiceImpl implements IOrderService {
         }
     }
 
+
     private Double calculateShippingFee(Address address, int totalItems, double itemsSubtotal) {
         if (totalItems == 0) return 0.0;
         if (itemsSubtotal > 700000) return 0.0;
@@ -230,33 +257,42 @@ public class OrderServiceImpl implements IOrderService {
     }
 
 
-    private String formatShippingAddress(Address address) {
+    private String formatShippingAddressToString(Address address) {
         if (address == null) {
-            logger.warn("Cannot format shipping address and recipient info because Address object is null.");
-
-            return "||"; 
+            logger.warn("Cannot format shipping address and recipient info because Address object is null. Returning empty placeholders.");
+            return "||";
         }
-
-        List<String> parts = new ArrayList<>();
-
-        // 1. Tên người nhận
-        String recipientName = address.getRecipientName();
-        parts.add(recipientName != null && !recipientName.trim().isEmpty() ? recipientName.trim() : "");
-
-        // 2. Số điện thoại người nhận
-        String recipientPhone = address.getRecipientPhone();
-        parts.add(recipientPhone != null && !recipientPhone.trim().isEmpty() ? recipientPhone.trim() : "");
-
-        // 3. Địa chỉ đường (StreetAddress)
-        String streetAddress = address.getStreetAddress();
-        parts.add(streetAddress != null && !streetAddress.trim().isEmpty() ? streetAddress.trim() : "");
-
-        // Nối các phần lại bằng dấu "|"
-        String result = String.join("|", parts);
-
-        logger.debug("Formatted shipping string for address ID {}: {}", address.getAddressId(), result);
+        String recipientName = (address.getRecipientName() != null && !address.getRecipientName().trim().isEmpty())
+                ? address.getRecipientName().trim() : "";
+        String recipientPhone = (address.getRecipientPhone() != null && !address.getRecipientPhone().trim().isEmpty())
+                ? address.getRecipientPhone().trim() : "";
+        StringBuilder detailedAddressBuilder = new StringBuilder();
+        if (address.getStreetAddress() != null && !address.getStreetAddress().trim().isEmpty()) {
+            detailedAddressBuilder.append(address.getStreetAddress().trim());
+        }
+        if (address.getWard() != null && !address.getWard().trim().isEmpty()) {
+            if (detailedAddressBuilder.length() > 0) detailedAddressBuilder.append(", ");
+            detailedAddressBuilder.append(address.getWard().trim());
+        }
+        if (address.getDistrict() != null && !address.getDistrict().trim().isEmpty()) {
+            if (detailedAddressBuilder.length() > 0) detailedAddressBuilder.append(", ");
+            detailedAddressBuilder.append(address.getDistrict().trim());
+        }
+        if (address.getCity() != null && !address.getCity().trim().isEmpty()) {
+            if (detailedAddressBuilder.length() > 0) detailedAddressBuilder.append(", ");
+            detailedAddressBuilder.append(address.getCity().trim());
+        }
+        String detailedAddress = detailedAddressBuilder.toString();
+        if (detailedAddress.isEmpty() && recipientName.isEmpty() && recipientPhone.isEmpty()){
+             logger.warn("All parts of address are empty for Address ID {}. Returning empty placeholders.", address.getAddressId());
+             return "||";
+        }
+        String result = String.join("|", recipientName, recipientPhone, detailedAddress);
+        logger.debug("Formatted shipping string for address ID {}: '{}'", address.getAddressId(), result);
         return result;
     }
+
+
     @Override
     public Order getOrderDetailsById(Long orderId, User user) {
         logger.debug("Fetching order details for ID: {} requested by User ID: {}", orderId, user.getUserId());
@@ -271,12 +307,17 @@ public class OrderServiceImpl implements IOrderService {
             throw new IllegalStateException("Bạn không có quyền xem đơn hàng này.");
         }
         logger.info("SHIPPING_ADDRESS_FROM_DB for order ID {}: '{}'", orderId, order.getShippingAddress());
+        // Eagerly fetch order lines and product names if needed for display
         order.getOrderLines().forEach(line -> {
-            if (line.getProduct() != null) line.getProduct().getName();
+            if (line.getProduct() != null) {
+                // This access will trigger lazy loading if not already fetched
+                logger.trace("Product in order line: {}", line.getProduct().getName());
+            }
         });
         logger.debug("Order details retrieved successfully for Order ID: {}", orderId);
         return order;
     }
+
 
     @Transactional
     @Override
@@ -295,54 +336,53 @@ public class OrderServiceImpl implements IOrderService {
              String vnp_TransactionStatus = vnpayData.get("vnp_TransactionStatus");
              long vnp_AmountReported = Long.parseLong(vnpayData.get("vnp_Amount"));
 
-             Optional<Order> orderOpt = orderRepository.findById(orderId);
-             if (orderOpt.isEmpty()) {
-                 logger.warn("VNPAY IPN: Order not found for ID: {}", orderId);
-                 throw new NoSuchElementException("Không tìm thấy đơn hàng với ID: " + orderId);
-             }
-             Order order = orderOpt.get();
+             Order order = orderRepository.findById(orderId)
+                 .orElseThrow(() -> {
+                     logger.warn("VNPAY IPN: Order not found for ID: {}. RspCode: 01", orderId);
+                     return new NoSuchElementException("Không tìm thấy đơn hàng với ID: " + orderId + " (RspCode: 01)");
+                 });
 
              if (order.getStatus() != OrderStatus.PENDING) {
-                 logger.warn("VNPAY IPN: Order ID {} already processed or in invalid state. Current status: {}. Expected PENDING.", orderId, order.getStatus());
-                 throw new IllegalStateException("Đơn hàng " + orderId + " không ở trạng thái chờ thanh toán: " + order.getStatus().name());
+                 logger.warn("VNPAY IPN: Order ID {} already processed or in invalid state. Current status: {}. Expected PENDING. RspCode: 02", orderId, order.getStatus());
+                 throw new IllegalStateException("Đơn hàng " + orderId + " không ở trạng thái chờ thanh toán (RspCode: 02). Trạng thái hiện tại: " + order.getStatus().name());
              }
 
              long orderAmountInSystemTimes100 = (long) (order.getTotalPrice() * 100);
              if (vnp_AmountReported != orderAmountInSystemTimes100) {
-                  logger.warn("VNPAY IPN amount mismatch for Order ID {}. VNPAY Amount (x100): {}, System Amount (x100): {}", orderId, vnp_AmountReported, orderAmountInSystemTimes100);
-                  throw new IllegalStateException("Số tiền thanh toán không khớp cho đơn hàng " + orderId);
+                  logger.warn("VNPAY IPN amount mismatch for Order ID {}. VNPAY Amount (x100): {}, System Amount (x100): {}. RspCode: 04",
+                          orderId, vnp_AmountReported, orderAmountInSystemTimes100);
+                  throw new IllegalStateException("Số tiền thanh toán không khớp cho đơn hàng " + orderId + " (RspCode: 04)");
              }
              logger.debug("Order {} status, amount, and signature are valid for IPN processing.", orderId);
+
+             OrderStatus originalStatusBeforeIpn = order.getStatus();
+             String statusMessageForEvent = "";
 
              if ("00".equals(vnp_ResponseCode) && "00".equals(vnp_TransactionStatus)) {
                  logger.info("VNPAY IPN: Payment successful for Order ID: {}", orderId);
                  order.setStatus(OrderStatus.WAITING);
 
-                 for (OrderLine line : order.getOrderLines()) {
+                 for (OrderLine line : order.getOrderLines()) { // Ensure orderLines are loaded
                      Product productToUpdate = line.getProduct();
-                     Optional<Product> freshProductOpt = productRepository.findById(productToUpdate.getProductId());
-                     if(freshProductOpt.isPresent()){
-                         Product freshProduct = freshProductOpt.get();
-                         int newStock = freshProduct.getQuantity() - line.getQuantity();
-                         if (newStock < 0) {
-                             logger.error("VNPAY IPN - Stock error! Product ID: {}, New Stock calculated: {}. Order cannot be fulfilled despite successful payment.",
-                                     freshProduct.getProductId(), newStock);
-                             order.setStatus(OrderStatus.ERROR);
-                             break;
-                         }
-                         freshProduct.setQuantity(newStock);
-                         productRepository.save(freshProduct);
-                         logger.debug("VNPAY IPN - Updated stock for Product ID: {}. New stock: {}", freshProduct.getProductId(), newStock);
-                     } else {
-                          logger.error("VNPAY IPN - Product ID {} not found during stock update for order {}.", productToUpdate.getProductId(), orderId);
-                          order.setStatus(OrderStatus.ERROR);
-                          break;
+                     Product freshProduct = productRepository.findById(productToUpdate.getProductId())
+                             .orElseThrow(() -> {
+                                 logger.error("VNPAY IPN - Product ID {} not found during stock update for order {}. Marking order as ERROR.", productToUpdate.getProductId(), orderId);
+                                 return new IllegalStateException("Sản phẩm không tồn tại khi cập nhật kho cho VNPAY IPN.");
+                             });
+                     int newStock = freshProduct.getQuantity() - line.getQuantity();
+                     if (newStock < 0) {
+                         logger.error("VNPAY IPN - Stock error! Product ID: {}, New Stock calculated: {}. Order cannot be fulfilled. Marking order as ERROR.",
+                                 freshProduct.getProductId(), newStock);
+                         order.setStatus(OrderStatus.ERROR);
+                         break;
                      }
+                     freshProduct.setQuantity(newStock);
+                     productRepository.save(freshProduct);
+                     logger.debug("VNPAY IPN - Updated stock for Product ID: {}. New stock: {}", freshProduct.getProductId(), newStock);
                  }
 
                  if (order.getStatus() != OrderStatus.ERROR) {
-                     Cart userCart = cartRepository.findByUser_UserId(order.getUser().getUserId())
-                             .orElse(null);
+                     Cart userCart = cartRepository.findByUser_UserId(order.getUser().getUserId()).orElse(null);
                      if (userCart != null) {
                          List<Long> productIdsInOrder = order.getOrderLines().stream()
                                  .map(ol -> ol.getProduct().getProductId())
@@ -355,63 +395,82 @@ public class OrderServiceImpl implements IOrderService {
                          }
                      }
                      resetPreviousProductReviews(order.getUser(), order);
+                     statusMessageForEvent = "đã được thanh toán thành công và đang được xử lý";
+                 } else {
+                     statusMessageForEvent = "gặp sự cố trong quá trình xử lý thanh toán";
                  }
 
              } else {
                  logger.warn("VNPAY IPN: Payment failed/cancelled for Order ID: {}. VNPAY Response Code: {}, Transaction Status: {}",
                          orderId, vnp_ResponseCode, vnp_TransactionStatus);
                  order.setStatus(OrderStatus.CANCELLED);
+                 statusMessageForEvent = "đã bị hủy do thanh toán không thành công";
              }
 
-             orderRepository.save(order);
-             logger.info("Order status updated to {} for Order ID {} via VNPAY IPN.", order.getStatus().name(), orderId);
+             Order finalUpdatedOrder = orderRepository.save(order);
+             logger.info("Order status updated to {} for Order ID {} via VNPAY IPN.", finalUpdatedOrder.getStatus().name(), orderId);
+             logger.info("PUBLISHING OrderStatusChangedEvent for Order ID: {}, Status: {}, TotalPrice: {}, CustomerEmail: {}, CustomerName: {}",
+                finalUpdatedOrder.getOrderId(),
+                finalUpdatedOrder.getStatus(),
+                finalUpdatedOrder.getTotalPrice(),
+                (finalUpdatedOrder.getUser() != null ? finalUpdatedOrder.getUser().getEmail() : "N/A"),
+                (finalUpdatedOrder.getUser() != null ? finalUpdatedOrder.getUser().getFullName() : "N/A")
+             );
+
+             if ((finalUpdatedOrder.getStatus() != originalStatusBeforeIpn || finalUpdatedOrder.getStatus() != OrderStatus.PENDING) && !statusMessageForEvent.isEmpty()) {
+                 logger.info("PUBLISHING OrderStatusChangedEvent for VNPAY IPN Order ID: {} with message: '{}'", finalUpdatedOrder.getOrderId(), statusMessageForEvent);
+                 eventPublisher.publishEvent(new OrderStatusChangedEvent(this, finalUpdatedOrder, statusMessageForEvent));
+             }
 
          } catch (NumberFormatException e) {
-             logger.error("Error parsing VNPAY IPN data (Order ID or Amount).", e);
+             logger.error("Error parsing VNPAY IPN data (Order ID or Amount). RspCode: 99 (Generic error)", e);
              throw new NumberFormatException("Error parsing VNPAY IPN data: " + e.getMessage());
          } catch (NoSuchElementException | IllegalArgumentException | IllegalStateException e) {
-             logger.warn("Business rule violation or data issue during VNPAY IPN processing: {}", e.getMessage());
+             logger.warn("Business rule violation or data issue during VNPAY IPN processing: {}. Propagating to controller.", e.getMessage());
              throw e;
          } catch (Exception e) {
-              logger.error("Unexpected error processing VNPAY IPN for order data potentially related to order {}: {}", vnpayData.get("vnp_TxnRef"), e.getMessage(), e);
+              logger.error("Unexpected error processing VNPAY IPN for order data (TxnRef: {}). RspCode: 99", vnpayData.get("vnp_TxnRef"), e);
               throw new RuntimeException("Unexpected error processing VNPAY IPN: " + e.getMessage(), e);
          }
      }
+
 
     @Override
     public List<Order> getOrdersByUserId(Long userId) {
         logger.debug("Fetching orders for User ID: {}", userId);
         List<Order> orders = orderRepository.findByUser_UserIdOrderByOrderDateDesc(userId);
         orders.forEach(order -> {
+            // Eagerly load order lines
             order.getOrderLines().size();
         });
         logger.info("Found {} orders for User ID: {}", orders.size(), userId);
         return orders;
     }
 
+
     @Override
     @Transactional(readOnly = true)
     public Order getOrderDetailsById(Long orderId) throws ResourceNotFoundException {
-        logger.debug("Fetching order details for Order ID: {}", orderId);
-        Optional<Order> optionalOrder = orderRepository.findById(orderId);
-        if (optionalOrder.isPresent()) {
-            Order order = optionalOrder.get();
-            order.getOrderLines().size();
-            for (OrderLine line : order.getOrderLines()) {
-                if (line.getProduct() != null) {
-                    line.getProduct().getName();
-                }
+        logger.debug("Fetching public order details for Order ID: {}", orderId);
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> {
+                logger.warn("Public order details: Order not found for ID: {}", orderId);
+                return new ResourceNotFoundException("Không tìm thấy đơn hàng với ID: " + orderId);
+            });
+
+        // Eagerly load related entities
+        order.getOrderLines().forEach(line -> {
+            if (line.getProduct() != null) {
+                logger.trace("Product in order line: {}", line.getProduct().getName());
             }
-            if (order.getUser() != null) {
-                order.getUser().getFullName();
-            }
-            logger.debug("Order details retrieved for Order ID: {}", orderId);
-            return order;
-        } else {
-            logger.warn("Order not found for ID: {}", orderId);
-            throw new ResourceNotFoundException("Không tìm thấy đơn hàng với ID: " + orderId);
+        });
+        if (order.getUser() != null) {
+            logger.trace("User for order: {}", order.getUser().getFullName());
         }
+        logger.debug("Public order details retrieved for Order ID: {}", orderId);
+        return order;
     }
+
 
     @Override
     @Transactional
@@ -427,25 +486,101 @@ public class OrderServiceImpl implements IOrderService {
             logger.warn("Cancel failed: Order ID {} cannot be cancelled. Current status: {}", orderId, order.getStatus());
             throw new IllegalStateException("Không thể hủy đơn hàng này. Trạng thái hiện tại: " + order.getStatus());
         }
+         OrderStatus originalStatus = order.getStatus();
 
         if (order.getStatus() == OrderStatus.WAITING) {
-            for (OrderLine line : order.getOrderLines()) {
+            logger.info("Order ID {} is WAITING, restoring product stock.", orderId);
+            for (OrderLine line : order.getOrderLines()) { // Ensure orderLines are loaded
                 Product productToRestore = line.getProduct();
-                 Optional<Product> freshProductOpt = productRepository.findById(productToRestore.getProductId());
-                 if(freshProductOpt.isPresent()){
-                     Product freshProduct = freshProductOpt.get();
-                     int newStock = freshProduct.getQuantity() + line.getQuantity();
-                     freshProduct.setQuantity(newStock);
-                     productRepository.save(freshProduct);
-                     logger.debug("Restored stock for Product ID: {}. New stock: {}", freshProduct.getProductId(), newStock);
-                 } else {
-                     logger.error("Error restoring stock: Product ID {} not found for order {}.", productToRestore.getProductId(), orderId);
-                 }
+                Product freshProduct = productRepository.findById(productToRestore.getProductId())
+                        .orElseThrow(() -> {
+                             logger.error("Error restoring stock: Product ID {} not found for order {}.", productToRestore.getProductId(), orderId);
+                             return new IllegalStateException("Sản phẩm không tồn tại khi hoàn kho cho đơn hủy.");
+                        });
+                int newStock = freshProduct.getQuantity() + line.getQuantity();
+                freshProduct.setQuantity(newStock);
+                productRepository.save(freshProduct);
+                logger.debug("Restored stock for Product ID: {}. New stock: {}", freshProduct.getProductId(), newStock);
             }
+        } else if (order.getStatus() == OrderStatus.PENDING) {
+             logger.info("Order ID {} is PENDING (VNPAY), no stock restoration needed as stock was not deducted.", orderId);
         }
+
         order.setStatus(OrderStatus.CANCELLED);
         Order savedOrder = orderRepository.save(order);
         logger.info("Order ID: {} has been cancelled successfully.", orderId);
+        logger.info("PUBLISHING OrderStatusChangedEvent for Order ID: {}, Status: {}, TotalPrice: {}, CustomerEmail: {}, CustomerName: {}",
+            savedOrder.getOrderId(),
+            savedOrder.getStatus(),
+            savedOrder.getTotalPrice(),
+            (savedOrder.getUser() != null ? savedOrder.getUser().getEmail() : "N/A"),
+            (savedOrder.getUser() != null ? savedOrder.getUser().getFullName() : "N/A")
+        );
+
+        if (savedOrder.getStatus() != originalStatus) {
+            String statusMessageForEvent = "đã được hủy theo yêu cầu của bạn";
+            logger.info("PUBLISHING OrderStatusChangedEvent for Cancelled Order ID: {} with message: '{}'", savedOrder.getOrderId(), statusMessageForEvent);
+            eventPublisher.publishEvent(new OrderStatusChangedEvent(this, savedOrder, statusMessageForEvent));
+        }
         return savedOrder;
+    }
+
+    @Override
+    @Transactional
+    public Order updateOrderStatus(Long orderId, OrderStatus newStatus, String customStatusMessageForEvent) throws ResourceNotFoundException, IllegalStateException {
+        logger.info("Attempting to update status for Order ID: {} to {}", orderId, newStatus);
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> {
+                    logger.warn("Update status failed: Order not found with ID: {}", orderId);
+                    return new ResourceNotFoundException("Không tìm thấy đơn hàng với ID: " + orderId);
+                });
+
+        OrderStatus oldStatus = order.getStatus();
+
+        if (!isValidStatusTransition(oldStatus, newStatus)) {
+            logger.warn("Invalid status transition for Order ID: {} from {} to {}", orderId, oldStatus, newStatus);
+            throw new IllegalStateException("Không thể cập nhật trạng thái từ " + oldStatus + " sang " + newStatus);
+        }
+
+        order.setStatus(newStatus);
+        Order updatedOrder = orderRepository.save(order);
+        logger.info("Order ID: {} status updated successfully from {} to {}", orderId, oldStatus, newStatus);
+        logger.info("PUBLISHING OrderStatusChangedEvent for Order ID: {}, Status: {}, TotalPrice: {}, CustomerEmail: {}, CustomerName: {}",
+            updatedOrder.getOrderId(),
+            updatedOrder.getStatus(),
+            updatedOrder.getTotalPrice(),
+            (updatedOrder.getUser() != null ? updatedOrder.getUser().getEmail() : "N/A"),
+            (updatedOrder.getUser() != null ? updatedOrder.getUser().getFullName() : "N/A")
+        );
+
+        String finalMessage = (customStatusMessageForEvent != null && !customStatusMessageForEvent.isEmpty())
+                            ? customStatusMessageForEvent
+                            : null;
+
+        logger.info("PUBLISHING OrderStatusChangedEvent for Updated Order ID: {} with message: '{}'", updatedOrder.getOrderId(), (finalMessage != null ? finalMessage : "Auto-generated by event"));
+        if (finalMessage != null) {
+            eventPublisher.publishEvent(new OrderStatusChangedEvent(this, updatedOrder, finalMessage));
+        } else {
+            eventPublisher.publishEvent(new OrderStatusChangedEvent(this, updatedOrder));
+        }
+
+        return updatedOrder;
+    }
+
+    private boolean isValidStatusTransition(OrderStatus oldStatus, OrderStatus newStatus) {
+        if (oldStatus == newStatus) return true;
+        if (oldStatus == OrderStatus.CANCELLED || oldStatus == OrderStatus.ERROR) {
+            return false;
+        }
+        if ((oldStatus == OrderStatus.RECEIVED || oldStatus == OrderStatus.REVIEWED) &&
+            (newStatus == OrderStatus.PENDING || newStatus == OrderStatus.WAITING || newStatus == OrderStatus.SHIPPING)) {
+            return false;
+        }
+        // Add more specific rules if needed
+        // Example: From WAITING, can only go to SHIPPING or CANCELLED
+        // if (oldStatus == OrderStatus.WAITING && !(newStatus == OrderStatus.SHIPPING || newStatus == OrderStatus.CANCELLED)) {
+        //     return false;
+        // }
+        return true;
     }
 }

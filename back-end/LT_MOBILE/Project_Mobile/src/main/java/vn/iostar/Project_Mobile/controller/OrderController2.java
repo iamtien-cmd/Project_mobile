@@ -1,23 +1,27 @@
 package vn.iostar.Project_Mobile.controller;
 
 import java.util.List;
+import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus; // Import HttpStatus
-import org.springframework.http.ResponseEntity; // Import ResponseEntity
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import vn.iostar.Project_Mobile.DTO.MessageResponseDTO;
 import vn.iostar.Project_Mobile.entity.Order;
 import vn.iostar.Project_Mobile.exception.ResourceNotFoundException;
 import vn.iostar.Project_Mobile.service.IOrderService;
-// Import các Exception tùy chỉnh nếu bạn tạo (xem bước 3)
-// import vn.iostar.Project_Mobile.exception.ResourceNotFoundException;
-// import vn.iostar.Project_Mobile.exception.OrderCannotBeCancelledException;
+import vn.iostar.Project_Mobile.util.OrderStatus;
 
 
 @RestController
 @RequestMapping("/api/orders")
-public class OrderController2 {
+public class OrderController2 { // Đã đổi tên để tránh trùng với OrderController gốc nếu có
+
+    private static final Logger controllerLogger = LoggerFactory.getLogger(OrderController2.class);
 
     @Autowired
     private IOrderService orderService;
@@ -26,62 +30,89 @@ public class OrderController2 {
     @GetMapping("/status/{userId}")
     public ResponseEntity<List<Order>> getOrderStatusesByUser(@PathVariable Long userId) {
         try {
-        	System.err.println("Kiểm tra UserID " + userId);
+            controllerLogger.info("Fetching orders for UserID: {}", userId);
             List<Order> orders = orderService.getOrdersByUserId(userId);
-            System.err.println("Kiểm tra Order "+ orders);
             if (orders == null || orders.isEmpty()) {
-                // Trả về 204 No Content hoặc 404 Not Found nếu không có đơn hàng
+                 controllerLogger.info("No orders found for UserID: {}", userId);
                  return ResponseEntity.noContent().build();
-                // Hoặc: return ResponseEntity.notFound().build();
             }
+            controllerLogger.info("Found {} orders for UserID: {}", orders.size(), userId);
             return ResponseEntity.ok(orders);
         } catch (Exception e) {
-            // Ghi log lỗi ở đây nếu cần
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null); // Trả về lỗi server
-        }
-    }
-    @GetMapping("/{orderId}") // Endpoint mới để lấy chi tiết theo ID
-    public ResponseEntity<?> getOrderDetailById(@PathVariable Long orderId) {
-        try {
-            System.out.println("Fetching detail for OrderID: " + orderId); // <<< Dùng logger
-            Order orderDetail = orderService.getOrderDetailsById(orderId);
-            // Trả về 200 OK cùng với đối tượng Order chi tiết
-            return ResponseEntity.ok(orderDetail);
-        } catch (ResourceNotFoundException e) {
-            // Trả về 404 Not Found nếu service ném ra lỗi này
-            System.out.println("Order not found: " + orderId); // <<< Dùng logger
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (Exception e) {
-            // Bắt các lỗi không mong muốn khác (ví dụ: lỗi database khi truy vấn)
-             System.err.println("Error fetching order detail " + orderId + ": " + e.getMessage()); // <<< Dùng logger
-             // Log stack trace đầy đủ
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                 .body("Đã xảy ra lỗi không mong muốn khi lấy chi tiết đơn hàng.");
+            controllerLogger.error("Error fetching orders for UserID {}: {}", userId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
-    // === API MỚI: Hủy đơn hàng ===
+    @GetMapping("/{orderId}")
+    public ResponseEntity<?> getOrderDetailById(@PathVariable Long orderId) {
+        try {
+            controllerLogger.info("Fetching detail for OrderID: {}", orderId);
+            Order orderDetail = orderService.getOrderDetailsById(orderId);
+            return ResponseEntity.ok(orderDetail);
+        } catch (ResourceNotFoundException e) {
+            controllerLogger.warn("Order not found when fetching detail for OrderID {}: {}", orderId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new MessageResponseDTO(false, e.getMessage()));
+        } catch (Exception e) {
+            controllerLogger.error("Error fetching order detail for OrderID {}: {}", orderId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                 .body(new MessageResponseDTO(false, "Đã xảy ra lỗi không mong muốn khi lấy chi tiết đơn hàng."));
+        }
+    }
+
     @PutMapping("/{orderId}/cancel")
     public ResponseEntity<?> cancelOrderById(@PathVariable Long orderId) {
         try {
-            // Gọi phương thức service để xử lý việc hủy đơn
+            controllerLogger.info("Attempting to cancel order with ID: {}", orderId);
             Order cancelledOrder = orderService.cancelOrder(orderId);
-            // Trả về 200 OK cùng với đơn hàng đã được cập nhật trạng thái
-            return ResponseEntity.ok(cancelledOrder);
-        } catch (ResourceNotFoundException e) { // Bắt lỗi không tìm thấy đơn hàng
-            // Trả về 404 Not Found
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (IllegalStateException e) { // Bắt lỗi không thể hủy (ví dụ: sai trạng thái)
-             // Trả về 400 Bad Request hoặc 409 Conflict đều hợp lý
-             // 400: Yêu cầu không hợp lệ do trạng thái đơn hàng
-             // 409: Xung đột trạng thái, không thể thực hiện hành động
-             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.ok(new MessageResponseDTO(true, "Hủy đơn hàng thành công!", cancelledOrder));
+        } catch (ResourceNotFoundException e) {
+            controllerLogger.warn("Order not found for cancellation, ID: {}: {}", orderId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new MessageResponseDTO(false, e.getMessage()));
+        } catch (IllegalStateException e) {
+            controllerLogger.warn("Illegal state for cancelling order ID {}: {}", orderId, e.getMessage());
+             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MessageResponseDTO(false, e.getMessage()));
         } catch (Exception e) {
-            // Bắt các lỗi không mong muốn khác
-            // Log lỗi ở đây (ví dụ: log.error("Error cancelling order: {}", orderId, e);)
+            controllerLogger.error("Error cancelling order ID {}: {}", orderId, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                 .body("Đã xảy ra lỗi không mong muốn khi hủy đơn hàng.");
+                                 .body(new MessageResponseDTO(false, "Đã xảy ra lỗi không mong muốn khi hủy đơn hàng."));
         }
     }
-    // === KẾT THÚC API MỚI ===
+
+    @PutMapping("/{orderId}/status")
+    public ResponseEntity<?> updateOrderStatusByAdminOrLogic(
+            @PathVariable Long orderId,
+            @RequestBody Map<String, String> payload
+    ) {
+        String newStatusString = payload.get("newStatus");
+        String customMessage = payload.get("message"); // This can be optional
+
+        if (newStatusString == null || newStatusString.trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MessageResponseDTO(false, "Trường 'newStatus' là bắt buộc."));
+        }
+
+        OrderStatus newStatusEnum;
+        try {
+            newStatusEnum = OrderStatus.valueOf(newStatusString.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            controllerLogger.warn("Invalid status value received: '{}' for order ID: {}", newStatusString, orderId);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MessageResponseDTO(false, "Giá trị trạng thái không hợp lệ: " + newStatusString));
+        }
+
+        try {
+            controllerLogger.info("Attempting to update order ID {} to status {} with custom message: '{}'", orderId, newStatusEnum, customMessage);
+            Order updatedOrder = orderService.updateOrderStatus(orderId, newStatusEnum, customMessage);
+            return ResponseEntity.ok(new MessageResponseDTO(true, "Cập nhật trạng thái đơn hàng thành công!", updatedOrder));
+        } catch (ResourceNotFoundException e) {
+            controllerLogger.error("Order not found for status update: {}", orderId, e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new MessageResponseDTO(false, e.getMessage()));
+        } catch (IllegalStateException e) {
+            controllerLogger.error("Illegal state for status update on order {}: {}", orderId, e.getMessage()); // Don't log full exception for IllegalState to avoid noise if it's a business rule
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MessageResponseDTO(false, e.getMessage()));
+        } catch (Exception e) {
+            controllerLogger.error("Unexpected error updating status for order {}: {}", orderId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                 .body(new MessageResponseDTO(false, "Lỗi không mong muốn khi cập nhật trạng thái đơn hàng."));
+        }
+    }
 }
