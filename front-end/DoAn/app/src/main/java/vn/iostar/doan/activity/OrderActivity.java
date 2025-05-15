@@ -536,7 +536,7 @@ public class OrderActivity extends AppCompatActivity {
                                 pendingVnpayOrderId = null;
                             } else {
                                 Toast.makeText(OrderActivity.this, "Đặt hàng thành công! Mã đơn: " + createdOrder.getOrderId(), Toast.LENGTH_LONG).show();
-                                Intent successIntent = new Intent(OrderActivity.this, OrderDetailActivity.class);
+                                Intent successIntent = new Intent(OrderActivity.this, OrderDetailActivity.class); // Hoặc OrderHistoryActivity
                                 successIntent.putExtra(EXTRA_ORDER_ID, createdOrder.getOrderId());
                                 successIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                                 startActivity(successIntent);

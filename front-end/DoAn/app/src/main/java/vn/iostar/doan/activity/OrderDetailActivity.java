@@ -49,7 +49,7 @@ public class OrderDetailActivity extends AppCompatActivity {
 
     private static final String TAG = "OrderDetailActivity";
 
-    public static final String EXTRA_ORDER_ID = "ORDER_ID_KEY";
+    public static final String EXTRA_ORDER_ID = "ORDER_ID"; // << SỬA THÀNH KEY NÀY
     public static final String EXTRA_ACTION_MODE = "ACTION_MODE_KEY";
     public static final String EXTRA_USER_ID_FOR_REVIEW = "USER_ID_FOR_REVIEW_KEY";
     public static final String ACTION_MODE_SELECT_PRODUCT_FOR_REVIEW = "SELECT_PRODUCT_FOR_REVIEW_ACTION";
