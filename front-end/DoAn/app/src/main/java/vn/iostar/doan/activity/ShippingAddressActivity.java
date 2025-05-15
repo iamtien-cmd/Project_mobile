@@ -1,11 +1,14 @@
 package vn.iostar.doan.activity;
 
+
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -17,8 +20,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
 import java.util.ArrayList;
 import java.util.List;
+
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -28,25 +33,30 @@ import vn.iostar.doan.adapter.AddressAdapter;
 import vn.iostar.doan.api.ApiService;
 import vn.iostar.doan.model.Address;
 
+
 public class ShippingAddressActivity extends AppCompatActivity implements AddressAdapter.OnAddressActionListener {
 
-    private static final String TAG = "ShippingAddressActivity";
 
+    private static final String TAG = "ShippingAddressActivity";
+    private boolean defaultAddressChanged = false;
     private RecyclerView addressesRecyclerView;
     private AddressAdapter addressAdapter;
     private List<Address> addressList = new ArrayList<>();
     private Button addNewAddressButton;
     private ImageView backButton;
     private TextView noAddressesTextView; // Add the TextView for empty state
-
+    public static final String ACTION_DEFAULT_ADDRESS_CHANGED = "vn.iostar.doan.DEFAULT_ADDRESS_CHANGED";
     private String token;
 
+
     private ActivityResultLauncher<Intent> addressFormLauncher;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_shipping_address);
+
 
         token = getIntent().getStringExtra("TOKEN");
         if (token == null || token.isEmpty()) {
@@ -57,9 +67,11 @@ public class ShippingAddressActivity extends AppCompatActivity implements Addres
         String authHeader = "Bearer " + token;
         Log.d(TAG, "Received Token for Address Activity.");
 
+
         AnhXa();
         setupRecyclerView();
         setupListeners(authHeader);
+
 
         addressFormLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
@@ -68,13 +80,18 @@ public class ShippingAddressActivity extends AppCompatActivity implements Addres
                     if (result.getResultCode() == RESULT_OK) {
                         Log.i(TAG, "Address form activity finished with RESULT_OK. Refreshing address list.");
                         fetchAddresses(authHeader); // Re-fetch the list
+                        defaultAddressChanged = true;
+                        setResult(RESULT_OK); // Báo cho ProfileActivity
+                        sendDefaultAddressChangedBroadcast();
                     } else {
                         Log.i(TAG, "Address form activity finished with non-OK result.");
                     }
                 });
 
+
         fetchAddresses(authHeader);
     }
+
 
     private void AnhXa() {
         addressesRecyclerView = findViewById(R.id.addressesRecyclerView);
@@ -83,14 +100,17 @@ public class ShippingAddressActivity extends AppCompatActivity implements Addres
         noAddressesTextView = findViewById(R.id.noAddressesTextView);
     }
 
+
     private void setupRecyclerView() {
         addressesRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         addressAdapter = new AddressAdapter(addressList, this); // 'this' refers to the activity implementing the interface
         addressesRecyclerView.setAdapter(addressAdapter);
     }
 
+
     private void setupListeners(String authHeader) {
         backButton.setOnClickListener(v -> finish()); // Go back to ProfileActivity
+
 
         addNewAddressButton.setOnClickListener(v -> {
             // Navigate to the Add Address Form Activity
@@ -101,6 +121,7 @@ public class ShippingAddressActivity extends AppCompatActivity implements Addres
             addressFormLauncher.launch(intent); // Use the launcher
         });
     }
+
 
     private void fetchAddresses(String authHeader) {
         Log.d(TAG, "Fetching addresses...");
@@ -125,6 +146,7 @@ public class ShippingAddressActivity extends AppCompatActivity implements Addres
                         }
                     }
 
+
                     @Override
                     public void onFailure(Call<List<Address>> call, Throwable t) {
                         Log.e(TAG, "API Error fetching addresses: " + t.getMessage(), t);
@@ -133,6 +155,7 @@ public class ShippingAddressActivity extends AppCompatActivity implements Addres
                     }
                 });
     }
+
 
     private void updateEmptyState() {
         if (addressList == null || addressList.isEmpty()) {
@@ -145,8 +168,6 @@ public class ShippingAddressActivity extends AppCompatActivity implements Addres
     }
 
 
-    // --- Implementation of AddressAdapter.OnAddressActionListener ---
-
     @Override
     public void onEditClick(Address address) {
         Log.d(TAG, "Edit clicked for address ID: " + address.getAddressId());
@@ -157,6 +178,7 @@ public class ShippingAddressActivity extends AppCompatActivity implements Addres
         intent.putExtra("IS_EDIT_MODE", true); // Indicate edit mode
         addressFormLauncher.launch(intent); // Use the launcher
     }
+
 
     @Override
     public void onDeleteClick(Address address) {
@@ -174,11 +196,14 @@ public class ShippingAddressActivity extends AppCompatActivity implements Addres
                 .show();
     }
 
+
     @Override
     public void onSetDefaultClick(Address address) {
         Log.d(TAG, "Set Default clicked for address ID: " + address.getAddressId());
         setDefaultAddress(address);
     }
+
+
 
 
     private void deleteAddress(Address address) {
@@ -211,6 +236,7 @@ public class ShippingAddressActivity extends AppCompatActivity implements Addres
                         }
                     }
 
+
                     @Override
                     public void onFailure(Call<Void> call, Throwable t) {
                         Log.e(TAG, "API Error deleting address: " + t.getMessage(), t);
@@ -218,6 +244,7 @@ public class ShippingAddressActivity extends AppCompatActivity implements Addres
                     }
                 });
     }
+
 
     private void setDefaultAddress(Address address) {
         if (address.getAddressId() == null) {
@@ -232,7 +259,11 @@ public class ShippingAddressActivity extends AppCompatActivity implements Addres
                         if (response.isSuccessful()) {
                             Log.d(TAG, "Address set as default successfully: " + address.getAddressId());
                             Toast.makeText(ShippingAddressActivity.this, "Địa chỉ đã được đặt làm mặc định.", Toast.LENGTH_SHORT).show();
-                            // Refresh the list to update the default indicator
+
+
+                            defaultAddressChanged = true; // Đặt cờ thành true
+                            setResult(RESULT_OK); // <--- ****** THÊM DÒNG NÀY ******
+                            sendDefaultAddressChangedBroadcast();
                             fetchAddresses(authHeader);
                         } else {
                             Log.e(TAG, "Failed to set address as default. Code: " + response.code());
@@ -245,6 +276,7 @@ public class ShippingAddressActivity extends AppCompatActivity implements Addres
                         }
                     }
 
+
                     @Override
                     public void onFailure(Call<Void> call, Throwable t) {
                         Log.e(TAG, "API Error setting address as default: " + t.getMessage(), t);
@@ -252,4 +284,17 @@ public class ShippingAddressActivity extends AppCompatActivity implements Addres
                     }
                 });
     }
+    @Override
+    public void finish() {
+        if (defaultAddressChanged) {
+            setResult(RESULT_OK);
+        }
+        super.finish();
+    }
+    private void sendDefaultAddressChangedBroadcast() {
+        Intent intent = new Intent(ACTION_DEFAULT_ADDRESS_CHANGED);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        Log.d(TAG, "Sent ACTION_DEFAULT_ADDRESS_CHANGED broadcast.");
+    }
 }
+

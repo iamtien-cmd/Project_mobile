@@ -1,6 +1,8 @@
 package vn.iostar.doan.adapter;
 
 
+
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,10 +14,13 @@ import java.util.List;
 import vn.iostar.doan.R;
 import vn.iostar.doan.model.Address;
 
+
 public class AddressAdapter extends RecyclerView.Adapter<AddressAdapter.AddressViewHolder> {
+
 
     private List<Address> addressList;
     private OnAddressActionListener listener;
+
 
     public interface OnAddressActionListener {
         void onEditClick(Address address);
@@ -25,16 +30,19 @@ public class AddressAdapter extends RecyclerView.Adapter<AddressAdapter.AddressV
         // void onItemClick(Address address);
     }
 
+
     public AddressAdapter(List<Address> addressList, OnAddressActionListener listener) {
         this.addressList = addressList;
         this.listener = listener;
     }
+
 
     // Method to update data
     public void setAddressList(List<Address> addressList) {
         this.addressList = addressList;
         notifyDataSetChanged(); // Notify adapter that data has changed
     }
+
 
     @NonNull
     @Override
@@ -43,15 +51,18 @@ public class AddressAdapter extends RecyclerView.Adapter<AddressAdapter.AddressV
         return new AddressViewHolder(view);
     }
 
+
     @Override
     public void onBindViewHolder(@NonNull AddressViewHolder holder, int position) {
         Address address = addressList.get(position);
         if (address == null) return;
 
+
         holder.textViewRecipientNameAndPhone.setText(
                 String.format("%s | %s", address.getFullName(), address.getPhone())
         );
-        holder.textViewFullAddress.setText(address.getFullAddressString());
+        holder.textViewFullAddress.setText(address.getHouseNumber());
+
 
         // Show/hide default indicator
         holder.textViewDefaultIndicator.setVisibility(
@@ -63,6 +74,8 @@ public class AddressAdapter extends RecyclerView.Adapter<AddressAdapter.AddressV
         );
 
 
+
+
         // Set click listeners for buttons
         holder.buttonEditAddress.setOnClickListener(v -> {
             if (listener != null) {
@@ -70,11 +83,13 @@ public class AddressAdapter extends RecyclerView.Adapter<AddressAdapter.AddressV
             }
         });
 
+
         holder.buttonDeleteAddress.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onDeleteClick(address);
             }
         });
+
 
         holder.buttonSetDefault.setOnClickListener(v -> {
             if (listener != null) {
@@ -82,20 +97,23 @@ public class AddressAdapter extends RecyclerView.Adapter<AddressAdapter.AddressV
             }
         });
 
+
         // Optional: Listener for the whole item view
-         /*
-         holder.itemView.setOnClickListener(v -> {
-              if (listener != null) {
-                  listener.onItemClick(address);
-              }
-          });
-         */
+        /*
+        holder.itemView.setOnClickListener(v -> {
+             if (listener != null) {
+                 listener.onItemClick(address);
+             }
+         });
+        */
     }
+
 
     @Override
     public int getItemCount() {
         return addressList != null ? addressList.size() : 0;
     }
+
 
     static class AddressViewHolder extends RecyclerView.ViewHolder {
         TextView textViewRecipientNameAndPhone;
@@ -104,6 +122,8 @@ public class AddressAdapter extends RecyclerView.Adapter<AddressAdapter.AddressV
         Button buttonEditAddress;
         Button buttonDeleteAddress;
         Button buttonSetDefault;
+
+
 
 
         public AddressViewHolder(@NonNull View itemView) {
@@ -117,3 +137,4 @@ public class AddressAdapter extends RecyclerView.Adapter<AddressAdapter.AddressV
         }
     }
 }
+

@@ -1,6 +1,10 @@
 package vn.iostar.doan.activity; // Thay thế bằng package name thực tế của bạn
 
+
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
@@ -11,15 +15,21 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewFlipper;
 
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.SearchView;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+
 import java.util.ArrayList;
 import java.util.List;
+
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -37,6 +47,8 @@ import vn.iostar.doan.model.User;
 import vn.iostar.doan.utils.SharedPreferencesUtils;
 
 
+
+
 public class HomeActivity extends AppCompatActivity {
     private static final String TAG = "HomeActivity";
     private String authToken;
@@ -50,10 +62,15 @@ public class HomeActivity extends AppCompatActivity {
     private ViewFlipper viewFlipperMain;
     private ImageView imgUser, ivCart, ivAboutUs, ivLocation, chatBotIcon, ivHome; // Thêm ivHome
     private TextView tvLocationAddress;
+    private ActivityResultLauncher<Intent> profileActivityLauncher;
+    private BroadcastReceiver defaultAddressChangeReceiver;
+
 
     // Khai báo View cho các layout được include
     private View headerLayout;
     private View bottomNavLayout;
+
+
 
 
     @Override
@@ -61,13 +78,94 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
+
         AnhXa();
+        setupLaunchers();
+        setupBroadcastReceivers();
         loadUserInfoAndInitData();
         setupSearchView();
         setupUserMenu();
         setupBottomNavigation();
     }
+    private void setupLaunchers() {
+        profileActivityLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK) {
+                        Log.d(TAG, "ProfileActivity returned RESULT_OK, refreshing user info on Home.");
+                        // loadUserInfoAndInitData(); // Hoặc một phương thức chỉ cập nhật UI người dùng
+                        fetchUserAddressForHeader(); // Gọi phương thức chỉ cập nhật địa chỉ
+                    }
+                }
+        );
+    }
 
+
+    private void setupBroadcastReceivers() {
+        defaultAddressChangeReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (ShippingAddressActivity.ACTION_DEFAULT_ADDRESS_CHANGED.equals(intent.getAction())) {
+                    Log.d(TAG, "HomeActivity received ACTION_DEFAULT_ADDRESS_CHANGED broadcast, refreshing address.");
+                    fetchUserAddressForHeader(); // Gọi phương thức chỉ cập nhật địa chỉ
+                }
+            }
+        };
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                defaultAddressChangeReceiver,
+                new IntentFilter(ShippingAddressActivity.ACTION_DEFAULT_ADDRESS_CHANGED)
+        );
+    }
+
+
+
+
+    // Tách riêng logic lấy và hiển thị địa chỉ để dễ gọi lại
+    private void fetchUserAddressForHeader() {
+        if (this.authToken == null || this.authToken.isEmpty()) {
+            Log.w(TAG, "Auth token is null/empty in fetchUserAddressForHeader. Cannot fetch.");
+            if (tvLocationAddress != null) tvLocationAddress.setText("Lỗi xác thực.");
+            return;
+        }
+        ApiService.apiService.getUserInfo("Bearer " + this.authToken)
+                .enqueue(new Callback<User>() {
+                    @Override
+                    public void onResponse(Call<User> call, Response<User> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            User user = response.body();
+                            List<Address> addresses = user.getAddresses();
+                            Address defaultAddress = null;
+                            if (addresses != null && !addresses.isEmpty()) {
+                                for (Address address : addresses) {
+                                    if (address != null && address.isDefaultAddress()) {
+                                        defaultAddress = address;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (tvLocationAddress != null) {
+                                if (defaultAddress != null) {
+                                    //String fullAddress = defaultAddress.getHouseNumber() + ", " + defaultAddress.getWard() + ", " + defaultAddress.getDistrict() + ", " + defaultAddress.getCity() + ", " + defaultAddress.getCountry();
+                                    String fullAddress = defaultAddress.getHouseNumber() + ", "+
+                                            defaultAddress.getCountry();
+                                    tvLocationAddress.setText(fullAddress);
+                                    Log.d(TAG, "Updated default address on Home: " + fullAddress);
+                                } else {
+                                    tvLocationAddress.setText("Chưa có địa chỉ mặc định.");
+                                }
+                            }
+                        } else {
+                            Log.e(TAG, "Error fetching user info for Home header: " + response.code());
+                            if (tvLocationAddress != null) tvLocationAddress.setText("Lỗi tải địa chỉ.");
+                        }
+                    }
+                    @Override
+                    public void onFailure(Call<User> call, Throwable t) {
+                        Log.e(TAG, "API failure fetching user info for Home header", t);
+                        if (tvLocationAddress != null) tvLocationAddress.setText("Lỗi kết nối.");
+                    }
+                });
+    }
     private void AnhXa() {
         // Ánh xạ các thành phần chính (trực tiếp trong activity_home.xml)
         rcCate = findViewById(R.id.rc_category);
@@ -76,9 +174,11 @@ public class HomeActivity extends AppCompatActivity {
         viewFlipperMain = findViewById(R.id.viewFlipperMain);
         chatBotIcon = findViewById(R.id.chatBotIcon); // ChatBotIcon nằm trực tiếp trong activity_home.xml
 
+
         // Ánh xạ các View include layout
         headerLayout = findViewById(R.id.headerLayout); // Tìm include header
         bottomNavLayout = findViewById(R.id.bottom_navigation); // Tìm include bottom navigation
+
 
         // Ánh xạ các thành phần bên trong Header (nếu include header được tìm thấy)
         if (headerLayout != null) {
@@ -90,6 +190,7 @@ public class HomeActivity extends AppCompatActivity {
             Log.e(TAG, "Header layout include with ID headerLayout not found! Header views will be null.");
         }
 
+
         // Ánh xạ các thành phần bên trong Bottom Navigation (nếu include bottom navigation được tìm thấy)
         if (bottomNavLayout != null) {
             // Lưu ý: Các icon nằm trong LinearLayout con có ID bottomNav trong bottom_nav_menu.xml
@@ -100,6 +201,7 @@ public class HomeActivity extends AppCompatActivity {
                 ivAboutUs = bottomNavLinearLayout.findViewById(R.id.ivaboutus); // Icon About Us trong bottom nav
                 ivCart = bottomNavLinearLayout.findViewById(R.id.ivcart); // Icon Cart trong bottom nav
 
+
                 if (ivHome == null) Log.w(TAG, "ivMenuBottom (Home) not found inside bottomNav LinearLayout.");
                 if (ivLocation == null) Log.w(TAG, "ivLocation not found inside bottomNav LinearLayout.");
                 if (ivAboutUs == null) Log.w(TAG, "ivaboutus not found inside bottomNav LinearLayout.");
@@ -108,9 +210,11 @@ public class HomeActivity extends AppCompatActivity {
                 Log.e(TAG, "LinearLayout with ID bottomNav not found inside bottom_navigation layout!");
             }
 
+
         } else {
             Log.e(TAG, "Bottom navigation layout include with ID bottom_navigation not found! Bottom nav icons will be null.");
         }
+
 
         // Log lỗi nghiêm trọng nếu các thành phần chính không tìm thấy
         if (rcCate == null) Log.e(TAG, "rcCate is null after AnhXa!");
@@ -120,9 +224,11 @@ public class HomeActivity extends AppCompatActivity {
         if (chatBotIcon == null) Log.e(TAG, "chatBotIcon is null after AnhXa!");
     }
 
+
     private void loadUserInfoAndInitData() {
         String tokenFromIntent = getIntent().getStringExtra("token");
         SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
+
 
         if (tokenFromIntent != null && !tokenFromIntent.isEmpty()) {
             this.authToken = tokenFromIntent;
@@ -131,6 +237,7 @@ public class HomeActivity extends AppCompatActivity {
         } else {
             this.authToken = prefs.getString("token", "");
         }
+
 
         if (this.authToken == null || this.authToken.isEmpty()) {
             Log.e(TAG, "Token is missing! Redirecting to Login.");
@@ -142,10 +249,12 @@ public class HomeActivity extends AppCompatActivity {
             return;
         }
 
+
         productAdapter = new ProductAdapter(this, new ArrayList<>(), this.authToken);
         GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 3);
         rclProduct.setLayoutManager(gridLayoutManager);
         rclProduct.setAdapter(productAdapter);
+
 
         ApiService.apiService.getUserInfo("Bearer " + this.authToken)
                 .enqueue(new Callback<User>() {
@@ -155,9 +264,12 @@ public class HomeActivity extends AppCompatActivity {
                             User user = response.body();
                             List<Address> addresses = user.getAddresses();
 
+
                             Log.d(TAG, "Addresses list received for Home. Size: " + (addresses != null ? addresses.size() : "null"));
 
+
                             Address defaultAddress = null;
+
 
                             if (addresses != null && !addresses.isEmpty()) {
                                 for (Address address : addresses) {
@@ -168,9 +280,11 @@ public class HomeActivity extends AppCompatActivity {
                                     }
                                 }
 
+
                                 if (defaultAddress != null) {
                                     String fullAddress = defaultAddress.getHouseNumber() + ", "+
                                             defaultAddress.getCountry();
+
 
                                     if (tvLocationAddress != null) {
                                         tvLocationAddress.setText(fullAddress);
@@ -182,6 +296,7 @@ public class HomeActivity extends AppCompatActivity {
                                         Log.w(TAG, "Address list is not empty, but no default address found for Home.");
                                     }
                                 }
+
 
                             } else {
                                 if (tvLocationAddress != null) {
@@ -200,6 +315,7 @@ public class HomeActivity extends AppCompatActivity {
                         }
                     }
 
+
                     @Override
                     public void onFailure(Call<User> call, Throwable t) {
                         Log.e(TAG, "Failed to connect to server for Home", t);
@@ -210,10 +326,13 @@ public class HomeActivity extends AppCompatActivity {
                 });
 
 
+
+
         getAllProducts();
         GetCategory();
         setupViewFlipper();
     }
+
 
     private void getAllProducts() {
         if (productAdapter == null || this.authToken == null) {
@@ -236,12 +355,14 @@ public class HomeActivity extends AppCompatActivity {
                         }
                     }
 
+
                     @Override
                     public void onFailure(Call<List<Product>> call, Throwable t) {
                         Log.e(TAG, "Request failed loading all products", t);
                     }
                 });
     }
+
 
     private void setupViewFlipper() {
         if (viewFlipperMain != null) {
@@ -251,6 +372,7 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
+
     private void GetCategory() {
         ApiService.apiService.getAllCategories().enqueue(new Callback<List<Category>>() {
             @Override
@@ -258,10 +380,12 @@ public class HomeActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     categoryList = response.body();
 
+
                     categoryAdapter = new CategoryAdapter(HomeActivity.this, categoryList, category -> {
                         getProductsByCategory(category.getCategoryId());
                     });
                     rcCate.setHasFixedSize(true);
+
 
                     RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(
                             HomeActivity.this, LinearLayoutManager.HORIZONTAL, false
@@ -269,10 +393,12 @@ public class HomeActivity extends AppCompatActivity {
                     rcCate.setLayoutManager(layoutManager);
                     rcCate.setAdapter(categoryAdapter);
 
+
                 } else {
                     Log.e(TAG, "Response Error loading categories: " + response.code());
                 }
             }
+
 
             @Override
             public void onFailure(Call<List<Category>> call, Throwable t) {
@@ -280,6 +406,7 @@ public class HomeActivity extends AppCompatActivity {
             }
         });
     }
+
 
     private void getProductsByCategory(Long categoryId) {
         if (productAdapter == null || this.authToken == null) {
@@ -300,12 +427,14 @@ public class HomeActivity extends AppCompatActivity {
                 }
             }
 
+
             @Override
             public void onFailure(Call<List<Product>> call, Throwable t) {
                 Log.e(TAG, "Failure loading products by category: " + t.getMessage(), t);
             }
         });
     }
+
 
     private void setupSearchView() {
         if (searchView != null) {
@@ -315,6 +444,7 @@ public class HomeActivity extends AppCompatActivity {
                     filterProducts(query);
                     return true;
                 }
+
 
                 @Override
                 public boolean onQueryTextChange(String newText) {
@@ -330,10 +460,12 @@ public class HomeActivity extends AppCompatActivity {
                 return false;
             });
 
+
         } else {
             Log.e(TAG, "searchView is null! Cannot set listener.");
         }
     }
+
 
     private void filterProducts(String keyword) {
         if (productList == null || productAdapter == null) {
@@ -341,9 +473,11 @@ public class HomeActivity extends AppCompatActivity {
             return;
         }
 
+
         if (viewFlipperMain != null && viewFlipperMain.getVisibility() == View.VISIBLE) {
             viewFlipperMain.setVisibility(View.GONE);
         }
+
 
         filteredProductList.clear();
         if (keyword == null || keyword.isEmpty()) {
@@ -359,22 +493,30 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
+
     private void setupUserMenu() {
         if (imgUser != null) {
             imgUser.setOnClickListener(v -> {
                 PopupMenu popupMenu = new PopupMenu(HomeActivity.this, imgUser);
                 popupMenu.getMenuInflater().inflate(R.menu.menu_user, popupMenu.getMenu());
 
+
                 popupMenu.setOnMenuItemClickListener(item -> {
                     int id = item.getItemId();
                     if (id == R.id.menu_profile) {
                         Intent intent = new Intent(HomeActivity.this, ProfileActivity.class);
                         intent.putExtra("token", authToken);
-                        startActivity(intent);
+                        if (profileActivityLauncher != null) {
+                            profileActivityLauncher.launch(intent);
+                        } else {
+                            Log.e(TAG, "profileActivityLauncher is null! Cannot launch ProfileActivity for result.");
+                            startActivity(intent); // Fallback nếu launcher null
+                        }
                         return true;
                     } else if (id == R.id.menu_logout) {
                         SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
                         prefs.edit().remove("token").apply();
+
 
                         Intent intent = new Intent(HomeActivity.this, LoginActivity.class);
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -390,7 +532,13 @@ public class HomeActivity extends AppCompatActivity {
             Log.e(TAG, "imgUser is null! Cannot setup user menu.");
         }
     }
-
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (defaultAddressChangeReceiver != null) {
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(defaultAddressChangeReceiver);
+        }
+    }
     private void setupBottomNavigation() {
         // Xử lý click cho icon Home (ivMenuBottom) - Thường ở trang chủ thì không làm gì hoặc cuộn lên đầu
         if (ivHome != null) {
@@ -404,6 +552,7 @@ public class HomeActivity extends AppCompatActivity {
             Log.e(TAG, "ivHome (ivMenuBottom) is null! Cannot setup Home click listener.");
         }
 
+
         // Xử lý click cho icon Giỏ hàng (Cart)
         if (ivCart != null) {
             ivCart.setOnClickListener(v -> {
@@ -415,6 +564,7 @@ public class HomeActivity extends AppCompatActivity {
         } else {
             Log.e(TAG, "ivCart is null! Cannot setup cart click listener.");
         }
+
 
         // Xử lý click cho icon Chatbot
         if (chatBotIcon != null) { // ChatBotIcon nằm trực tiếp trong activity_home.xml
@@ -429,6 +579,8 @@ public class HomeActivity extends AppCompatActivity {
         }
 
 
+
+
         // Xử lý click cho icon About Us (ivaboutus trong bottom nav)
         if (ivAboutUs != null) {
             ivAboutUs.setOnClickListener(v -> {
@@ -440,6 +592,7 @@ public class HomeActivity extends AppCompatActivity {
             Log.e(TAG, "ivAboutUs is null! Cannot setup About Us click listener.");
         }
 
+
         // Xử lý click cho icon Location (ivLocation trong bottom nav)
         if (ivLocation != null) {
             ivLocation.setOnClickListener(v -> {
@@ -449,17 +602,22 @@ public class HomeActivity extends AppCompatActivity {
                 locationIntent.putExtra("token", authToken); // Truyền token nếu cần
                 startActivity(locationIntent);
 
+
                 // Nếu bạn thực sự muốn mở AboutAppActivity như code cũ:
                 // Intent aboutIntent = new Intent(HomeActivity.this, AboutAppActivity.class);
                 // startActivity(aboutIntent);
+
 
             });
         } else {
             Log.e(TAG, "ivLocation is null! Cannot setup Location click listener.");
         }
 
+
         // <<< CẦN THÊM XỬ LÝ CHO CÁC ICON KHÁC TRONG BOTTOM NAV CỦA BẠN NẾU CÓ >>>
         // Đảm bảo bạn đã ánh xạ chúng trong AnhXa và thêm listener ở đây.
     }
 }
+
+
 

@@ -339,9 +339,11 @@ public class ProductDetailActivity extends AppCompatActivity {
     // Hàm xử lý khi nhấn nút Add to Cart
     private void handleAddToCartClick() {
         if (currentProductId != -1) {
-            Toast.makeText(this, "Thêm sản phẩm " + currentProductId + " vào giỏ", Toast.LENGTH_SHORT).show();
             int quantityToAdd = 1;
             addProductToCart(currentProductId, quantityToAdd);
+            Intent intent = new Intent(ProductDetailActivity.this, CartActivity.class);
+            intent.putExtra("token", authToken);
+            startActivity(intent);
         } else {
             Log.e(TAG, "Add to Cart Clicked: Invalid Product ID.");
             Toast.makeText(this, "Lỗi: Không thể thêm sản phẩm không hợp lệ.", Toast.LENGTH_SHORT).show();

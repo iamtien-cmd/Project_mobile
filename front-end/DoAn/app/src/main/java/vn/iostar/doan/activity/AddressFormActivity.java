@@ -1,6 +1,8 @@
 package vn.iostar.doan.activity;
 
+
 import androidx.appcompat.app.AppCompatActivity;
+
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -18,10 +20,13 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
 import com.google.android.material.textfield.TextInputEditText;
+
 
 import java.util.ArrayList;
 import java.util.List;
+
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -35,9 +40,12 @@ import vn.iostar.doan.modelResponse.AddressInputDTO;
 import vn.iostar.doan.model.goong.GoongAutocompleteResponse; // Import Goong response model
 import vn.iostar.doan.utils.Constants; // Import Constants
 
+
 public class AddressFormActivity extends AppCompatActivity {
 
+
     private static final String TAG = "AddressFormActivity";
+
 
     private ImageView backButton;
     private TextView toolbarTitle;
@@ -47,9 +55,11 @@ public class AddressFormActivity extends AppCompatActivity {
     private Button buttonSaveAddress;
     private ListView listViewSuggestions; // ListView for Goong suggestions
 
+
     private String token;
     private Address currentAddress; // Null if adding, contains data if editing
     private boolean isEditMode = false;
+
 
     // Goong API and data
     private GoongApiService goongApiService;
@@ -57,10 +67,12 @@ public class AddressFormActivity extends AppCompatActivity {
     private List<GoongAutocompleteResponse.Prediction> currentPredictions = new ArrayList<>();
     private TextWatcher houseNumberTextWatcher;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_address_form);
+
 
         token = getIntent().getStringExtra("TOKEN");
         if (token == null || token.isEmpty()) {
@@ -70,6 +82,7 @@ public class AddressFormActivity extends AppCompatActivity {
             return;
         }
         String authHeader = "Bearer " + token;
+
 
         isEditMode = getIntent().getBooleanExtra("IS_EDIT_MODE", false);
         if (isEditMode) {
@@ -86,12 +99,15 @@ public class AddressFormActivity extends AppCompatActivity {
         }
 
 
+
+
         AnhXa();
         setupToolbarTitle();
         populateFieldsIfEditing();
         setupListeners(authHeader);
         setupGoongAutocomplete(); // Setup Goong listener
     }
+
 
     private void AnhXa() {
         backButton = findViewById(R.id.backButton);
@@ -108,6 +124,7 @@ public class AddressFormActivity extends AppCompatActivity {
         listViewSuggestions = findViewById(R.id.listViewSuggestions); // Initialize ListView
     }
 
+
     private void setupToolbarTitle() {
         if (isEditMode) {
             toolbarTitle.setText("Edit Address");
@@ -117,6 +134,7 @@ public class AddressFormActivity extends AppCompatActivity {
             buttonSaveAddress.setText("Save Address");
         }
     }
+
 
     private void populateFieldsIfEditing() {
         if (isEditMode && currentAddress != null) {
@@ -129,10 +147,12 @@ public class AddressFormActivity extends AppCompatActivity {
             editTextCountry.setText(currentAddress.getCountry());
             checkboxDefaultAddress.setChecked(currentAddress.isDefaultAddress());
 
+
             // Cannot unset the *only* default address. Disable checkbox if it's the default?
             // Or let the backend handle the constraint. For now, leave it enabled.
         }
     }
+
 
     private void setupListeners(String authHeader) {
         backButton.setOnClickListener(v -> {
@@ -140,12 +160,14 @@ public class AddressFormActivity extends AppCompatActivity {
             finish();
         });
 
+
         buttonSaveAddress.setOnClickListener(v -> {
             if (validateInput()) {
                 saveAddress(authHeader);
             }
         });
     }
+
 
     private boolean validateInput() {
         String fullName = editTextFullName.getText().toString().trim();
@@ -155,6 +177,8 @@ public class AddressFormActivity extends AppCompatActivity {
         String district = editTextDistrict.getText().toString().trim();
         String city = editTextCity.getText().toString().trim();
         String country = editTextCountry.getText().toString().trim();
+
+
 
 
         if (fullName.isEmpty() || phone.isEmpty() || houseNumber.isEmpty() ||
@@ -168,8 +192,11 @@ public class AddressFormActivity extends AppCompatActivity {
             return false;
         }
 
+
         return true;
     }
+
+
 
 
     private void saveAddress(String authHeader) {
@@ -187,6 +214,7 @@ public class AddressFormActivity extends AppCompatActivity {
         Log.d(TAG, "Token received: " + token); // Log giá trị của token gốc
         Log.d(TAG, "Authorization Header being sent: " + authHeader);
 
+
         Call<Address> call;
         if (isEditMode && currentAddress != null && currentAddress.getAddressId() != null) {
             Log.d(TAG, "Calling update API for address ID: " + currentAddress.getAddressId());
@@ -196,6 +224,7 @@ public class AddressFormActivity extends AppCompatActivity {
             Log.d(TAG, "Calling add API.");
             call = ApiService.apiService.addAddress(authHeader, addressInput);
         }
+
 
         call.enqueue(new Callback<Address>() {
             @Override
@@ -211,6 +240,7 @@ public class AddressFormActivity extends AppCompatActivity {
                         String errorBody = response.errorBody().string();
                         Log.e(TAG, "Error Body: " + errorBody);
 
+
                         Toast.makeText(AddressFormActivity.this, "Lỗi: " + response.code() + " - " + errorBody, Toast.LENGTH_LONG).show();
                     } catch (Exception e) {
                         Log.e(TAG, "Could not read error body", e);
@@ -218,6 +248,7 @@ public class AddressFormActivity extends AppCompatActivity {
                     }
                 }
             }
+
 
             @Override
             public void onFailure(Call<Address> call, Throwable t) {
@@ -227,21 +258,27 @@ public class AddressFormActivity extends AppCompatActivity {
         });
     }
 
+
     // --- Goong Autocomplete Implementation ---
+
 
     private void setupGoongAutocomplete() {
         goongApiService = ApiService1.getGoongApiService(); // Get Goong API service instance
+
 
         suggestionsAdapter = new ArrayAdapter<>(this,
                 android.R.layout.simple_dropdown_item_1line, new ArrayList<>());
         listViewSuggestions.setAdapter(suggestionsAdapter);
 
+
         houseNumberTextWatcher = new TextWatcher() {
             private final long DELAY = 300; // Milliseconds delay
             private long lastTextChange = 0;
 
+
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -253,6 +290,7 @@ public class AddressFormActivity extends AppCompatActivity {
                     suggestionsAdapter.notifyDataSetChanged();
                 }
             }
+
 
             @Override
             public void afterTextChanged(final Editable s) {
@@ -273,17 +311,22 @@ public class AddressFormActivity extends AppCompatActivity {
                 GoongAutocompleteResponse.Prediction selectedPrediction = currentPredictions.get(position);
                 String fullAddress = selectedPrediction.getDescription();
 
+
                 editTextHouseNumber.removeTextChangedListener(houseNumberTextWatcher);
+
 
                 editTextHouseNumber.setText(fullAddress);
                 editTextHouseNumber.setSelection(editTextHouseNumber.getText().length());
                 editTextHouseNumber.addTextChangedListener(houseNumberTextWatcher);
+
 
                 // Hide the suggestions list
                 listViewSuggestions.setVisibility(View.GONE);
                 currentPredictions.clear();
                 suggestionsAdapter.clear();
                 suggestionsAdapter.notifyDataSetChanged();
+
+
 
 
                 String[] parts = fullAddress.split(", ");
@@ -296,11 +339,13 @@ public class AddressFormActivity extends AppCompatActivity {
                 if (parts.length >= 4) city = parts[parts.length - 1].trim();
                 country = "Vietnam";
 
+
                 if (!ward.isEmpty() && !ward.equals(parts[parts.length - 2].trim())) {
                     editTextWard.setText(ward);
                 } else {
                     editTextWard.setText("");
                 }
+
 
                 if (!district.isEmpty() && !district.equals(parts[parts.length - 1].trim())) {
                     editTextDistrict.setText(district);
@@ -314,10 +359,12 @@ public class AddressFormActivity extends AppCompatActivity {
                 }
                 editTextCountry.setText(country); // Assuming Vietnam
 
+
                 editTextWard.requestFocus(); // Hoặc trường nào bạn muốn người dùng nhập tiếp
             }
         });
     }
+
 
     private void fetchGoongSuggestions(String input) {
         if (input.isEmpty() || Constants.GOONG_API_KEY.equals("YOUR_GOONG_API_KEY")) {
@@ -330,6 +377,7 @@ public class AddressFormActivity extends AppCompatActivity {
             }
             return;
         }
+
 
         goongApiService.autocomplete(Constants.GOONG_API_KEY, input, 10) // Limit to 10 suggestions
                 .enqueue(new Callback<GoongAutocompleteResponse>() {
@@ -355,6 +403,7 @@ public class AddressFormActivity extends AppCompatActivity {
                         }
                     }
 
+
                     @Override
                     public void onFailure(Call<GoongAutocompleteResponse> call, Throwable t) {
                         Log.e(TAG, "Goong Autocomplete API connection error: " + t.getMessage(), t);
@@ -364,3 +413,4 @@ public class AddressFormActivity extends AppCompatActivity {
                 });
     }
 }
+
