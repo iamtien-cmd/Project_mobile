@@ -1,5 +1,6 @@
 package vn.iostar.doan.activity;
 
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -10,17 +11,22 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
 // --- THÊM CÁC IMPORT CHO ACTIVITY RESULT API ---
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 // --- HẾT PHẦN IMPORT MỚI ---
 
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+
 import com.bumptech.glide.Glide;
 
+
 import java.util.List;
+
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -30,14 +36,18 @@ import vn.iostar.doan.api.ApiService;
 import vn.iostar.doan.model.Address;
 import vn.iostar.doan.model.User;
 
+
 public class ProfileActivity extends AppCompatActivity {
 
+
     private static final String TAG = "ProfileActivity";
+
 
     private TextView emailTextView, fullNameTextView, phoneTextView, addressTextView;
     private ImageView avatarImageView;
     private Button orderHistoryButton;
     private Button editProfileButton, shippingAddressButton;
+
 
     private String token;
     private User currentUser;
@@ -48,13 +58,16 @@ public class ProfileActivity extends AppCompatActivity {
     // --- HẾT KHAI BÁO LAUNCHER ---
 
 
+    private boolean userInfoHasChanged = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
 
+
         token = getIntent().getStringExtra("token");
         Log.d(TAG, "Token received: " + token);
+
 
         // Kiểm tra token trước khi làm gì khác
         if (token == null || token.isEmpty()) {
@@ -66,6 +79,7 @@ public class ProfileActivity extends AppCompatActivity {
             finish(); // Đóng activity profile nếu không có token
             return;
         }
+
 
         AnhXa();
         setSupportActionBar(toolbar);
@@ -81,6 +95,7 @@ public class ProfileActivity extends AppCompatActivity {
                         Log.i(TAG, "EditProfileActivity finished with RESULT_OK. Refreshing user info.");
                         if (token != null && !token.isEmpty()) {
                             getUserInfo(token);
+                            userInfoHasChanged = true;
                         } else {
                             Log.e(TAG, "Token is null during edit profile activity result. Cannot refresh user info.");
                         }
@@ -88,6 +103,7 @@ public class ProfileActivity extends AppCompatActivity {
                         Log.i(TAG, "EditProfileActivity finished with non-OK result or cancelled.");
                     }
                 });
+
 
         shippingAddressLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
@@ -97,14 +113,17 @@ public class ProfileActivity extends AppCompatActivity {
                         Log.i(TAG, "ShippingAddressActivity finished with RESULT_OK. Refreshing user info.");
                         if (token != null && !token.isEmpty()) {
                             getUserInfo(token);
+                            userInfoHasChanged = true;
                         } else {
                             Log.e(TAG, "Token is null during address activity result. Cannot refresh user info.");
                         }
+
 
                     } else {
                         Log.i(TAG, "ShippingAddressActivity finished with non-OK result or cancelled.");
                     }
                 });
+
 
         orderHistoryLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
@@ -112,15 +131,21 @@ public class ProfileActivity extends AppCompatActivity {
                     Log.d(TAG, "OrderHistoryLauncher callback received. ResultCode: " + result.getResultCode());
                 });
 
+
         getUserInfo(token);
+
 
         setupButtonClickListeners();
     }
 
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
-            finish(); // Close activity
+            if (userInfoHasChanged) {
+                setResult(RESULT_OK);
+            }
+            finish();
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -136,13 +161,16 @@ public class ProfileActivity extends AppCompatActivity {
         shippingAddressButton = findViewById(R.id.shippingAddressButton);
         toolbar = findViewById(R.id.toolbarProfile);
 
+
     }
+
 
     private void setupButtonClickListeners() {
         editProfileButton.setOnClickListener(v -> navigateToEditProfile());
         shippingAddressButton.setOnClickListener(v -> navigateToShippingAddress());
         orderHistoryButton.setOnClickListener(v -> navigateToOrderHistory());
     }
+
 
     private void getUserInfo(String token) {
         Log.d(TAG, "Attempting to get user info with token...");
@@ -154,7 +182,9 @@ public class ProfileActivity extends AppCompatActivity {
                             currentUser = response.body(); // Store the user object
                             Log.d(TAG, "User info received successfully. User ID: " + currentUser.getUserId()); // Log user ID
 
+
                             updateUI(currentUser);
+
 
                         } else {
                             String errorBody = "";
@@ -173,6 +203,7 @@ public class ProfileActivity extends AppCompatActivity {
                 });
     }
 
+
     private void updateUI(User userInfo) {
         if (userInfo == null) {
             Log.w(TAG, "updateUI called with null userInfo.");
@@ -180,14 +211,17 @@ public class ProfileActivity extends AppCompatActivity {
         }
         currentUser = userInfo;
 
+
         emailTextView.setText(userInfo.getEmail() != null ? userInfo.getEmail() : "N/A");
         fullNameTextView.setText(userInfo.getFullName() != null ? userInfo.getFullName() : "N/A");
         phoneTextView.setText(userInfo.getPhone() != null ? userInfo.getPhone() : "N/A");
+
 
         StringBuilder addressBuilder = new StringBuilder();
         List<Address> addresses = userInfo.getAddresses();
         Log.d(TAG, "Addresses list received. Size: " + (addresses != null ? addresses.size() : "null"));
         Address defaultAddress = null;
+
 
         if (addresses != null && !addresses.isEmpty()) {
             for (Address address : addresses) {
@@ -196,6 +230,7 @@ public class ProfileActivity extends AppCompatActivity {
                     break;
                 }
             }
+
 
             if (defaultAddress != null) {
                 addressBuilder.append(defaultAddress.getHouseNumber() != null ? defaultAddress.getHouseNumber() + ", " : "");
@@ -208,12 +243,15 @@ public class ProfileActivity extends AppCompatActivity {
                 Log.w(TAG, "No default address found among the list.");
             }
 
+
         } else {
             addressBuilder.append("Chưa có địa chỉ.");
             Log.d(TAG, "Address list is null or empty.");
         }
 
+
         addressTextView.setText(addressBuilder.toString().trim());
+
 
         if (userInfo.getAvatar() != null && !userInfo.getAvatar().isEmpty()) {
             Glide.with(ProfileActivity.this)
@@ -231,6 +269,7 @@ public class ProfileActivity extends AppCompatActivity {
         }
     }
 
+
     private void navigateToEditProfile() {
         // Check if user data is loaded before attempting to pass it
         if (currentUser == null) {
@@ -244,15 +283,18 @@ public class ProfileActivity extends AppCompatActivity {
             return;
         }
 
+
         Intent intent = new Intent(ProfileActivity.this, EditProfileActivity.class);
         intent.putExtra("CURRENT_FULL_NAME", currentUser.getFullName());
         intent.putExtra("CURRENT_PHONE", currentUser.getPhone());
         intent.putExtra("CURRENT_AVATAR_URL", currentUser.getAvatar()); // Pass current avatar URL
         intent.putExtra("TOKEN", token); // Pass token needed for the PUT request in EditProfileActivity
 
+
         Log.i(TAG, "Launching EditProfileActivity using launcher...");
         editProfileLauncher.launch(intent);
     }
+
 
     private void navigateToShippingAddress() {
         if (token == null || token.isEmpty()) {
@@ -263,9 +305,11 @@ public class ProfileActivity extends AppCompatActivity {
         Intent intent = new Intent(ProfileActivity.this, ShippingAddressActivity.class);
         intent.putExtra("TOKEN", token); // Pass the token to the address activity
 
+
         Log.i(TAG, "Launching ShippingAddressActivity using launcher...");
         shippingAddressLauncher.launch(intent);
     }
+
 
     private void navigateToOrderHistory() {
         if (currentUser == null || currentUser.getUserId() <= 0) {
@@ -279,13 +323,23 @@ public class ProfileActivity extends AppCompatActivity {
             return;
         }
 
+
         Intent intent = new Intent(ProfileActivity.this, OrderHistoryActivity.class);
         intent.putExtra("userId", currentUser.getUserId());
         intent.putExtra("token", token); // Pass token if OrderHistoryActivity needs it for API calls
+
 
         Log.i(TAG, "Launching OrderHistoryActivity using launcher with User ID: " + currentUser.getUserId());
         orderHistoryLauncher.launch(intent);
     }
 
 
+    @Override
+    public void finish() {
+        if (userInfoHasChanged) {
+            setResult(RESULT_OK);
+        }
+        super.finish();
+    }
 }
+

@@ -1,11 +1,13 @@
 package vn.iostar.doan.activity;
 
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -17,13 +19,16 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
 
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -36,9 +41,12 @@ import vn.iostar.doan.model.Cart;
 import vn.iostar.doan.model.CartItem;
 import vn.iostar.doan.modelRequest.CartActionRequest;
 
+
 public class CartActivity extends AppCompatActivity implements CartAdapter.CartItemListener {
 
+
     private static final String TAG = "CartActivity";
+
 
     private String authToken;
     private Toolbar toolbar;
@@ -46,17 +54,21 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
     private ProgressBar progressBarCart;
     private TextView textViewEmptyCart;
 
+
     private TextView textViewTotalValue;
     private CheckBox checkboxSelectAll;
     private AppCompatButton buttonCheckout;
 
+
     private CartAdapter cartAdapter;
     private List<CartItem> cartItemList = new ArrayList<>();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cart);
+
 
         // Get token
         authToken = getIntent().getStringExtra("token");
@@ -68,6 +80,7 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
         }
         setupViews();
         setupToolbar();
+
 
         setupRecyclerView();
         setupListeners();
@@ -95,19 +108,23 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
         textViewEmptyCart = findViewById(R.id.textViewEmptyCart);
         toolbar = findViewById(R.id.toolbar);
 
+
         textViewTotalValue = findViewById(R.id.textViewTotalValue); // Giữ lại, nhưng nó sẽ hiển thị tạm tính
         checkboxSelectAll = findViewById(R.id.checkboxSelectAll);
         buttonCheckout = findViewById(R.id.buttonCheckout);
 
+
         progressBarCart.setVisibility(View.GONE);
         textViewEmptyCart.setVisibility(View.GONE);
     }
+
 
     private void setupRecyclerView() {
         cartAdapter = new CartAdapter(this, cartItemList, this);
         recyclerViewCart.setLayoutManager(new LinearLayoutManager(this));
         recyclerViewCart.setAdapter(cartAdapter);
     }
+
 
     private void setupListeners() {
         checkboxSelectAll.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -120,6 +137,7 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
                 }
             }
 
+
             if (buttonView.isPressed() || stateNeedsChange) {
                 Log.d(TAG, "SelectAll triggered. IsPressed: " + buttonView.isPressed() + ", NeedsChange: " + stateNeedsChange + ", NewState: " + isChecked);
                 selectAllItems(isChecked);
@@ -129,6 +147,7 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
                 Log.d(TAG, "SelectAll event skipped. IsPressed: " + buttonView.isPressed() + ", NeedsChange: " + stateNeedsChange + ", CurrentState: " + isChecked);
             }
         });
+
 
         buttonCheckout.setOnClickListener(v -> {
             List<CartItem> selectedItems = new ArrayList<>();
@@ -153,8 +172,10 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
         });
     }
 
+
     private void fetchCartData() {
         showLoading(true);
+
 
         String header = "Bearer " + authToken;
         ApiService.apiService.getCartItems(header).enqueue(new Callback<List<CartItem>>() {
@@ -164,6 +185,7 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
                 if (response.isSuccessful() && response.body() != null) {
                     cartItemList.clear();
                     cartItemList.addAll(response.body());
+
 
                     if (cartItemList.isEmpty()) {
                         showDataView(false, "Giỏ hàng của bạn đang trống");
@@ -181,6 +203,7 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
                 }
             }
 
+
             @Override
             public void onFailure(Call<List<CartItem>> call, Throwable t) {
                 showLoading(false);
@@ -190,6 +213,7 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
             }
         });
     }
+
 
     @Override
     public void onQuantityChanged(CartItem item, int newQuantity) {
@@ -201,6 +225,7 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
         Long productId = item.getProduct().getProductId();
         String header = "Bearer " + authToken;
         CartActionRequest updateRequest = new CartActionRequest(productId, newQuantity);
+
 
         ApiService.apiService.updateCartItem(header, updateRequest).enqueue(new Callback<Cart>() {
             @Override
@@ -238,6 +263,7 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
                 }
             }
 
+
             @Override
             public void onFailure(Call<Cart> call, Throwable t) {
                 Log.e(TAG, "API Call Failed (Update Quantity): " + t.getMessage(), t);
@@ -247,6 +273,8 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
             }
         });
     }
+
+
 
 
     @Override
@@ -294,6 +322,7 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
                             }
                         }
 
+
                         @Override
                         public void onFailure(Call<ResponseBody> call, Throwable t) {
                             Log.e(TAG, "API Call Failed (Remove Item): " + t.getMessage(), t);
@@ -304,6 +333,7 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
                 .show();
     }
 
+
     @Override
     public void onItemSelectionChanged() {
         // Logic giữ nguyên
@@ -312,10 +342,13 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
     }
 
 
+
+
     private void updateSummary() {
         double subtotal = 0;
         int selectedItemCount = 0;
         boolean hasItemSelected = false;
+
 
         for (CartItem item : cartItemList) {
             if (item.isSelected()) {
@@ -324,32 +357,25 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
                 hasItemSelected = true;
             }
         }
-
-        // Bỏ tính thuế và tổng cuối cùng
-        // double taxes = subtotal * 0.05;
-        // double total = subtotal + taxes;
-
         NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
 
-        // Cập nhật TextView "Tạm tính" (trước đây là Total)
+
         textViewTotalValue.setText(currencyFormat.format(subtotal));
 
-        // Bỏ cập nhật TextView thuế
-        // textViewTaxesValue.setText("+ " + currencyFormat.format(taxes));
 
-        // Cập nhật nút Checkout
         buttonCheckout.setText("Thanh toán (" + selectedItemCount + ")");
         buttonCheckout.setEnabled(hasItemSelected);
 
-        // Cập nhật background nút (có thể giữ nguyên hoặc đơn giản hóa nếu muốn)
+
         if (hasItemSelected) {
-            buttonCheckout.setBackgroundResource(R.drawable.bottom_nav_background); // Màu nền khi enable
-            // buttonCheckout.setTextColor(getColor(R.color.white)); // Đặt màu chữ nếu cần
-        } else {
             buttonCheckout.setBackgroundResource(R.drawable.bg); // Màu nền khi disable (vd: màu xám)
-            // buttonCheckout.setTextColor(getColor(R.color.grey)); // Đặt màu chữ khi disable nếu cần
+
+
+        } else {
+            buttonCheckout.setBackgroundResource(R.drawable.bottom_nav_background); // Màu nền khi enable
         }
     }
+
 
     // Hàm này giữ nguyên
     private void updateSelectAllCheckboxState() {
@@ -367,6 +393,7 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
             checkboxSelectAll.setEnabled(true); // Kích hoạt lại khi có item
         }
 
+
         boolean allSelected = true;
         for (CartItem item : cartItemList) {
             if (!item.isSelected()) {
@@ -374,6 +401,7 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
                 break;
             }
         }
+
 
         if (checkboxSelectAll.isChecked() != allSelected) {
             // Gỡ bỏ listener tạm thời để tránh vòng lặp
@@ -383,6 +411,7 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
             setupSelectAllListener();
         }
     }
+
 
     // Hàm này tách ra để dễ quản lý listener của checkbox Select All
     private void setupSelectAllListener() {
@@ -404,12 +433,15 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
     }
 
 
+
+
     // Hàm này giữ nguyên
     private void selectAllItems(boolean select) {
         for (CartItem item : cartItemList) {
             item.setSelected(select);
         }
     }
+
 
     // Hàm này giữ nguyên
     private void showLoading(boolean isLoading) {
@@ -419,6 +451,7 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
             textViewEmptyCart.setVisibility(View.GONE);
         }
     }
+
 
     // Hàm này giữ nguyên (chỉ ẩn/hiện RecyclerView thay vì NestedScrollView)
     private void showDataView(boolean showData, String message) {
@@ -432,6 +465,7 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
         }
         // Summary và Button luôn hiển thị, chỉ có giá trị thay đổi
     }
+
 
     // Hàm này giữ nguyên
     private void handleApiError(Response<?> response) {
@@ -453,3 +487,4 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
         showDataView(false, "Lỗi " + response.code() + ": " + errorMessage);
     }
 }
+
