@@ -172,7 +172,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         // --- Setup RecyclerView Related Products ---
         recyclerViewRelatedProducts.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         // Đảm bảo constructor ProductAdapter phù hợp
-        relatedProductAdapter = new ProductAdapter(this, new ArrayList<>());
+        relatedProductAdapter = new ProductAdapter(this, new ArrayList<>(), this.authToken, this.userId);
         recyclerViewRelatedProducts.setAdapter(relatedProductAdapter);
         recyclerViewRelatedProducts.setHasFixedSize(true);
 

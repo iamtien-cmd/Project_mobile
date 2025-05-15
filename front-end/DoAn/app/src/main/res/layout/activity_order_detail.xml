@@ -1,53 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@color/white"> <!-- Thay bằng màu nền phù hợp -->
+    android:background="@color/white"> <!-- Optional: Set background here or on content area -->
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
-
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar_order_detail"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
-            android:backgroundTint="@color/black"
-            app:navigationIcon="?attr/homeAsUpIndicator"
-            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-            app:title="Chi tiết đơn hàng" />
-
-    </com.google.android.material.appbar.AppBarLayout>
-
-    <ProgressBar
-        android:id="@+id/progress_bar_order_detail"
-        style="?android:attr/progressBarStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginTop="32dp"
-        android:visibility="gone" />
-
-    <TextView
-        android:id="@+id/tv_error_message_order_detail"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:gravity="center"
-        android:textColor="@color/my_red_error"
-        android:visibility="gone"
-        tools:text="Đã xảy ra lỗi khi tải dữ liệu."
-        tools:visibility="visible"/>
-
-    <ScrollView
-        android:id="@+id/scroll_view_order_detail"
+    <!-- Content Area: This will be above the bottom navigation -->
+    <!-- Use a LinearLayout to contain the existing vertical structure -->
+    <LinearLayout
+        android:id="@+id/contentContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:layout_above="@+id/bottomNav"
+        android:background="@color/white"> <!-- Keep background here -->
+
+        <!-- Your original order detail content -->
+        <com.google.android.material.appbar.AppBarLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/toolbar_order_detail"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="?attr/colorPrimary"
+                android:backgroundTint="@color/black"
+                app:navigationIcon="?attr/homeAsUpIndicator"
+                app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+                app:title="Chi tiết đơn hàng"
+                app:titleTextColor="@android:color/white" /> <!-- Add title color if needed -->
+
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <ProgressBar
+            android:id="@+id/progress_bar_order_detail"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="32dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tv_error_message_order_detail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:gravity="center"
+            android:textColor="@color/my_red_error"
+            android:visibility="gone"
+            tools:text="Đã xảy ra lỗi khi tải dữ liệu."
+            tools:visibility="visible"/>
+
+        <ScrollView
+            android:id="@+id/scroll_view_order_detail"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
         android:visibility="gone"
         tools:visibility="visible">
 
@@ -335,3 +346,58 @@
         </LinearLayout>
     </ScrollView>
 </LinearLayout>
+
+    <!-- Bottom Navigation Bar: This will be fixed at the bottom -->
+<LinearLayout
+android:id="@+id/bottomNav"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:layout_alignParentBottom="true"
+    android:orientation="horizontal"
+    android:background="@drawable/bottom_nav_background"
+    android:padding="8dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center"
+    android:elevation="8dp">
+
+<ImageView
+android:id="@+id/ivMenuBottom"
+android:layout_width="0dp"
+android:layout_height="wrap_content"
+android:layout_weight="1"
+android:scaleType="centerInside"
+android:contentDescription="Menu"
+android:src="@drawable/home_1" />
+
+<ImageView
+android:id="@+id/ivLocation"
+android:layout_width="0dp"
+android:layout_height="wrap_content"
+android:layout_weight="1"
+android:scaleType="centerInside"
+android:contentDescription="Location"
+android:src="@drawable/map" />
+
+<ImageView
+android:id="@+id/ivaboutus"
+android:layout_width="0dp"
+android:layout_height="wrap_content"
+android:layout_weight="1"
+android:scaleType="centerInside"
+android:contentDescription="Search"
+android:src="@drawable/edit_1" />
+
+<ImageView
+android:id="@+id/ivcart"
+android:layout_width="0dp"
+android:layout_height="wrap_content"
+android:layout_weight="1"
+android:scaleType="centerInside"
+android:contentDescription="User"
+android:src="@drawable/cart_1"
+android:clickable="true"
+android:focusable="true" />
+    </LinearLayout>
+
+    </RelativeLayout>

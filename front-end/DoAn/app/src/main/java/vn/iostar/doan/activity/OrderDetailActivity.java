@@ -1,8 +1,11 @@
-package vn.iostar.doan.activity; // <<<< THAY ĐỔI CHO ĐÚNG PACKAGE CỦA BẠN
+package vn.iostar.doan.activity;
+
+import static android.content.ContentValues.TAG;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -30,6 +33,7 @@ import java.io.IOException;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 import retrofit2.Call;
@@ -42,41 +46,45 @@ import vn.iostar.doan.model.Order;
 import vn.iostar.doan.model.OrderLine;
 import vn.iostar.doan.model.OrderStatus;
 import vn.iostar.doan.model.Product;
-import vn.iostar.doan.model.User; // Đảm bảo import User model
+import vn.iostar.doan.model.User;
 
 
 public class OrderDetailActivity extends AppCompatActivity {
 
     private static final String TAG = "OrderDetailActivity";
 
-    public static final String EXTRA_ORDER_ID = "ORDER_ID"; // << SỬA THÀNH KEY NÀY
+    public static final String EXTRA_ORDER_ID = "ORDER_ID";
     public static final String EXTRA_ACTION_MODE = "ACTION_MODE_KEY";
     public static final String EXTRA_USER_ID_FOR_REVIEW = "USER_ID_FOR_REVIEW_KEY";
     public static final String ACTION_MODE_SELECT_PRODUCT_FOR_REVIEW = "SELECT_PRODUCT_FOR_REVIEW_ACTION";
+
+    // ** Thêm hằng số cho key truyền Product ID (đã có) **
+    public static final String EXTRA_PRODUCT_ID = "productId"; // <-- Sử dụng key mà ProductDetailActivity đang dùng
 
     private Toolbar toolbar;
     private ProgressBar progressBar;
     private TextView tvErrorMessage;
     private ScrollView scrollViewContent;
     private TextView tvDetailOrderId, tvDetailOrderStatus, tvDetailOrderDate, tvDetailPredictDate, tvDetailPaymentMethod;
-    private TextView tvDetailRecipientInfoAndAddress; // THAY THẾ cho tvDetailShippingAddress
+    private TextView tvDetailRecipientInfoAndAddress;
     private LinearLayout llOrderDetailItems;
     private TextView tvDetailItemsSubtotal, tvDetailShippingFee, tvDetailDiscountAmount, tvDetailTotalPrice;
     private RelativeLayout layoutDiscount;
     private TextView tvDetailDiscountLabel;
 
-    // THÊM CÁC BIẾN CHO THÔNG TIN NGƯỜI ĐẶT
+    // Biến cho thông tin người đặt
     private TextView tvOrderPlacerName, tvOrderPlacerPhone, tvOrderPlacerEmail;
-
 
     private NumberFormat currencyFormatter;
     private SimpleDateFormat displayDateFormat;
 
     private long orderId = -1;
     private String currentActionMode = null;
-    private Long userIdForReview = -1L;
+    private Long userIdForReview = -1L; // ID người dùng cho mục đích review (nếu có)
+    private long currentLoggedInUserId = -1L; // << THÊM BIẾN NÀY để lưu ID người dùng hiện tại
     private Order currentOrderData;
-
+    private ImageView ivCartMenuBottom, ivCartLocation, ivCartAboutUs, ivCartIconSelf; // Biến cho bottom nav
+    private String authToken;
     private ActivityResultLauncher<Intent> productRatingLauncher;
 
     @Override
@@ -84,63 +92,126 @@ public class OrderDetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_order_detail);
 
+        SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
+        authToken = prefs.getString("token", "");
+        currentLoggedInUserId = prefs.getLong("userId", -1L); // << LẤY USER ID TỪ SHARED PREFS
+
         Intent intent = getIntent();
         orderId = intent.getLongExtra(EXTRA_ORDER_ID, -1L);
         if (intent.hasExtra(EXTRA_ACTION_MODE)) {
             currentActionMode = intent.getStringExtra(EXTRA_ACTION_MODE);
         }
+        // userIdForReview chỉ được dùng trong chế độ đánh giá, khác với currentLoggedInUserId
         if (intent.hasExtra(EXTRA_USER_ID_FOR_REVIEW)) {
             userIdForReview = intent.getLongExtra(EXTRA_USER_ID_FOR_REVIEW, -1L);
         }
 
         if (orderId == -1) {
             Log.e(TAG, "Order ID not passed correctly via Intent.");
-            Toast.makeText(this, "Lỗi: Không tìm thấy mã đơn hàng.", Toast.LENGTH_LONG).show();
+
             finish();
             return;
         }
-        Log.d(TAG, "Received Order ID: " + orderId + ", ActionMode: " + currentActionMode + ", UserID for Review: " + userIdForReview);
+        Log.d(TAG, "Received Order ID: " + orderId + ", ActionMode: " + currentActionMode + ", UserID for Review: " + userIdForReview + ", Logged-in UserID: " + currentLoggedInUserId);
+
 
         currencyFormatter = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
         displayDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
 
         initProductRatingLauncher();
-        setupViews(); // Gọi sau khi khởi tạo launcher
-
+        setupViews();
+        setupBottomNavigation(); // Gọi setup bottom navigation sau khi AnhXa
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             if (ACTION_MODE_SELECT_PRODUCT_FOR_REVIEW.equals(currentActionMode)) {
                 getSupportActionBar().setTitle("Chọn sản phẩm để đánh giá");
             } else {
-                getSupportActionBar().setTitle("Chi tiết Đơn hàng"); // Tiêu đề chung hơn
+                // Tiêu đề sẽ được cập nhật sau khi fetch data
+                getSupportActionBar().setTitle("Chi tiết Đơn hàng");
             }
         }
 
-        if (savedInstanceState == null || currentOrderData == null) {
-            fetchOrderDetailWithRetrofit(orderId);
-        } else {
-            // Nếu có dữ liệu cũ, có thể hiển thị nó trước rồi mới fetch lại, hoặc chỉ fetch lại.
-            // Ở đây ta fetch lại để đảm bảo dữ liệu mới nhất.
-            fetchOrderDetailWithRetrofit(orderId);
-        }
+        // Luôn fetch data để đảm bảo dữ liệu mới nhất
+        fetchOrderDetailWithRetrofit(orderId);
     }
 
+    // ... (Các phương thức setupBottomNavigation, initProductRatingLauncher, setupViews, onOptionsItemSelected giữ nguyên)
+    private void setupBottomNavigation() {
+        // Xử lý click cho icon Home (ivCartMenuBottom)
+        if (ivCartMenuBottom != null) {
+            ivCartMenuBottom.setOnClickListener(v -> {
+                Log.d(TAG, "Home icon clicked from OrderDetailActivity");
+                Intent intent = new Intent(OrderDetailActivity.this, HomeActivity.class);
+                intent.putExtra("token", authToken); // Truyền token về HomeActivity
+                // Dùng cờ để clear stack và đưa HomeActivity lên đầu
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+                finish(); // Đóng OrderDetailActivity
+            });
+        } else {
+            Log.e(TAG, "setupBottomNavigation: ivCartMenuBottom is null!");
+        }
+
+        // Xử lý click cho icon Location (ivCartLocation)
+        if (ivCartLocation != null) {
+            ivCartLocation.setOnClickListener(v -> {
+                Log.d(TAG, "Location icon clicked from OrderDetailActivity");
+                Intent intent = new Intent(OrderDetailActivity.this, AboutAppActivity.class); // Hoặc Activity khác bạn muốn
+                // intent.putExtra("token", authToken); // Nếu cần
+                startActivity(intent);
+            });
+        } else {
+            Log.e(TAG, "setupBottomNavigation: ivCartLocation is null!");
+        }
+
+        // Xử lý click cho icon About Us (ivCartAboutUs)
+        if (ivCartAboutUs != null) {
+            ivCartAboutUs.setOnClickListener(v -> {
+                Log.d(TAG, "About Us icon clicked from OrderDetailActivity");
+                Intent intent = new Intent(OrderDetailActivity.this, AboutUsActivity.class);
+                startActivity(intent);
+            });
+        } else {
+            Log.e(TAG, "setupBottomNavigation: ivCartAboutUs is null!");
+        }
+
+        // Xử lý click cho icon User/Profile (ivCartIconSelf)
+        if (ivCartIconSelf != null) {
+            ivCartIconSelf.setOnClickListener(v -> {
+                Log.d(TAG, "Cart icon clicked from OrderDetailActivity");
+                Intent intent = new Intent(OrderDetailActivity.this, CartActivity.class); // Chuyển đến CartActivity
+                intent.putExtra("token", authToken); // Truyền token
+                startActivity(intent);
+                // KHÔNG finish() ở đây trừ khi bạn muốn thoát hoàn toàn khỏi luồng Order Detail -> Cart
+            });
+        } else {
+            Log.e(TAG, "setupBottomNavigation: ivCartIconSelf is null!");
+        }
+    }
     private void initProductRatingLauncher() {
         productRatingLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
+                    // Nhận kết quả từ ProductRatingActivity
                     if (result.getResultCode() == Activity.RESULT_OK) {
                         Log.d(TAG, "ProductRatingActivity returned RESULT_OK.");
+                        // Nếu review thành công, có thể muốn refresh chi tiết đơn hàng
+                        // hoặc báo lại cho OrderHistoryActivity để refresh danh sách
+                        // Dựa vào logic hiện tại, bạn set RESULT_OK và finish() để quay lại OrderHistoryActivity
                         setResult(Activity.RESULT_OK);
-                        finish();
-                    } else {
-                        Log.d(TAG, "ProductRatingActivity returned code: " + result.getResultCode() + ". Setting RESULT_CANCELED for OrderHistoryActivity.");
+                        finish(); // Quay lại OrderHistoryActivity
+                    } else if (result.getResultCode() == Activity.RESULT_CANCELED) {
+                        Log.d(TAG, "ProductRatingActivity returned RESULT_CANCELED.");
+                        // Nếu người dùng hủy đánh giá, có thể không làm gì hoặc refresh
+                        // Dựa vào logic hiện tại, bạn set RESULT_CANCELED và finish()
                         setResult(Activity.RESULT_CANCELED);
-                        // Không cần finish() ở đây nếu bạn muốn người dùng ở lại màn hình chi tiết
-                        // Nhưng nếu luồng là "chọn SP -> đánh giá -> quay lại lịch sử", thì finish() là đúng
-                        // Dựa vào logic trước đó, finish() khi productRatingLauncher trả về kết quả
-                        finish();
+                        finish(); // Quay lại OrderHistoryActivity
+                    } else {
+                        Log.w(TAG, "ProductRatingActivity returned unexpected result code: " + result.getResultCode());
+                        // Xử lý các mã lỗi khác nếu có
+                        setResult(Activity.RESULT_CANCELED); // Coi như bị hủy
+                        finish(); // Quay lại OrderHistoryActivity
                     }
                 }
         );
@@ -160,12 +231,12 @@ public class OrderDetailActivity extends AppCompatActivity {
         tvDetailPredictDate = findViewById(R.id.tv_detail_predict_date);
         tvDetailPaymentMethod = findViewById(R.id.tv_detail_payment_method);
 
-        // THÊM ÁNH XẠ CHO THÔNG TIN NGƯỜI ĐẶT
+        // THÔNG TIN NGƯỜI ĐẶT
         tvOrderPlacerName = findViewById(R.id.tv_order_placer_name);
         tvOrderPlacerPhone = findViewById(R.id.tv_order_placer_phone);
         tvOrderPlacerEmail = findViewById(R.id.tv_order_placer_email);
 
-        // SỬA ÁNH XẠ CHO THÔNG TIN NGƯỜI NHẬN
+        // THÔNG TIN NGƯỜI NHẬN & ĐỊA CHỈ
         tvDetailRecipientInfoAndAddress = findViewById(R.id.tv_detail_recipient_info_and_address);
 
         // Danh sách sản phẩm và Tóm tắt đơn hàng
@@ -176,11 +247,30 @@ public class OrderDetailActivity extends AppCompatActivity {
         tvDetailTotalPrice = findViewById(R.id.tv_detail_total_price);
         layoutDiscount = findViewById(R.id.layout_discount);
         tvDetailDiscountLabel = findViewById(R.id.tv_detail_discount_label);
+
+        // Ánh xạ các icon Bottom Navigation (đã nằm trong layout gốc activity_order_detail)
+        // LinearLayout cha của các icon trong layout đã combine
+        LinearLayout bottomNavLayout = findViewById(R.id.bottomNav);
+
+        if (bottomNavLayout != null) {
+            ivCartMenuBottom = bottomNavLayout.findViewById(R.id.ivMenuBottom);
+            ivCartLocation = bottomNavLayout.findViewById(R.id.ivLocation);
+            ivCartAboutUs = bottomNavLayout.findViewById(R.id.ivaboutus);
+            ivCartIconSelf = bottomNavLayout.findViewById(R.id.ivcart);
+
+            if (ivCartMenuBottom == null) Log.w(TAG, "setupViews: ivMenuBottom not found in bottomNav.");
+            if (ivCartLocation == null) Log.w(TAG, "setupViews: ivLocation not found in bottomNav.");
+            if (ivCartAboutUs == null) Log.w(TAG, "setupViews: ivaboutus not found in bottomNav.");
+            if (ivCartIconSelf == null) Log.w(TAG, "setupViews: ivcart not found in bottomNav.");
+        } else {
+            Log.e(TAG, "setupViews: bottomNav LinearLayout not found!");
+        }
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
+            // Nếu đang ở chế độ chọn sản phẩm đánh giá, báo cancel
             if (ACTION_MODE_SELECT_PRODUCT_FOR_REVIEW.equals(currentActionMode)) {
                 setResult(Activity.RESULT_CANCELED);
             }
@@ -259,7 +349,7 @@ public class OrderDetailActivity extends AppCompatActivity {
         tvDetailOrderStatus.setText(statusText);
         tvDetailOrderStatus.setTextColor(statusColor);
 
-        // THÊM HIỂN THỊ THÔNG TIN NGƯỜI ĐẶT HÀNG
+        // HIỂN THỊ THÔNG TIN NGƯỜI ĐẶT HÀNG
         User placer = order.getUser();
         if (placer != null) {
             tvOrderPlacerName.setText("Tên: " + (placer.getFullName() != null && !placer.getFullName().isEmpty() ? placer.getFullName() : "N/A"));
@@ -276,71 +366,43 @@ public class OrderDetailActivity extends AppCompatActivity {
             tvOrderPlacerEmail.setVisibility(View.GONE);
         }
 
-        Log.d(TAG, "Raw shippingInfo from order object: '" + order.getShippingAddress() + "'");
-
+        // HIỂN THỊ THÔNG TIN NGƯỜI NHẬN & ĐỊA CHỈ
         String shippingInfo = order.getShippingAddress();
 
         if (shippingInfo != null && !shippingInfo.trim().isEmpty()) {
-            // Trường hợp backend trả về placeholder cho 3 giá trị rỗng (khi address object là null)
             if (shippingInfo.equals("||")) {
                 tvDetailRecipientInfoAndAddress.setText("Thông tin người nhận và địa chỉ không có.");
             } else {
-                // Tách chuỗi thành các phần, -1 để giữ lại các phần tử rỗng ở cuối (nếu có)
                 String[] parts = shippingInfo.split("\\|", -1);
-                Log.d(TAG, "Split shippingInfo into parts: " + java.util.Arrays.toString(parts) + " (length: " + parts.length + ")");
-
-
-                // Mong đợi 3 phần tử: Tên, SĐT, Đường
                 String name = (parts.length > 0) ? parts[0].trim() : "";
                 String phone = (parts.length > 1) ? parts[1].trim() : "";
                 String street = (parts.length > 2) ? parts[2].trim() : "";
-                // KHÔNG lấy parts[3], parts[4], parts[5] nữa
-
-                Log.d(TAG, "Parsed Name: '" + name + "', Phone: '" + phone + "', Street: '" + street + "'");
-
 
                 StringBuilder displayBuilder = new StringBuilder();
                 boolean firstLineAdded = false;
 
-                // 1. Thêm tên người nhận
                 if (!name.isEmpty()) {
                     displayBuilder.append("Người nhận: ").append(name);
                     firstLineAdded = true;
                 }
-
-                // 2. Thêm số điện thoại
                 if (!phone.isEmpty()) {
-                    if (firstLineAdded) {
-                        displayBuilder.append("\n"); // Xuống dòng nếu đã có dòng trước
-                    }
+                    if (firstLineAdded) displayBuilder.append("\n");
                     displayBuilder.append("SĐT: ").append(phone);
                     firstLineAdded = true;
                 }
-
-                // 3. Thêm địa chỉ đường (StreetAddress)
-                // Không cần List<String> addressDetails nữa nếu chỉ có street
                 if (!street.isEmpty()) {
-                    if (firstLineAdded) {
-                        displayBuilder.append("\n");
-                    }
+                    if (firstLineAdded) displayBuilder.append("\n");
                     displayBuilder.append("Địa chỉ: ").append(street);
-                    // firstLineAdded = true; // Không cần thiết nếu đây là dòng cuối
                 }
 
-                // Kiểm tra xem có nội dung nào được thêm vào không
                 if (displayBuilder.length() > 0) {
                     tvDetailRecipientInfoAndAddress.setText(displayBuilder.toString());
-                    Log.d(TAG, "Final display string: '" + displayBuilder.toString() + "'");
                 } else {
-                    // Trường hợp này xảy ra nếu shippingInfo ban đầu không phải "||"
-                    // nhưng sau khi trim, tất cả 3 phần tử đều rỗng (ví dụ: " | | ")
                     tvDetailRecipientInfoAndAddress.setText("Thông tin người nhận và địa chỉ không đầy đủ.");
-                    Log.d(TAG, "DisplayBuilder was empty, showing 'không đầy đủ'. Original parts: " + java.util.Arrays.toString(parts));
                 }
             }
         } else {
             tvDetailRecipientInfoAndAddress.setText("Không có thông tin người nhận hoặc địa chỉ.");
-            Log.d(TAG, "shippingInfo was null or empty.");
         }
 
         // Danh sách sản phẩm
@@ -362,9 +424,19 @@ public class OrderDetailActivity extends AppCompatActivity {
                     tvName.setText(product.getName());
                     Glide.with(this)
                             .load(product.getImage())
-                            .placeholder(R.drawable.placeholder_image)
-                            .error(R.drawable.error_image)
+                            .placeholder(R.drawable.placeholder_image) // Thay bằng placeholder của bạn
+                            .error(R.drawable.error_image) // Thay bằng error image của bạn
                             .into(ivProduct);
+
+                    // ** THÊM ONCLICKLISTENER CHO TOÀN BỘ ITEM SẢN PHẨM **
+                    final long clickedProductId = product.getProductId(); // Lấy ID sản phẩm
+                    itemView.setOnClickListener(v -> {
+                        Log.d(TAG, "Product item clicked. Launching ProductDetailActivity for product ID: " + clickedProductId);
+                        // Gọi hàm chuyển Activity, truyền ID sản phẩm, User ID và Token
+                        navigateToProductDetail(clickedProductId, currentLoggedInUserId, authToken);
+                    });
+                    // ** KẾT THÚC THÊM ONCLICKLISTENER **
+
 
                     if (ACTION_MODE_SELECT_PRODUCT_FOR_REVIEW.equals(currentActionMode) &&
                             order.getStatus() == OrderStatus.RECEIVED && // Chỉ cho đánh giá khi đã nhận
@@ -374,21 +446,26 @@ public class OrderDetailActivity extends AppCompatActivity {
                         final long currentSelectedProductId = product.getProductId();
 
                         btnEvaluateThisProduct.setOnClickListener(v -> {
-                            Log.d(TAG, "Evaluate this product clicked. ProductId: " + currentSelectedProductId +
+                            Log.d(TAG, "Evaluate this product button clicked. ProductId: " + currentSelectedProductId +
                                     ", UserId: " + userIdForReview + ", OrderId: " + order.getOrderId());
 
                             Intent intentToProductRating = new Intent(OrderDetailActivity.this, ProductRatingActivity.class);
                             intentToProductRating.putExtra("product_id", currentSelectedProductId);
                             intentToProductRating.putExtra("user_id", userIdForReview);
                             intentToProductRating.putExtra("order_id", order.getOrderId());
+                            // Có thể truyền thêm token nếu ProductRatingActivity cần
+                            intentToProductRating.putExtra("token", authToken);
+
 
                             if (productRatingLauncher != null) {
                                 productRatingLauncher.launch(intentToProductRating);
                             } else {
                                 Log.e(TAG, "productRatingLauncher is null! Cannot launch ProductRatingActivity for result.");
-                                startActivity(intentToProductRating); // Fallback
-                                setResult(Activity.RESULT_CANCELED); // Nếu fallback, nên báo là cancel
-                                finish();
+                                // Fallback: Start activity without result
+                                startActivity(intentToProductRating);
+                                // Nếu không dùng launcher, không thể báo kết quả về OrderHistoryActivity
+                                // Có thể thông báo cho người dùng và không finish()
+                                Toast.makeText(OrderDetailActivity.this, "Không thể theo dõi kết quả đánh giá.", Toast.LENGTH_SHORT).show();
                             }
                         });
                     } else {
@@ -398,6 +475,8 @@ public class OrderDetailActivity extends AppCompatActivity {
                     tvName.setText("Sản phẩm không xác định");
                     ivProduct.setImageResource(R.drawable.placeholder_image); // Hoặc một ảnh mặc định
                     btnEvaluateThisProduct.setVisibility(View.GONE);
+                    // Nếu sản phẩm null, không cho click item
+                    itemView.setClickable(false);
                 }
 
                 tvQuantity.setText("SL: x" + line.getQuantity());
@@ -409,12 +488,12 @@ public class OrderDetailActivity extends AppCompatActivity {
                     View divider = new View(this);
                     LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
-                            (int) getResources().getDimension(R.dimen.divider_height) // Define in dimens.xml e.g. 1dp
+                            getResources().getDimensionPixelSize(R.dimen.divider_height)
                     );
-                    params.setMargins(0, (int) getResources().getDimension(R.dimen.divider_margin_vertical), // e.g. 8dp
-                            0, (int) getResources().getDimension(R.dimen.divider_margin_vertical));
+                    params.setMargins(0, getResources().getDimensionPixelSize(R.dimen.divider_margin_vertical),
+                            0, getResources().getDimensionPixelSize(R.dimen.divider_margin_vertical));
                     divider.setLayoutParams(params);
-                    divider.setBackgroundColor(ContextCompat.getColor(this, R.color.divider_color)); // Define in colors.xml e.g. #E0E0E0
+                    divider.setBackgroundColor(ContextCompat.getColor(this, R.color.divider_color));
                     llOrderDetailItems.addView(divider);
                 }
             }
@@ -423,34 +502,48 @@ public class OrderDetailActivity extends AppCompatActivity {
             noItemsText.setText("Không có sản phẩm trong đơn hàng này.");
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-            params.setMargins(0, 16,0,16); // Thêm margin cho đẹp
+            params.setMargins(0, 16,0,16);
             noItemsText.setLayoutParams(params);
             llOrderDetailItems.addView(noItemsText);
         }
 
         // Tóm tắt đơn hàng
-        double itemsSubtotal = order.getItemsSubtotal(); // Lấy từ Order object
-        double totalPrice = order.getTotalPrice();     // Lấy từ Order object
+        double itemsSubtotal = order.getItemsSubtotal();
+        double totalPrice = order.getTotalPrice();
+        double discountAmount = order.getDiscountAmount(); // Lấy discount amount
 
-        // Tính toán shippingFee ở client từ totalPrice và itemsSubtotal
-        double calculatedShippingFee = totalPrice - itemsSubtotal;
+        // Tính toán shippingFee: Total = Subtotal + Shipping - Discount
+        // => Shipping = Total - Subtotal + Discount
+        double calculatedShippingFee = totalPrice - itemsSubtotal + discountAmount;
 
         tvDetailItemsSubtotal.setText(currencyFormatter.format(itemsSubtotal));
         tvDetailShippingFee.setText(currencyFormatter.format(calculatedShippingFee)); // Sử dụng giá trị vừa tính
 
-        if (order.getDiscountAmount() > 0) {
+        if (discountAmount > 0) {
             layoutDiscount.setVisibility(View.VISIBLE);
             String discountLabel = "Giảm giá";
             if (order.getVoucherCode() != null && !order.getVoucherCode().isEmpty()) {
                 discountLabel += " (" + order.getVoucherCode() + ")";
             }
             tvDetailDiscountLabel.setText(discountLabel + ":");
-            tvDetailDiscountAmount.setText("- " + currencyFormatter.format(order.getDiscountAmount()));
+            tvDetailDiscountAmount.setText("- " + currencyFormatter.format(discountAmount));
         } else {
             layoutDiscount.setVisibility(View.GONE);
         }
-        tvDetailTotalPrice.setText(currencyFormatter.format(totalPrice)); // Hiển thị totalPrice từ Order object
+        tvDetailTotalPrice.setText(currencyFormatter.format(totalPrice));
     }
+
+    // ** THÊM PHƯƠNG THỨC CHUYỂN ĐẾN CHI TIẾT SẢN PHẨM **
+    private void navigateToProductDetail(long productId, long userId, String token) {
+        Intent intent = new Intent(this, ProductDetailActivity.class);
+        intent.putExtra(EXTRA_PRODUCT_ID, productId); // Key phải khớp với ProductDetailActivity
+        intent.putExtra("userId", userId);           // Truyền User ID (currentLoggedInUserId)
+        intent.putExtra("token", token);             // Truyền Token
+
+        startActivity(intent);
+    }
+    // ** KẾT THÚC PHƯƠNG THỨC CHUYỂN ĐẾN CHI TIẾT SẢN PHẨM **
+
 
     private String formatDate(Date date) {
         if (date == null) return "N/A";
@@ -471,12 +564,12 @@ public class OrderDetailActivity extends AppCompatActivity {
             case RECEIVED: return "Đã giao thành công";
             case CANCELLED: return "Đã hủy";
             case ERROR: return "Lỗi đơn hàng";
-            default: return status.name(); // Hoặc một chuỗi mặc định khác
+            default: return status.name();
         }
     }
 
     private int getStatusColor(OrderStatus status) {
-        int colorResId = R.color.my_grey_neutral; // Màu mặc định
+        int colorResId = R.color.my_grey_neutral;
         if (status != null) {
             switch (status) {
                 case RECEIVED: colorResId = R.color.my_green_success; break;
@@ -485,7 +578,6 @@ public class OrderDetailActivity extends AppCompatActivity {
                 case ERROR:    colorResId = R.color.my_red_error; break;
                 case WAITING:
                 case REVIEWED: colorResId = R.color.my_blue_info; break;
-                // Không cần default vì đã có màu mặc định ở trên
             }
         }
         return ContextCompat.getColor(this, colorResId);
@@ -499,22 +591,23 @@ public class OrderDetailActivity extends AppCompatActivity {
             if (scrollViewContent != null) scrollViewContent.setVisibility(View.GONE);
             if (tvErrorMessage != null) tvErrorMessage.setVisibility(View.GONE);
         }
-        // Không tự động ẩn scrollViewContent và tvErrorMessage khi !isLoading
-        // việc này sẽ được xử lý bởi fetchOrderDetailWithRetrofit
     }
 
     private void showError(String message) {
         if (scrollViewContent != null) {
-            scrollViewContent.setVisibility(View.GONE); // Ẩn nội dung chính khi có lỗi
+            scrollViewContent.setVisibility(View.GONE);
         }
         if (tvErrorMessage != null) {
             if (message != null && !message.isEmpty()) {
                 tvErrorMessage.setText(message);
                 tvErrorMessage.setVisibility(View.VISIBLE);
             } else {
-                tvErrorMessage.setText("Đã xảy ra lỗi không xác định."); // Thông báo lỗi mặc định
+                tvErrorMessage.setText("Đã xảy ra lỗi không xác định.");
                 tvErrorMessage.setVisibility(View.VISIBLE);
             }
         }
     }
+
+    // Cần thêm định nghĩa cho R.dimen.divider_height, R.dimen.divider_margin_vertical
+    // và R.color.divider_color trong các file values/dimens.xml và values/colors.xml
 }

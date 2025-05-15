@@ -67,8 +67,10 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
         View view = LayoutInflater.from(context).inflate(R.layout.item_product, parent, false);
         return new ViewHolder(view);
     }
-    public void updateList(List<Product> newList) {
-        productList = newList;
+    @SuppressLint("NotifyDataSetChanged")
+    public void updateList(List<Product> newList) { // Đổi tên hoặc giữ updateProducts, nhưng logic này tốt hơn
+        this.productList = (newList != null) ? newList : new ArrayList<>(); // Đảm bảo không gán null
+        Log.d(TAG, "Adapter updateList called with " + this.productList.size() + " items.");
         notifyDataSetChanged();
     }
 

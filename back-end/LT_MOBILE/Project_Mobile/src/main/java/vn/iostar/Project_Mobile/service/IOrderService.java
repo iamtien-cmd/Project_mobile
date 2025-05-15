@@ -21,6 +21,7 @@ import vn.iostar.Project_Mobile.repository.CartRepository;
 import vn.iostar.Project_Mobile.repository.OrderLineRepository;
 import vn.iostar.Project_Mobile.repository.IOrderRepository;
 import vn.iostar.Project_Mobile.repository.ProductRepository;
+import vn.iostar.Project_Mobile.util.OrderStatus;
 
 
 public interface IOrderService {
@@ -34,5 +35,8 @@ public interface IOrderService {
 	public List<Order> getOrdersByUserId(Long userId);
 	Order getOrderDetailsById(Long orderId) throws ResourceNotFoundException;
    Order cancelOrder(Long orderId) throws ResourceNotFoundException, IllegalStateException;
+
+Order updateOrderStatus(Long orderId, OrderStatus newStatus, String customStatusMessageForEvent)
+		throws ResourceNotFoundException, IllegalStateException;
 
 }
