@@ -57,7 +57,7 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Thông tin chung đơn hàng (Giữ nguyên) -->
+            <!-- Thông tin chung đơn hàng -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -111,7 +111,7 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Địa chỉ nhận hàng (Giữ nguyên) -->
+            <!-- Thông tin người đặt hàng -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -126,19 +126,61 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Địa chỉ nhận hàng"
+                        android:text="Thông tin người đặt hàng"
                         android:textStyle="bold"
                         android:textSize="16sp"/>
                     <TextView
-                        android:id="@+id/tv_detail_shipping_address"
+                        android:id="@+id/tv_order_placer_name"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        tools:text="123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, Thành phố Hồ Chí Minh"/>
+                        tools:text="Tên: Nguyễn Văn A"/>
+                    <TextView
+                        android:id="@+id/tv_order_placer_phone"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        tools:text="SĐT: 0987654321"/>
+                    <TextView
+                        android:id="@+id/tv_order_placer_email"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        tools:text="Email: nguyenvana@example.com"
+                        android:visibility="gone"
+                        tools:visibility="visible"/>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Danh sách sản phẩm (Giữ nguyên) -->
+            <!-- Thông tin người nhận & Địa chỉ -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="4dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Thông tin người nhận &amp; Địa chỉ"
+                        android:textStyle="bold"
+                        android:textSize="16sp"/>
+                    <TextView
+                        android:id="@+id/tv_detail_recipient_info_and_address"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:lineSpacingExtra="4dp"
+                        tools:text="Người nhận: Trần Thị B\nSĐT: 0901234567\nĐịa chỉ: 123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, Thành phố Hồ Chí Minh"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Danh sách sản phẩm -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -167,6 +209,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical">
+                        <!-- Các item sản phẩm sẽ được thêm vào đây bằng code -->
                         <include layout="@layout/list_item_order_detail_product" tools:visibility="visible"/>
                         <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E0E0E0" android:layout_marginTop="4dp" android:layout_marginBottom="4dp"/>
                         <include layout="@layout/list_item_order_detail_product" tools:visibility="visible"/>
@@ -199,8 +242,6 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp">
-
-                        <!-- **** SỬA Ở ĐÂY: THÊM layout_width và layout_height **** -->
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -218,7 +259,6 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp">
-                        <!-- **** SỬA Ở ĐÂY **** -->
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -238,7 +278,6 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:visibility="gone" tools:visibility="visible">
-                        <!-- **** SỬA Ở ĐÂY **** -->
                         <TextView
                             android:id="@+id/tv_detail_discount_label"
                             android:layout_width="wrap_content"
@@ -264,7 +303,6 @@
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
-                        <!-- **** SỬA Ở ĐÂY **** -->
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -282,12 +320,9 @@
                             android:textStyle="bold"
                             android:textColor="@color/purple_700"/>
                     </RelativeLayout>
-
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-
-            <!-- (Tùy chọn) LinearLayout cho các nút bấm cuối -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -298,7 +333,5 @@
             </LinearLayout>
 
         </LinearLayout>
-
     </ScrollView>
-
 </LinearLayout>

@@ -17,8 +17,8 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultLauncher; // <<<< THÊM IMPORT
-import androidx.activity.result.contract.ActivityResultContracts; // <<<< THÊM IMPORT
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -42,6 +42,7 @@ import vn.iostar.doan.model.Order;
 import vn.iostar.doan.model.OrderLine;
 import vn.iostar.doan.model.OrderStatus;
 import vn.iostar.doan.model.Product;
+import vn.iostar.doan.model.User; // Đảm bảo import User model
 
 
 public class OrderDetailActivity extends AppCompatActivity {
@@ -58,11 +59,15 @@ public class OrderDetailActivity extends AppCompatActivity {
     private TextView tvErrorMessage;
     private ScrollView scrollViewContent;
     private TextView tvDetailOrderId, tvDetailOrderStatus, tvDetailOrderDate, tvDetailPredictDate, tvDetailPaymentMethod;
-    private TextView tvDetailShippingAddress;
+    private TextView tvDetailRecipientInfoAndAddress; // THAY THẾ cho tvDetailShippingAddress
     private LinearLayout llOrderDetailItems;
     private TextView tvDetailItemsSubtotal, tvDetailShippingFee, tvDetailDiscountAmount, tvDetailTotalPrice;
     private RelativeLayout layoutDiscount;
     private TextView tvDetailDiscountLabel;
+
+    // THÊM CÁC BIẾN CHO THÔNG TIN NGƯỜI ĐẶT
+    private TextView tvOrderPlacerName, tvOrderPlacerPhone, tvOrderPlacerEmail;
+
 
     private NumberFormat currencyFormatter;
     private SimpleDateFormat displayDateFormat;
@@ -72,7 +77,6 @@ public class OrderDetailActivity extends AppCompatActivity {
     private Long userIdForReview = -1L;
     private Order currentOrderData;
 
-    // <<<< KHAI BÁO LAUNCHER CHO ProductRatingActivity >>>>
     private ActivityResultLauncher<Intent> productRatingLauncher;
 
     @Override
@@ -100,45 +104,43 @@ public class OrderDetailActivity extends AppCompatActivity {
         currencyFormatter = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
         displayDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
 
-        // <<<< KHỞI TẠO LAUNCHER >>>>
         initProductRatingLauncher();
+        setupViews(); // Gọi sau khi khởi tạo launcher
 
-        setupViews();
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             if (ACTION_MODE_SELECT_PRODUCT_FOR_REVIEW.equals(currentActionMode)) {
                 getSupportActionBar().setTitle("Chọn sản phẩm để đánh giá");
             } else {
-                getSupportActionBar().setTitle("Đơn hàng #" + orderId);
+                getSupportActionBar().setTitle("Chi tiết Đơn hàng"); // Tiêu đề chung hơn
             }
         }
 
         if (savedInstanceState == null || currentOrderData == null) {
             fetchOrderDetailWithRetrofit(orderId);
         } else {
+            // Nếu có dữ liệu cũ, có thể hiển thị nó trước rồi mới fetch lại, hoặc chỉ fetch lại.
+            // Ở đây ta fetch lại để đảm bảo dữ liệu mới nhất.
             fetchOrderDetailWithRetrofit(orderId);
         }
     }
 
-    // <<<< HÀM KHỞI TẠO LAUNCHER >>>>
     private void initProductRatingLauncher() {
         productRatingLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
-                    // Callback này được gọi khi ProductRatingActivity kết thúc
                     if (result.getResultCode() == Activity.RESULT_OK) {
-                        // Người dùng đã đánh giá thành công
                         Log.d(TAG, "ProductRatingActivity returned RESULT_OK.");
-                        // Đặt kết quả cho OrderHistoryActivity và đóng OrderDetailActivity
                         setResult(Activity.RESULT_OK);
-                        finish(); // Đóng OrderDetailActivity để OrderHistoryActivity nhận kết quả
+                        finish();
                     } else {
-                        // Người dùng hủy hoặc có lỗi từ ProductRatingActivity
                         Log.d(TAG, "ProductRatingActivity returned code: " + result.getResultCode() + ". Setting RESULT_CANCELED for OrderHistoryActivity.");
-                        // Nếu ProductRatingActivity bị hủy, chúng ta cũng nên báo là CANCELED cho OrderHistoryActivity
                         setResult(Activity.RESULT_CANCELED);
-                        finish(); // Đóng OrderDetailActivity
+                        // Không cần finish() ở đây nếu bạn muốn người dùng ở lại màn hình chi tiết
+                        // Nhưng nếu luồng là "chọn SP -> đánh giá -> quay lại lịch sử", thì finish() là đúng
+                        // Dựa vào logic trước đó, finish() khi productRatingLauncher trả về kết quả
+                        finish();
                     }
                 }
         );
@@ -146,17 +148,27 @@ public class OrderDetailActivity extends AppCompatActivity {
 
 
     private void setupViews() {
-        // ... (giữ nguyên)
         toolbar = findViewById(R.id.toolbar_order_detail);
         progressBar = findViewById(R.id.progress_bar_order_detail);
         tvErrorMessage = findViewById(R.id.tv_error_message_order_detail);
         scrollViewContent = findViewById(R.id.scroll_view_order_detail);
+
+        // Thông tin chung
         tvDetailOrderId = findViewById(R.id.tv_detail_order_id);
         tvDetailOrderStatus = findViewById(R.id.tv_detail_order_status);
         tvDetailOrderDate = findViewById(R.id.tv_detail_order_date);
         tvDetailPredictDate = findViewById(R.id.tv_detail_predict_date);
         tvDetailPaymentMethod = findViewById(R.id.tv_detail_payment_method);
-        tvDetailShippingAddress = findViewById(R.id.tv_detail_shipping_address);
+
+        // THÊM ÁNH XẠ CHO THÔNG TIN NGƯỜI ĐẶT
+        tvOrderPlacerName = findViewById(R.id.tv_order_placer_name);
+        tvOrderPlacerPhone = findViewById(R.id.tv_order_placer_phone);
+        tvOrderPlacerEmail = findViewById(R.id.tv_order_placer_email);
+
+        // SỬA ÁNH XẠ CHO THÔNG TIN NGƯỜI NHẬN
+        tvDetailRecipientInfoAndAddress = findViewById(R.id.tv_detail_recipient_info_and_address);
+
+        // Danh sách sản phẩm và Tóm tắt đơn hàng
         llOrderDetailItems = findViewById(R.id.ll_order_detail_items);
         tvDetailItemsSubtotal = findViewById(R.id.tv_detail_items_subtotal);
         tvDetailShippingFee = findViewById(R.id.tv_detail_shipping_fee);
@@ -170,7 +182,7 @@ public class OrderDetailActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
             if (ACTION_MODE_SELECT_PRODUCT_FOR_REVIEW.equals(currentActionMode)) {
-                setResult(Activity.RESULT_CANCELED); // Khi back từ mode chọn sản phẩm, coi như hủy
+                setResult(Activity.RESULT_CANCELED);
             }
             finish();
             return true;
@@ -179,7 +191,6 @@ public class OrderDetailActivity extends AppCompatActivity {
     }
 
     private void fetchOrderDetailWithRetrofit(long currentOrderIdToFetch) {
-        // ... (giữ nguyên)
         showLoading(true);
         tvErrorMessage.setVisibility(View.GONE);
         scrollViewContent.setVisibility(View.GONE);
@@ -194,6 +205,10 @@ public class OrderDetailActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     currentOrderData = response.body();
                     Log.d(TAG, "API call successful. Order received: " + currentOrderData.getOrderId());
+                    // Cập nhật lại tiêu đề Toolbar với mã đơn hàng thực tế
+                    if (getSupportActionBar() != null && !ACTION_MODE_SELECT_PRODUCT_FOR_REVIEW.equals(currentActionMode)) {
+                        getSupportActionBar().setTitle("Đơn hàng #" + currentOrderData.getOrderId());
+                    }
                     displayOrderDetails(currentOrderData);
                     scrollViewContent.setVisibility(View.VISIBLE);
                 } else {
@@ -201,7 +216,7 @@ public class OrderDetailActivity extends AppCompatActivity {
                     try {
                         if (response.errorBody() != null) {
                             String errorBodyString = response.errorBody().string();
-                            if (!errorBodyString.isEmpty() && !errorBodyString.startsWith("<")) {
+                            if (!errorBodyString.isEmpty() && !errorBodyString.startsWith("<")) { // Tránh hiển thị HTML
                                 errorMsg = "Lỗi " + response.code() + ": " + errorBodyString.substring(0, Math.min(errorBodyString.length(), 100));
                             }
                             Log.e(TAG, "API call failed with code " + response.code() + ". Error Body: " + errorBodyString);
@@ -226,12 +241,12 @@ public class OrderDetailActivity extends AppCompatActivity {
 
     @SuppressLint("SetTextI18n")
     private void displayOrderDetails(Order order) {
-        // ... (phần đầu giữ nguyên) ...
         if (order == null) {
             showError("Không có dữ liệu chi tiết cho đơn hàng này.");
             return;
         }
 
+        // Thông tin chung
         tvDetailOrderId.setText("Mã ĐH: #" + order.getOrderId());
         tvDetailPaymentMethod.setText("Thanh toán: " + (order.getPaymentMethod() != null ? order.getPaymentMethod().toString() : "N/A"));
         tvDetailOrderDate.setText("Ngày đặt: " + formatDate(order.getOrderDate()));
@@ -244,8 +259,34 @@ public class OrderDetailActivity extends AppCompatActivity {
         tvDetailOrderStatus.setText(statusText);
         tvDetailOrderStatus.setTextColor(statusColor);
 
-        tvDetailShippingAddress.setText(order.getShippingAddress() != null ? order.getShippingAddress() : "Không có thông tin địa chỉ.");
+        // THÊM HIỂN THỊ THÔNG TIN NGƯỜI ĐẶT HÀNG
+        User placer = order.getUser();
+        if (placer != null) {
+            tvOrderPlacerName.setText("Tên: " + (placer.getFullName() != null && !placer.getFullName().isEmpty() ? placer.getFullName() : "N/A"));
+            tvOrderPlacerPhone.setText("SĐT: " + (placer.getPhone() != null && !placer.getPhone().isEmpty() ? placer.getPhone() : "N/A"));
+            if (placer.getEmail() != null && !placer.getEmail().isEmpty()) {
+                tvOrderPlacerEmail.setText("Email: " + placer.getEmail());
+                tvOrderPlacerEmail.setVisibility(View.VISIBLE);
+            } else {
+                tvOrderPlacerEmail.setVisibility(View.GONE);
+            }
+        } else {
+            tvOrderPlacerName.setText("Tên: N/A");
+            tvOrderPlacerPhone.setText("SĐT: N/A");
+            tvOrderPlacerEmail.setVisibility(View.GONE);
+        }
 
+        // SỬA HIỂN THỊ THÔNG TIN NGƯỜI NHẬN & ĐỊA CHỈ
+        String shippingInfo = order.getShippingAddress();
+        if (shippingInfo != null && !shippingInfo.trim().isEmpty()) {
+            // Giả sử shippingInfo đã được format đẹp từ backend
+            // Nếu không, bạn có thể cần xử lý chuỗi này ở đây để tách tên, SĐT, địa chỉ
+            tvDetailRecipientInfoAndAddress.setText(shippingInfo);
+        } else {
+            tvDetailRecipientInfoAndAddress.setText("Không có thông tin người nhận hoặc địa chỉ.");
+        }
+
+        // Danh sách sản phẩm
         llOrderDetailItems.removeAllViews();
         if (order.getOrderLines() != null && !order.getOrderLines().isEmpty()) {
             LayoutInflater inflater = LayoutInflater.from(this);
@@ -269,8 +310,8 @@ public class OrderDetailActivity extends AppCompatActivity {
                             .into(ivProduct);
 
                     if (ACTION_MODE_SELECT_PRODUCT_FOR_REVIEW.equals(currentActionMode) &&
-                            order.getStatus() == OrderStatus.RECEIVED &&
-                            userIdForReview > 0L) {
+                            order.getStatus() == OrderStatus.RECEIVED && // Chỉ cho đánh giá khi đã nhận
+                            userIdForReview != null && userIdForReview > 0L) {
 
                         btnEvaluateThisProduct.setVisibility(View.VISIBLE);
                         final long currentSelectedProductId = product.getProductId();
@@ -284,25 +325,21 @@ public class OrderDetailActivity extends AppCompatActivity {
                             intentToProductRating.putExtra("user_id", userIdForReview);
                             intentToProductRating.putExtra("order_id", order.getOrderId());
 
-                            // <<<< SỬ DỤNG productRatingLauncher ĐỂ MỞ ProductRatingActivity >>>>
                             if (productRatingLauncher != null) {
                                 productRatingLauncher.launch(intentToProductRating);
                             } else {
                                 Log.e(TAG, "productRatingLauncher is null! Cannot launch ProductRatingActivity for result.");
-                                // Fallback (không khuyến khích vì mất luồng kết quả)
-                                startActivity(intentToProductRating);
-                                // Nếu fallback, phải setResult và finish ở đây để OrderHistoryActivity không bị treo chờ
-                                setResult(Activity.RESULT_CANCELED); // Coi như không hoàn thành đúng luồng
+                                startActivity(intentToProductRating); // Fallback
+                                setResult(Activity.RESULT_CANCELED); // Nếu fallback, nên báo là cancel
                                 finish();
                             }
-                            // <<<< KHÔNG GỌI setResult VÀ finish Ở ĐÂY NỮA >>>>
                         });
                     } else {
                         btnEvaluateThisProduct.setVisibility(View.GONE);
                     }
                 } else {
                     tvName.setText("Sản phẩm không xác định");
-                    ivProduct.setImageResource(R.drawable.placeholder_image);
+                    ivProduct.setImageResource(R.drawable.placeholder_image); // Hoặc một ảnh mặc định
                     btnEvaluateThisProduct.setVisibility(View.GONE);
                 }
 
@@ -310,32 +347,31 @@ public class OrderDetailActivity extends AppCompatActivity {
                 tvPrice.setText(currencyFormatter.format(line.getPrice()));
                 llOrderDetailItems.addView(itemView);
 
+                // Thêm divider nếu không phải item cuối
                 if (i < order.getOrderLines().size() - 1) {
-                    // ... (code thêm divider như cũ) ...
                     View divider = new View(this);
                     LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
-                            (int) getResources().getDimension(R.dimen.divider_height)
+                            (int) getResources().getDimension(R.dimen.divider_height) // Define in dimens.xml e.g. 1dp
                     );
-                    params.setMargins(0, (int) getResources().getDimension(R.dimen.divider_margin_vertical),
+                    params.setMargins(0, (int) getResources().getDimension(R.dimen.divider_margin_vertical), // e.g. 8dp
                             0, (int) getResources().getDimension(R.dimen.divider_margin_vertical));
                     divider.setLayoutParams(params);
-                    divider.setBackgroundColor(ContextCompat.getColor(this, R.color.divider_color));
+                    divider.setBackgroundColor(ContextCompat.getColor(this, R.color.divider_color)); // Define in colors.xml e.g. #E0E0E0
                     llOrderDetailItems.addView(divider);
                 }
             }
         } else {
-            // ... (code hiển thị "không có sản phẩm" như cũ) ...
             TextView noItemsText = new TextView(this);
             noItemsText.setText("Không có sản phẩm trong đơn hàng này.");
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-            params.setMargins(0, 16,0,16);
+            params.setMargins(0, 16,0,16); // Thêm margin cho đẹp
             noItemsText.setLayoutParams(params);
             llOrderDetailItems.addView(noItemsText);
         }
 
-        // ... (code hiển thị tóm tắt đơn hàng như cũ) ...
+        // Tóm tắt đơn hàng
         tvDetailItemsSubtotal.setText(currencyFormatter.format(order.getItemsSubtotal()));
         double shippingFee = order.getShippingFee();
         tvDetailShippingFee.setText(currencyFormatter.format(shippingFee));
@@ -354,7 +390,6 @@ public class OrderDetailActivity extends AppCompatActivity {
         tvDetailTotalPrice.setText(currencyFormatter.format(order.getTotalPrice()));
     }
 
-    // ... (formatDate, getStatusDisplayString, getStatusColor, showLoading, showError giữ nguyên) ...
     private String formatDate(Date date) {
         if (date == null) return "N/A";
         try {
@@ -374,12 +409,12 @@ public class OrderDetailActivity extends AppCompatActivity {
             case RECEIVED: return "Đã giao thành công";
             case CANCELLED: return "Đã hủy";
             case ERROR: return "Lỗi đơn hàng";
-            default: return status.name();
+            default: return status.name(); // Hoặc một chuỗi mặc định khác
         }
     }
 
     private int getStatusColor(OrderStatus status) {
-        int colorResId = R.color.my_grey_neutral;
+        int colorResId = R.color.my_grey_neutral; // Màu mặc định
         if (status != null) {
             switch (status) {
                 case RECEIVED: colorResId = R.color.my_green_success; break;
@@ -388,6 +423,7 @@ public class OrderDetailActivity extends AppCompatActivity {
                 case ERROR:    colorResId = R.color.my_red_error; break;
                 case WAITING:
                 case REVIEWED: colorResId = R.color.my_blue_info; break;
+                // Không cần default vì đã có màu mặc định ở trên
             }
         }
         return ContextCompat.getColor(this, colorResId);
@@ -401,18 +437,21 @@ public class OrderDetailActivity extends AppCompatActivity {
             if (scrollViewContent != null) scrollViewContent.setVisibility(View.GONE);
             if (tvErrorMessage != null) tvErrorMessage.setVisibility(View.GONE);
         }
+        // Không tự động ẩn scrollViewContent và tvErrorMessage khi !isLoading
+        // việc này sẽ được xử lý bởi fetchOrderDetailWithRetrofit
     }
 
     private void showError(String message) {
         if (scrollViewContent != null) {
-            scrollViewContent.setVisibility(View.GONE);
+            scrollViewContent.setVisibility(View.GONE); // Ẩn nội dung chính khi có lỗi
         }
         if (tvErrorMessage != null) {
             if (message != null && !message.isEmpty()) {
                 tvErrorMessage.setText(message);
                 tvErrorMessage.setVisibility(View.VISIBLE);
             } else {
-                tvErrorMessage.setVisibility(View.GONE);
+                tvErrorMessage.setText("Đã xảy ra lỗi không xác định."); // Thông báo lỗi mặc định
+                tvErrorMessage.setVisibility(View.VISIBLE);
             }
         }
     }
