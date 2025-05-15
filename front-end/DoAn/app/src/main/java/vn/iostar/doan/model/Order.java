@@ -27,9 +27,6 @@ public class Order {
     @SerializedName("paymentMethod")
     private PaymentMethod paymentMethod;
 
-    @SerializedName("shippingFee") // Hoặc "shipping_fee"
-    private double shippingFee;
-
     @SerializedName("status")
     private OrderStatus status;
     @SerializedName("discountAmount") // Hoặc "discount_amount"
@@ -69,14 +66,6 @@ public class Order {
 
     public void setReviewed(boolean reviewed) {
         this.reviewed = reviewed;
-    }
-
-    public double getShippingFee() {
-        return shippingFee;
-    }
-
-    public void setShippingFee(double shippingFee) {
-        this.shippingFee = shippingFee;
     }
 
     public double getDiscountAmount() {

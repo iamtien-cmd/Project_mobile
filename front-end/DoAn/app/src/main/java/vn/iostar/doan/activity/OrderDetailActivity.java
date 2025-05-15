@@ -276,14 +276,71 @@ public class OrderDetailActivity extends AppCompatActivity {
             tvOrderPlacerEmail.setVisibility(View.GONE);
         }
 
-        // SỬA HIỂN THỊ THÔNG TIN NGƯỜI NHẬN & ĐỊA CHỈ
+        Log.d(TAG, "Raw shippingInfo from order object: '" + order.getShippingAddress() + "'");
+
         String shippingInfo = order.getShippingAddress();
+
         if (shippingInfo != null && !shippingInfo.trim().isEmpty()) {
-            // Giả sử shippingInfo đã được format đẹp từ backend
-            // Nếu không, bạn có thể cần xử lý chuỗi này ở đây để tách tên, SĐT, địa chỉ
-            tvDetailRecipientInfoAndAddress.setText(shippingInfo);
+            // Trường hợp backend trả về placeholder cho 3 giá trị rỗng (khi address object là null)
+            if (shippingInfo.equals("||")) {
+                tvDetailRecipientInfoAndAddress.setText("Thông tin người nhận và địa chỉ không có.");
+            } else {
+                // Tách chuỗi thành các phần, -1 để giữ lại các phần tử rỗng ở cuối (nếu có)
+                String[] parts = shippingInfo.split("\\|", -1);
+                Log.d(TAG, "Split shippingInfo into parts: " + java.util.Arrays.toString(parts) + " (length: " + parts.length + ")");
+
+
+                // Mong đợi 3 phần tử: Tên, SĐT, Đường
+                String name = (parts.length > 0) ? parts[0].trim() : "";
+                String phone = (parts.length > 1) ? parts[1].trim() : "";
+                String street = (parts.length > 2) ? parts[2].trim() : "";
+                // KHÔNG lấy parts[3], parts[4], parts[5] nữa
+
+                Log.d(TAG, "Parsed Name: '" + name + "', Phone: '" + phone + "', Street: '" + street + "'");
+
+
+                StringBuilder displayBuilder = new StringBuilder();
+                boolean firstLineAdded = false;
+
+                // 1. Thêm tên người nhận
+                if (!name.isEmpty()) {
+                    displayBuilder.append("Người nhận: ").append(name);
+                    firstLineAdded = true;
+                }
+
+                // 2. Thêm số điện thoại
+                if (!phone.isEmpty()) {
+                    if (firstLineAdded) {
+                        displayBuilder.append("\n"); // Xuống dòng nếu đã có dòng trước
+                    }
+                    displayBuilder.append("SĐT: ").append(phone);
+                    firstLineAdded = true;
+                }
+
+                // 3. Thêm địa chỉ đường (StreetAddress)
+                // Không cần List<String> addressDetails nữa nếu chỉ có street
+                if (!street.isEmpty()) {
+                    if (firstLineAdded) {
+                        displayBuilder.append("\n");
+                    }
+                    displayBuilder.append("Địa chỉ: ").append(street);
+                    // firstLineAdded = true; // Không cần thiết nếu đây là dòng cuối
+                }
+
+                // Kiểm tra xem có nội dung nào được thêm vào không
+                if (displayBuilder.length() > 0) {
+                    tvDetailRecipientInfoAndAddress.setText(displayBuilder.toString());
+                    Log.d(TAG, "Final display string: '" + displayBuilder.toString() + "'");
+                } else {
+                    // Trường hợp này xảy ra nếu shippingInfo ban đầu không phải "||"
+                    // nhưng sau khi trim, tất cả 3 phần tử đều rỗng (ví dụ: " | | ")
+                    tvDetailRecipientInfoAndAddress.setText("Thông tin người nhận và địa chỉ không đầy đủ.");
+                    Log.d(TAG, "DisplayBuilder was empty, showing 'không đầy đủ'. Original parts: " + java.util.Arrays.toString(parts));
+                }
+            }
         } else {
             tvDetailRecipientInfoAndAddress.setText("Không có thông tin người nhận hoặc địa chỉ.");
+            Log.d(TAG, "shippingInfo was null or empty.");
         }
 
         // Danh sách sản phẩm
@@ -372,9 +429,14 @@ public class OrderDetailActivity extends AppCompatActivity {
         }
 
         // Tóm tắt đơn hàng
-        tvDetailItemsSubtotal.setText(currencyFormatter.format(order.getItemsSubtotal()));
-        double shippingFee = order.getShippingFee();
-        tvDetailShippingFee.setText(currencyFormatter.format(shippingFee));
+        double itemsSubtotal = order.getItemsSubtotal(); // Lấy từ Order object
+        double totalPrice = order.getTotalPrice();     // Lấy từ Order object
+
+        // Tính toán shippingFee ở client từ totalPrice và itemsSubtotal
+        double calculatedShippingFee = totalPrice - itemsSubtotal;
+
+        tvDetailItemsSubtotal.setText(currencyFormatter.format(itemsSubtotal));
+        tvDetailShippingFee.setText(currencyFormatter.format(calculatedShippingFee)); // Sử dụng giá trị vừa tính
 
         if (order.getDiscountAmount() > 0) {
             layoutDiscount.setVisibility(View.VISIBLE);
@@ -387,7 +449,7 @@ public class OrderDetailActivity extends AppCompatActivity {
         } else {
             layoutDiscount.setVisibility(View.GONE);
         }
-        tvDetailTotalPrice.setText(currencyFormatter.format(order.getTotalPrice()));
+        tvDetailTotalPrice.setText(currencyFormatter.format(totalPrice)); // Hiển thị totalPrice từ Order object
     }
 
     private String formatDate(Date date) {

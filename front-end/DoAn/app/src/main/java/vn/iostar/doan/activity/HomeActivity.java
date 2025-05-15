@@ -544,14 +544,27 @@ public class HomeActivity extends AppCompatActivity {
         if (ivHome != null) {
             ivHome.setOnClickListener(v -> {
                 Log.d(TAG, "Home icon clicked");
-                // Không cần làm gì đặc biệt vì đã ở trang chủ
-                // Tùy chọn: rcCate.scrollToPosition(0); rclProduct.scrollToPosition(0);
-                // Tùy chọn: Nếu bạn có SwipeRefreshLayout, có thể kích hoạt refresh.
-            });
+                if (searchView != null) {
+                    searchView.setQuery("", false); // Đặt text rỗng, false để không submit
+                    searchView.clearFocus();          // Bỏ focus khỏi search view
+                } else {
+                    if (productAdapter != null && productList != null) {
+                        productAdapter.updateList(productList);
+                    }
+                    if (viewFlipperMain != null) {
+                        viewFlipperMain.setVisibility(View.VISIBLE);
+                    }
+                }
+                if (rcCate != null) {
+                    rcCate.smoothScrollToPosition(0);
+                }
+                if (rclProduct != null) {
+                    rclProduct.smoothScrollToPosition(0);
+                }
+                  });
         } else {
             Log.e(TAG, "ivHome (ivMenuBottom) is null! Cannot setup Home click listener.");
         }
-
 
         // Xử lý click cho icon Giỏ hàng (Cart)
         if (ivCart != null) {

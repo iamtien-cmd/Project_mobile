@@ -18,6 +18,7 @@ public class OrderLine {
 
     @SerializedName("product")
     private Product product;
+
     public OrderLine() {
     }
 

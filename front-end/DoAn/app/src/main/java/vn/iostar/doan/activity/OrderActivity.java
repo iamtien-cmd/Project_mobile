@@ -406,7 +406,9 @@ public class OrderActivity extends AppCompatActivity {
 
     private void updateTotals() {
         double subtotal = 0.0;
-        if (checkoutItems != null) {
+        int currentTotalQuantity = 0;
+
+        if (checkoutItems != null && !checkoutItems.isEmpty()) {
             for (SelectedItemDetail item : checkoutItems) {
                 if (item.getProduct() != null && item.getProduct().getPrice() != null) {
                     try {
@@ -417,22 +419,56 @@ public class OrderActivity extends AppCompatActivity {
                     }
                 }
             }
+            currentTotalQuantity = calculateTotalQuantity(checkoutItems); // Hàm này bạn đã có và có vẻ đúng
         }
 
-        double shippingFee = calculateShippingFee();
+        // --- Logging để debug ---
+        Log.d("UpdateTotals", "Subtotal calculated: " + subtotal);
+        Log.d("UpdateTotals", "Total quantity calculated: " + currentTotalQuantity);
+        Log.d("UpdateTotals", "Default address available: " + (this.defaultAddress != null));
+        if (this.defaultAddress == null) {
+            Log.w("UpdateTotals", "Default address is NULL. Shipping fee cannot be calculated accurately yet.");
+            // Có thể hiển thị thông báo cho người dùng yêu cầu chọn/thêm địa chỉ
+            // Hoặc tạm thời hiển thị phí ship là 0 hoặc "Chưa xác định"
+        }
+        // --- Hết Logging ---
+
+        binding.tvItemsTitle.setText(String.format(Locale.getDefault(), "Sản phẩm (%d)", currentTotalQuantity));
+        binding.tvItemsSubtotal.setText(currencyFormat.format(subtotal));
+
+        double shippingFee = 0.0;
+        // Chỉ tính phí ship nếu có địa chỉ (để giống với logic backend có thể phụ thuộc vào địa chỉ)
+        // và checkoutItems không rỗng (để tránh lỗi nếu subtotal và quantity là 0)
+        if (this.defaultAddress != null && checkoutItems != null && !checkoutItems.isEmpty()) {
+            shippingFee = calculateShippingFee(this.defaultAddress, currentTotalQuantity, subtotal);
+        } else if (checkoutItems == null || checkoutItems.isEmpty()) {
+            shippingFee = 0.0; // Không có sản phẩm thì không có phí ship
+        }
+        // Nếu defaultAddress là null, shippingFee sẽ vẫn là 0.0 (hoặc bạn có thể xử lý khác)
+
+        Log.d("UpdateTotals", "Shipping fee calculated: " + shippingFee);
 
         double totalPrice = subtotal + shippingFee;
+        Log.d("UpdateTotals", "Total price calculated: " + totalPrice);
 
-        binding.tvItemsSubtotal.setText(currencyFormat.format(subtotal));
         binding.tvShippingFee.setText(currencyFormat.format(shippingFee));
         binding.tvOrderTotal.setText(currencyFormat.format(totalPrice));
         binding.tvFinalTotalBottom.setText(currencyFormat.format(totalPrice));
     }
 
-    private double calculateShippingFee() {
-        if (checkoutItems == null || checkoutItems.isEmpty()) return 0.0;
-        int totalQuantity = calculateTotalQuantity(checkoutItems);
+    private double calculateShippingFee(Address address, int totalQuantity, double itemsSubtotalValue) {
+        // --- Thêm logging để debug ---
+        Log.d("ClientShippingFeeCalc", "Calculating for: totalQuantity=" + totalQuantity +
+                ", itemsSubtotal=" + itemsSubtotalValue +
+                ", addressPresent=" + (address != null));
+        // --- Hết Logging ---
+
         if (totalQuantity == 0) return 0.0;
+        // Đồng bộ điều kiện này với backend
+        if (itemsSubtotalValue > 700000) { // Giá trị này là ví dụ, khớp với backend của bạn
+            Log.d("ClientShippingFeeCalc", "Subtotal > 700k, free shipping applied.");
+            return 0.0;
+        }
         if (totalQuantity <= 3) return 15000.0;
         if (totalQuantity <= 7) return 25000.0;
         return 35000.0;

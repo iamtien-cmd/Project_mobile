@@ -35,7 +35,6 @@ public class OrderController {
     }
 
     private Optional<User> getUserByToken(String authHeader) {
-        // ... (Giữ nguyên) ...
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return Optional.empty();
         }
@@ -59,14 +58,11 @@ public class OrderController {
         logger.info("User '{}' attempting to create order with payment method '{}'.", currentUser.getUserId(), request.getPaymentMethod() != null ? request.getPaymentMethod().name() : "null");
 
         try {
-            // *** Sửa kiểu biến nhận kết quả ***
             CreateOrderResponseDTO responseDTO = orderService.createOrder(currentUser, request, httpServletRequest);
 
-            // Lấy orderId từ DTO để log nếu muốn
             String orderId = responseDTO.getOrder() != null ? String.valueOf(responseDTO.getOrder().getOrderId()) : "N/A";
             logger.info("Order created successfully response generated for user '{}', Order ID: {}", currentUser.getUserId(), orderId);
 
-            // *** Trả về DTO trong ResponseEntity ***
             return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
 
         } catch (IllegalArgumentException | NoSuchElementException e) {
