@@ -20,104 +20,177 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- Use ShapeableImageView for rounded corners/circular shape -->
-    <com.google.android.material.imageview.ShapeableImageView
-        android:id="@+id/editAvatarImageView"
-        android:layout_width="120dp"
-        android:layout_height="120dp"
-        android:layout_marginTop="32dp"
-        android:scaleType="centerCrop"
-        android:src="@drawable/image_62"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+    <ScrollView
+        android:id="@+id/profileContentScrollView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         app:layout_constraintTop_toBottomOf="@id/toolbarEditProfile"
-        android:contentDescription="Chọn ảnh đại diện"
-        android:clickable="true"
-        android:focusable="true"
-        app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.EditProfile.CornerSize50Percent" />
-    <!-- Optional: add a stroke
-    app:strokeWidth="2dp"
-    app:strokeColor="?attr/colorPrimary"
-    -->
-
-
-    <TextView
-        android:id="@+id/textViewClickToChange"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Nhấn vào ảnh đại diện để thay đổi"
-        android:textSize="12sp"
-        android:textColor="?android:attr/textColorSecondary"
-        app:layout_constraintTop_toBottomOf="@id/editAvatarImageView"
-        app:layout_constraintStart_toStartOf="@id/editAvatarImageView"
-        app:layout_constraintEnd_toEndOf="@id/editAvatarImageView"
-        android:layout_marginTop="8dp"/>
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/fullNameInputLayout"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:layout_marginStart="24dp"
-        android:layout_marginEnd="24dp"
-        app:layout_constraintTop_toBottomOf="@id/textViewClickToChange"
+        app:layout_constraintBottom_toTopOf="@+id/bottomNavContainer"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/editFullNameEditText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Họ và tên"
-            android:inputType="textPersonName" />
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/phoneInputLayout"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:layout_marginStart="24dp"
-        android:layout_marginEnd="24dp"
-        app:layout_constraintTop_toBottomOf="@id/fullNameInputLayout"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/editPhoneEditText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Số điện thoại"
-            android:inputType="phone" />
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <Button
-        android:id="@+id/saveProfileButton"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:layout_marginStart="24dp"
-        android:layout_marginEnd="24dp"
-        android:paddingTop="12dp"
-        android:paddingBottom="12dp"
-        android:text="Lưu thay đổi"
-        android:textSize="16sp"
-        app:layout_constraintTop_toBottomOf="@id/phoneInputLayout"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
-
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyleLarge"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        tools:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:fillViewport="true"> <!-- Quan trọng để ConstraintLayout bên trong có thể match_parent height nếu cần -->
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="16dp"> <!-- Thêm padding dưới để nút Lưu không quá sát -->
+
+            <!-- Use ShapeableImageView for rounded corners/circular shape -->
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/editAvatarImageView"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:layout_marginTop="32dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/image_62"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+            android:contentDescription="Chọn ảnh đại diện"
+            android:clickable="true"
+            android:focusable="true"
+            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.EditProfile.CornerSize50Percent" />
+            <!-- Optional: add a stroke
+            app:strokeWidth="2dp"
+            app:strokeColor="?attr/colorPrimary"
+            -->
+
+            <TextView
+                android:id="@+id/textViewClickToChange"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nhấn vào ảnh đại diện để thay đổi"
+                android:textSize="12sp"
+                android:textColor="?android:attr/textColorSecondary"
+                app:layout_constraintTop_toBottomOf="@id/editAvatarImageView"
+                app:layout_constraintStart_toStartOf="@id/editAvatarImageView"
+                app:layout_constraintEnd_toEndOf="@id/editAvatarImageView"
+                android:layout_marginTop="8dp"/>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/fullNameInputLayout"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"
+                app:layout_constraintTop_toBottomOf="@id/textViewClickToChange"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editFullNameEditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Họ và tên"
+                    android:inputType="textPersonName" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/phoneInputLayout"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"
+                app:layout_constraintTop_toBottomOf="@id/fullNameInputLayout"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editPhoneEditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Số điện thoại"
+                    android:inputType="phone" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <Button
+                android:id="@+id/saveProfileButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"
+                android:paddingTop="12dp"
+                android:paddingBottom="12dp"
+                android:text="Lưu thay đổi"
+                android:textSize="16sp"
+                app:layout_constraintTop_toBottomOf="@id/phoneInputLayout"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" /> <!-- Đảm bảo nút này ở cuối cùng trong ScrollView content -->
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
+
+    <!-- Thanh điều hướng dưới cùng -->
+    <LinearLayout
+        android:id="@+id/bottomNavContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@drawable/bottom_nav_background"
+    android:padding="8dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center"
+    android:elevation="8dp"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintEnd_toEndOf="parent">
+
+    <ImageView
+        android:id="@+id/ivMenuBottom"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:scaleType="centerInside"
+        android:contentDescription="Menu"
+        android:src="@drawable/home_1" /> <!-- Cần có drawable này -->
+
+    <ImageView
+        android:id="@+id/ivLocation"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:scaleType="centerInside"
+        android:contentDescription="Location"
+        android:src="@drawable/map" /> <!-- Cần có drawable này -->
+
+    <ImageView
+        android:id="@+id/ivaboutus"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:scaleType="centerInside"
+        android:contentDescription="About Us"
+    android:src="@drawable/edit_1" />
+
+    <ImageView
+        android:id="@+id/ivcart"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:scaleType="centerInside"
+        android:contentDescription="Cart"
+    android:src="@drawable/cart_1"
+    android:clickable="true"
+    android:focusable="true" />
+</LinearLayout>
+
+<ProgressBar
+android:id="@+id/progressBar"
+style="?android:attr/progressBarStyleLarge"
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:visibility="gone"
+tools:visibility="visible"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>

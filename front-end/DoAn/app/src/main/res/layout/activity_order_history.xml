@@ -1,17 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="#F5F5DC"
     tools:context=".activity.OrderHistoryActivity">
 
     <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
+        android:id="@+id/appBarLayout"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
@@ -21,14 +24,14 @@
             android:backgroundTint="@color/black"
             app:navigationIcon="?attr/homeAsUpIndicator"
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-            app:title="Theo dõi đơn hàng" /> <!-- Đặt tiêu đề mặc định -->
+            app:title="Theo dõi đơn hàng" />
 
 
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/tab_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:tabMode="scrollable" /> <!-- 'scrollable' là ổn nếu có nhiều tab. Nếu ít (2-4 tab), cân nhắc 'fixed' -->
+            app:tabMode="scrollable" />
         <!-- Nếu dùng 'fixed', có thể thêm: app:tabGravity="fill" -->
 
     </com.google.android.material.appbar.AppBarLayout>
@@ -36,8 +39,66 @@
 
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/view_pager"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_weight="1" />
+        app:layout_constraintTop_toBottomOf="@id/appBarLayout"
+        app:layout_constraintBottom_toTopOf="@+id/bottomNavContainer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Thanh điều hướng dưới cùng -->
+    <LinearLayout
+        android:id="@+id/bottomNavContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@drawable/bottom_nav_background"
+    android:padding="8dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center"
+    android:elevation="8dp"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintEnd_toEndOf="parent">
+
+    <ImageView
+        android:id="@+id/ivMenuBottom"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:scaleType="centerInside"
+        android:contentDescription="Menu"
+        android:src="@drawable/home_1" /> <!-- Cần có drawable này -->
+
+    <ImageView
+        android:id="@+id/ivLocation"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:scaleType="centerInside"
+        android:contentDescription="Location"
+        android:src="@drawable/map" /> <!-- Cần có drawable này -->
+
+    <ImageView
+        android:id="@+id/ivaboutus"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:scaleType="centerInside"
+        android:contentDescription="About Us"
+        android:src="@drawable/edit_1" /> <!-- Cần có drawable này -->
+
+    <ImageView
+        android:id="@+id/ivcart"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:scaleType="centerInside"
+        android:contentDescription="Cart"
+        android:src="@drawable/cart_1"
+    android:clickable="true"
+    android:focusable="true" />
 </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>

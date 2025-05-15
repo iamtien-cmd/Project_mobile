@@ -48,7 +48,7 @@ public class ProfileActivity extends AppCompatActivity {
     private Button orderHistoryButton;
     private Button editProfileButton, shippingAddressButton;
 
-
+    private ImageView ivHomeBottomNav, ivLocationBottomNav, ivAboutUsBottomNav, ivCartBottomNav;
     private String token;
     private User currentUser;
     private Toolbar toolbar;
@@ -82,6 +82,7 @@ public class ProfileActivity extends AppCompatActivity {
 
 
         AnhXa();
+        setupBottomNavigation();
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -159,9 +160,24 @@ public class ProfileActivity extends AppCompatActivity {
         orderHistoryButton = findViewById(R.id.orderHistoryButton);
         editProfileButton = findViewById(R.id.editProfileButton);
         shippingAddressButton = findViewById(R.id.shippingAddressButton);
-        toolbar = findViewById(R.id.toolbarProfile);
+        toolbar = findViewById(R.id.toolbarProfile);View bottomNavLayoutContainer = findViewById(R.id.bottomNavContainer);
 
+        if (bottomNavLayoutContainer != null) {
+            // 2. Tìm các ImageView con BÊN TRONG bottomNavLayoutContainer
+            ivHomeBottomNav = bottomNavLayoutContainer.findViewById(R.id.ivMenuBottom);
+            ivLocationBottomNav = bottomNavLayoutContainer.findViewById(R.id.ivLocation);
+            ivAboutUsBottomNav = bottomNavLayoutContainer.findViewById(R.id.ivaboutus);
+            ivCartBottomNav = bottomNavLayoutContainer.findViewById(R.id.ivcart);
 
+            // Log để kiểm tra
+            if (ivHomeBottomNav == null) Log.w(TAG, "AnhXa: ivMenuBottom (Home) not found inside bottomNavContainer.");
+            if (ivLocationBottomNav == null) Log.w(TAG, "AnhXa: ivLocation not found inside bottomNavContainer.");
+            if (ivAboutUsBottomNav == null) Log.w(TAG, "AnhXa: ivaboutus not found inside bottomNavContainer.");
+            if (ivCartBottomNav == null) Log.w(TAG, "AnhXa: ivcart not found inside bottomNavContainer.");
+
+        } else {
+            Log.e(TAG, "AnhXa: Bottom navigation layout (R.id.bottomNavContainer) not found! Bottom nav icons will be null.");
+        }
     }
 
 
@@ -341,5 +357,64 @@ public class ProfileActivity extends AppCompatActivity {
         }
         super.finish();
     }
+
+    private void setupBottomNavigation() {
+        // Xử lý click cho icon Home (ivHomeBottomNav)
+        if (ivHomeBottomNav != null) {
+            ivHomeBottomNav.setOnClickListener(v -> {
+                Log.d(TAG, "Home icon clicked from ProfileActivity");
+                // Chuyển về HomeActivity
+                Intent intent = new Intent(ProfileActivity.this, HomeActivity.class);
+                intent.putExtra("token", token); // Truyền token nếu HomeActivity cần
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP); // Để không tạo nhiều instance của HomeActivity
+                startActivity(intent);
+                finish(); // Đóng ProfileActivity
+            });
+        } else {
+            Log.e(TAG, "ivHomeBottomNav is null! Cannot setup Home click listener.");
+        }
+
+        // Xử lý click cho icon Giỏ hàng (Cart) (ivCartBottomNav)
+        if (ivCartBottomNav != null) {
+            ivCartBottomNav.setOnClickListener(v -> {
+                Log.d(TAG, "Cart icon clicked from ProfileActivity");
+                Intent intent = new Intent(ProfileActivity.this, CartActivity.class);
+                intent.putExtra("token", token); // Sử dụng biến token của ProfileActivity
+                startActivity(intent);
+            });
+        } else {
+            Log.e(TAG, "ivCartBottomNav is null! Cannot setup cart click listener.");
+        }
+
+        // ProfileActivity không có chatBotIcon trực tiếp như HomeActivity,
+        // nếu icon chatbot là một phần của bottom_nav_menu và được include,
+        // bạn cần ánh xạ và xử lý nó tương tự các icon khác.
+        // Giả sử không có chatbot icon riêng lẻ trên ProfileActivity như HomeActivity.
+
+        // Xử lý click cho icon About Us (ivAboutUsBottomNav)
+        if (ivAboutUsBottomNav != null) {
+            ivAboutUsBottomNav.setOnClickListener(v -> {
+                Log.d(TAG, "About Us icon clicked from ProfileActivity");
+                Intent aboutIntent = new Intent(ProfileActivity.this, AboutUsActivity.class);
+                startActivity(aboutIntent);
+            });
+        } else {
+            Log.e(TAG, "ivAboutUsBottomNav is null! Cannot setup About Us click listener.");
+        }
+
+        // Xử lý click cho icon Location (ivLocationBottomNav)
+        if (ivLocationBottomNav != null) {
+            ivLocationBottomNav.setOnClickListener(v -> {
+                Log.d(TAG, "Location icon clicked from ProfileActivity");
+                // Mở AboutAppActivity (tương tự HomeActivity) hoặc một Activity khác tùy ý
+                Intent locationIntent = new Intent(ProfileActivity.this, AboutAppActivity.class);
+                // locationIntent.putExtra("token", token); // Truyền token nếu AboutAppActivity cần
+                startActivity(locationIntent);
+            });
+        } else {
+            Log.e(TAG, "ivLocationBottomNav is null! Cannot setup Location click listener.");
+        }
+    }
+    // --- Hết phương thức setupBottomNavigation ---
 }
 

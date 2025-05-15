@@ -58,7 +58,7 @@ public class EditProfileActivity extends AppCompatActivity {
     private Uri selectedImageUri = null;
     private String uploadedAvatarUrl = null; // Lưu URL sau khi upload thành công
     private Toolbar toolbar;
-    // --- ActivityResultLaunchers ---
+    private ImageView ivCartMenuBottom, ivCartLocation, ivCartAboutUs, ivCartIconSelf;
     private final ActivityResultLauncher<Intent> pickImageLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
@@ -88,13 +88,31 @@ public class EditProfileActivity extends AppCompatActivity {
         saveProfileButton = findViewById(R.id.saveProfileButton);
         progressBar = findViewById(R.id.progressBar);
         toolbar = findViewById(R.id.toolbarEditProfile);
+        View cartBottomNavLayoutContainer = findViewById(R.id.bottomNavContainer);
 
+        if (cartBottomNavLayoutContainer != null) {
+            // 2. Tìm các ImageView con BÊN TRONG cartBottomNavLayoutContainer
+            // Sử dụng các ID đã được định nghĩa trong activity_cart.xml cho thanh điều hướng
+            ivCartMenuBottom = cartBottomNavLayoutContainer.findViewById(R.id.ivMenuBottom);
+            ivCartLocation = cartBottomNavLayoutContainer.findViewById(R.id.ivLocation);
+            ivCartAboutUs = cartBottomNavLayoutContainer.findViewById(R.id.ivaboutus);
+            ivCartIconSelf = cartBottomNavLayoutContainer.findViewById(R.id.ivcart);
+
+            // Log để kiểm tra
+            if (ivCartMenuBottom == null) Log.w(TAG, "setupViews: ivCartMenuBottom not found.");
+            if (ivCartLocation == null) Log.w(TAG, "setupViews: ivCartLocation not found.");
+            if (ivCartAboutUs == null) Log.w(TAG, "setupViews: ivCartAboutUs not found.");
+            if (ivCartIconSelf == null) Log.w(TAG, "setupViews: ivCartIconSelf not found.");
+
+        } else {
+            Log.e(TAG, "setupViews: Bottom navigation layout (R.id.cartBottomNavContainer) not found!");
+        }
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setDisplayShowHomeEnabled(true);
         }
-
+        setupBottomNavigation();
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
             token = extras.getString("TOKEN");
@@ -343,5 +361,57 @@ public class EditProfileActivity extends AppCompatActivity {
             if (cut != -1) { result = result.substring(cut + 1); }
         }
         return result;
+    }
+
+    private void setupBottomNavigation() {
+        // Xử lý click cho icon Home (ivCartMenuBottom)
+        if (ivCartMenuBottom != null) {
+            ivCartMenuBottom.setOnClickListener(v -> {
+                Log.d(TAG, "Home icon clicked from CartActivity");
+                Intent intent = new Intent(EditProfileActivity.this, HomeActivity.class);
+                intent.putExtra("token", token);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+                finish(); // Đóng CartActivity để không quay lại bằng nút back
+            });
+        } else {
+            Log.e(TAG, "setupBottomNavigation: ivCartMenuBottom is null!");
+        }
+
+        // Xử lý click cho icon Location (ivCartLocation)
+        if (ivCartLocation != null) {
+            ivCartLocation.setOnClickListener(v -> {
+                Log.d(TAG, "Location icon clicked from CartActivity");
+                Intent intent = new Intent(EditProfileActivity.this, AboutAppActivity.class); // Hoặc Activity khác
+                // intent.putExtra("token", authToken); // Nếu cần
+                startActivity(intent);
+            });
+        } else {
+            Log.e(TAG, "setupBottomNavigation: ivCartLocation is null!");
+        }
+
+        // Xử lý click cho icon About Us (ivCartAboutUs)
+        if (ivCartAboutUs != null) {
+            ivCartAboutUs.setOnClickListener(v -> {
+                Log.d(TAG, "About Us icon clicked from CartActivity");
+                Intent intent = new Intent(EditProfileActivity.this, AboutUsActivity.class);
+                startActivity(intent);
+            });
+        } else {
+            Log.e(TAG, "setupBottomNavigation: ivCartAboutUs is null!");
+        }
+
+        // Xử lý click cho icon User/Profile (ivCartIconSelf)
+        if (ivCartIconSelf != null) {
+            ivCartIconSelf.setOnClickListener(v -> {
+                Log.d(TAG, "User/Profile icon clicked from CartActivity");
+                Intent intent = new Intent(EditProfileActivity.this, CartActivity.class);
+                intent.putExtra("token", token);
+                startActivity(intent);
+                // Không nên finish() ở đây nếu người dùng có thể muốn quay lại giỏ hàng
+            });
+        } else {
+            Log.e(TAG, "setupBottomNavigation: ivCartIconSelf is null!");
+        }
     }
 }

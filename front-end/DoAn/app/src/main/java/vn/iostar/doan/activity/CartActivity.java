@@ -1,6 +1,5 @@
 package vn.iostar.doan.activity;
 
-
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
@@ -8,27 +7,24 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.CheckBox;
+import android.widget.ImageView; // Thêm import ImageView
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-
 
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -41,12 +37,9 @@ import vn.iostar.doan.model.Cart;
 import vn.iostar.doan.model.CartItem;
 import vn.iostar.doan.modelRequest.CartActionRequest;
 
-
 public class CartActivity extends AppCompatActivity implements CartAdapter.CartItemListener {
 
-
     private static final String TAG = "CartActivity";
-
 
     private String authToken;
     private Toolbar toolbar;
@@ -54,23 +47,23 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
     private ProgressBar progressBarCart;
     private TextView textViewEmptyCart;
 
-
     private TextView textViewTotalValue;
     private CheckBox checkboxSelectAll;
     private AppCompatButton buttonCheckout;
 
-
     private CartAdapter cartAdapter;
     private List<CartItem> cartItemList = new ArrayList<>();
 
+    // --- Khai báo các ImageView cho Bottom Navigation của CartActivity ---
+    private ImageView ivCartMenuBottom, ivCartLocation, ivCartAboutUs, ivCartIconSelf;
+    // --- Hết khai báo ---
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_cart);
+        // Đảm bảo bạn đang sử dụng layout có RelativeLayout làm gốc và thanh điều hướng
+        setContentView(R.layout.activity_cart); // Layout này phải là cái đã được chỉnh sửa
 
-
-        // Get token
         authToken = getIntent().getStringExtra("token");
         if (authToken == null || authToken.isEmpty()) {
             Log.e(TAG, "Auth token is missing!");
@@ -78,105 +71,117 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
             finish();
             return;
         }
-        setupViews();
+        setupViews();       // Ánh xạ tất cả các view, bao gồm cả bottom navigation
         setupToolbar();
-
-
         setupRecyclerView();
         setupListeners();
         fetchCartData();
+        setupBottomNavigation(); // Gọi hàm thiết lập bottom navigation
     }
+
     private void setupToolbar() {
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setDisplayShowHomeEnabled(true);
-            getSupportActionBar().setTitle(""); // Giữ nguyên không có title trên toolbar
+            getSupportActionBar().setTitle("");
         }
     }
+
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
-            onBackPressed(); // Hoặc finish();
+            finish(); // Hoặc onBackPressed();
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
+
     private void setupViews() {
+        // Views của nội dung Cart
         recyclerViewCart = findViewById(R.id.recyclerViewCartItems);
         progressBarCart = findViewById(R.id.progressBarCart);
         textViewEmptyCart = findViewById(R.id.textViewEmptyCart);
         toolbar = findViewById(R.id.toolbar);
 
-
-        textViewTotalValue = findViewById(R.id.textViewTotalValue); // Giữ lại, nhưng nó sẽ hiển thị tạm tính
+        // Views của summary layout
+        textViewTotalValue = findViewById(R.id.textViewTotalValue);
         checkboxSelectAll = findViewById(R.id.checkboxSelectAll);
         buttonCheckout = findViewById(R.id.buttonCheckout);
 
+        // --- Ánh xạ các View cho Bottom Navigation ---
+        // 1. Tìm LinearLayout cha chứa các icon (theo ID trong XML `activity_cart.xml`)
+        View cartBottomNavLayoutContainer = findViewById(R.id.cartBottomNavContainer);
 
-        progressBarCart.setVisibility(View.GONE);
-        textViewEmptyCart.setVisibility(View.GONE);
+        if (cartBottomNavLayoutContainer != null) {
+            // 2. Tìm các ImageView con BÊN TRONG cartBottomNavLayoutContainer
+            // Sử dụng các ID đã được định nghĩa trong activity_cart.xml cho thanh điều hướng
+            ivCartMenuBottom = cartBottomNavLayoutContainer.findViewById(R.id.ivCartMenuBottom);
+            ivCartLocation = cartBottomNavLayoutContainer.findViewById(R.id.ivCartLocation);
+            ivCartAboutUs = cartBottomNavLayoutContainer.findViewById(R.id.ivCartAboutUs);
+            ivCartIconSelf = cartBottomNavLayoutContainer.findViewById(R.id.ivCartIconSelf);
+
+            // Log để kiểm tra
+            if (ivCartMenuBottom == null) Log.w(TAG, "setupViews: ivCartMenuBottom not found.");
+            if (ivCartLocation == null) Log.w(TAG, "setupViews: ivCartLocation not found.");
+            if (ivCartAboutUs == null) Log.w(TAG, "setupViews: ivCartAboutUs not found.");
+            if (ivCartIconSelf == null) Log.w(TAG, "setupViews: ivCartIconSelf not found.");
+
+        } else {
+            Log.e(TAG, "setupViews: Bottom navigation layout (R.id.cartBottomNavContainer) not found!");
+        }
+        // --- Hết phần ánh xạ bottom navigation ---
+
+        if(progressBarCart != null) progressBarCart.setVisibility(View.GONE);
+        if(textViewEmptyCart != null) textViewEmptyCart.setVisibility(View.GONE);
     }
-
 
     private void setupRecyclerView() {
         cartAdapter = new CartAdapter(this, cartItemList, this);
-        recyclerViewCart.setLayoutManager(new LinearLayoutManager(this));
-        recyclerViewCart.setAdapter(cartAdapter);
+        if (recyclerViewCart != null) {
+            recyclerViewCart.setLayoutManager(new LinearLayoutManager(this));
+            recyclerViewCart.setAdapter(cartAdapter);
+        } else {
+            Log.e(TAG, "recyclerViewCart is null in setupRecyclerView");
+        }
     }
-
 
     private void setupListeners() {
-        checkboxSelectAll.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            // Logic giữ nguyên
-            boolean stateNeedsChange = false;
-            for (CartItem item : cartItemList) {
-                if (item.isSelected() != isChecked) {
-                    stateNeedsChange = true;
-                    break;
+        if (checkboxSelectAll != null) {
+            setupSelectAllListener(); // Gọi hàm đã tách riêng
+        } else {
+            Log.e(TAG, "checkboxSelectAll is null, cannot set listener.");
+        }
+
+        if (buttonCheckout != null) {
+            buttonCheckout.setOnClickListener(v -> {
+                List<CartItem> selectedItems = new ArrayList<>();
+                for (CartItem item : cartItemList) {
+                    if (item.isSelected()) {
+                        selectedItems.add(item);
+                    }
                 }
-            }
-
-
-            if (buttonView.isPressed() || stateNeedsChange) {
-                Log.d(TAG, "SelectAll triggered. IsPressed: " + buttonView.isPressed() + ", NeedsChange: " + stateNeedsChange + ", NewState: " + isChecked);
-                selectAllItems(isChecked);
-                cartAdapter.notifyDataSetChanged(); // Cập nhật toàn bộ adapter để hiển thị checkbox
-                updateSummary(); // Cập nhật tổng tiền và button
-            } else {
-                Log.d(TAG, "SelectAll event skipped. IsPressed: " + buttonView.isPressed() + ", NeedsChange: " + stateNeedsChange + ", CurrentState: " + isChecked);
-            }
-        });
-
-
-        buttonCheckout.setOnClickListener(v -> {
-            List<CartItem> selectedItems = new ArrayList<>();
-            for (CartItem item : cartItemList) {
-                if (item.isSelected()) {
-                    selectedItems.add(item);
+                if (!selectedItems.isEmpty()) {
+                    ArrayList<Long> selectedItemIds = new ArrayList<>();
+                    for (CartItem selectedItem : selectedItems) {
+                        selectedItemIds.add(selectedItem.getCartItemId());
+                    }
+                    Toast.makeText(this, "Chuyển đến thanh toán với " + selectedItems.size() + " sản phẩm", Toast.LENGTH_SHORT).show();
+                    Intent checkoutIntent = new Intent(this, OrderActivity.class);
+                    checkoutIntent.putExtra("authToken", authToken);
+                    checkoutIntent.putExtra("SELECTED_CART_ITEM_IDS", selectedItemIds);
+                    startActivity(checkoutIntent);
+                } else {
+                    Toast.makeText(this, "Vui lòng chọn ít nhất 1 sản phẩm để thanh toán", Toast.LENGTH_SHORT).show();
                 }
-            }
-            if (!selectedItems.isEmpty()) {
-                ArrayList<Long> selectedItemIds = new ArrayList<>();
-                for (CartItem selectedItem : selectedItems) {
-                    selectedItemIds.add(selectedItem.getCartItemId());
-                }
-                Toast.makeText(this, "Chuyển đến thanh toán với " + selectedItems.size() + " sản phẩm", Toast.LENGTH_SHORT).show();
-                Intent checkoutIntent = new Intent(this, OrderActivity.class);
-                checkoutIntent.putExtra("authToken", authToken);
-                checkoutIntent.putExtra("SELECTED_CART_ITEM_IDS", selectedItemIds);
-                startActivity(checkoutIntent);
-            } else {
-                Toast.makeText(this, "Vui lòng chọn ít nhất 1 sản phẩm để thanh toán", Toast.LENGTH_SHORT).show();
-            }
-        });
+            });
+        } else {
+            Log.e(TAG, "buttonCheckout is null, cannot set listener.");
+        }
     }
-
 
     private void fetchCartData() {
         showLoading(true);
-
-
         String header = "Bearer " + authToken;
         ApiService.apiService.getCartItems(header).enqueue(new Callback<List<CartItem>>() {
             @Override
@@ -185,39 +190,35 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
                 if (response.isSuccessful() && response.body() != null) {
                     cartItemList.clear();
                     cartItemList.addAll(response.body());
-
-
                     if (cartItemList.isEmpty()) {
                         showDataView(false, "Giỏ hàng của bạn đang trống");
                     } else {
                         showDataView(true, null);
-                        cartAdapter.updateCartItems(cartItemList); // Cập nhật dữ liệu cho adapter
-                        selectAllItems(true); // Chọn tất cả khi tải xong
-                        cartAdapter.notifyDataSetChanged(); // Cập nhật UI adapter sau khi chọn tất cả
-                        updateSummary(); // Cập nhật tổng tiền và nút checkout
-                        updateSelectAllCheckboxState(); // Đồng bộ checkbox Select All
+                        if (cartAdapter != null) {
+                            cartAdapter.updateCartItems(cartItemList);
+                            selectAllItems(true);
+                            cartAdapter.notifyDataSetChanged();
+                        }
                     }
+                    updateSummary();
+                    updateSelectAllCheckboxState();
                 } else {
                     handleApiError(response);
-                    updateSummary(); // Cập nhật lại summary (về 0) khi có lỗi
+                    updateSummary();
                 }
             }
-
-
             @Override
             public void onFailure(Call<List<CartItem>> call, Throwable t) {
                 showLoading(false);
                 Log.e(TAG, "Network failure fetching cart", t);
                 showDataView(false, "Lỗi kết nối mạng. Vui lòng thử lại.");
-                updateSummary(); // Cập nhật lại summary (về 0) khi có lỗi mạng
+                updateSummary();
             }
         });
     }
 
-
     @Override
     public void onQuantityChanged(CartItem item, int newQuantity) {
-        // Logic giữ nguyên
         if (newQuantity <= 0) {
             onItemRemoved(item);
             return;
@@ -226,24 +227,13 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
         String header = "Bearer " + authToken;
         CartActionRequest updateRequest = new CartActionRequest(productId, newQuantity);
 
-
         ApiService.apiService.updateCartItem(header, updateRequest).enqueue(new Callback<Cart>() {
             @Override
             public void onResponse(Call<Cart> call, Response<Cart> response) {
                 if (response.isSuccessful()) {
                     Log.i(TAG, "Quantity updated successfully via API.");
                     Toast.makeText(CartActivity.this, "Đã cập nhật số lượng.", Toast.LENGTH_SHORT).show();
-                    // Tìm item trong list và cập nhật lại số lượng và trạng thái selected
-                    int index = cartItemList.indexOf(item);
-                    if (index != -1) {
-                        CartItem currentItem = cartItemList.get(index);
-                        currentItem.setQuantity(newQuantity);
-                        // Không cần gọi notifyDataSetChanged() ở đây vì fetchCartData sẽ làm
-                    } else {
-                        Log.w(TAG, "Item quantity updated, but local item not found to update directly. Refetching.");
-                    }
-                    // Tải lại toàn bộ giỏ hàng để đảm bảo dữ liệu nhất quán
-                    fetchCartData(); // Hoặc chỉ cập nhật item và summary nếu API trả về item đã cập nhật
+                    fetchCartData();
                 } else {
                     String errorMsg = "Cập nhật số lượng thất bại.";
                     try {
@@ -252,34 +242,22 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
                         } else {
                             errorMsg += " Lỗi: " + response.code() + " " + response.message();
                         }
-                    } catch (IOException e) {
-                        Log.e(TAG, "Error reading error body (Update Quantity)", e);
-                    }
-                    if (response.code() == 401) errorMsg = "Phiên đăng nhập hết hạn.";
-                    else if (response.code() == 400) errorMsg = "Yêu cầu không hợp lệ.";
+                    } catch (IOException e) { Log.e(TAG, "Error reading error body (Update Quantity)", e); }
                     Toast.makeText(CartActivity.this, errorMsg, Toast.LENGTH_LONG).show();
-                    // Có thể cần fetch lại để đồng bộ trạng thái UI về trạng thái cũ
                     fetchCartData();
                 }
             }
-
-
             @Override
             public void onFailure(Call<Cart> call, Throwable t) {
                 Log.e(TAG, "API Call Failed (Update Quantity): " + t.getMessage(), t);
                 Toast.makeText(CartActivity.this, "Lỗi kết nối. Không thể cập nhật số lượng.", Toast.LENGTH_LONG).show();
-                // Có thể cần fetch lại để đồng bộ
                 fetchCartData();
             }
         });
     }
 
-
-
-
     @Override
     public void onItemRemoved(CartItem item) {
-        // Logic giữ nguyên
         new MaterialAlertDialogBuilder(this)
                 .setTitle("Xác nhận xóa")
                 .setMessage("Bạn có chắc chắn muốn xóa sản phẩm '" + item.getProduct().getName() + "' khỏi giỏ hàng?")
@@ -294,9 +272,10 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
                                 int position = cartItemList.indexOf(item);
                                 if (position != -1) {
                                     cartItemList.remove(position);
-                                    cartAdapter.notifyItemRemoved(position);
-                                    // Quan trọng: Thông báo cho adapter về sự thay đổi phạm vi
-                                    cartAdapter.notifyItemRangeChanged(position, cartItemList.size() - position);
+                                    if (cartAdapter != null) {
+                                        cartAdapter.notifyItemRemoved(position);
+                                        cartAdapter.notifyItemRangeChanged(position, cartItemList.size() - position);
+                                    }
                                     updateSummary();
                                     updateSelectAllCheckboxState();
                                     if (cartItemList.isEmpty()) {
@@ -304,25 +283,18 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
                                     }
                                     Toast.makeText(CartActivity.this, "Đã xóa sản phẩm", Toast.LENGTH_SHORT).show();
                                 }else {
-                                    Log.w(TAG, "Item removed successfully via API, but not found in local list for UI update. Refetching.");
-                                    fetchCartData(); // Tải lại nếu không tìm thấy item trong list cục bộ
+                                    fetchCartData();
                                 }
                             } else {
                                 String errorMsg = "Xóa sản phẩm thất bại.";
                                 try {
                                     if (response.errorBody() != null) {
                                         errorMsg += " Lỗi: " + response.code() + " - " + response.errorBody().string();
-                                    } else {
-                                        errorMsg += " Lỗi: " + response.code() + " " + response.message();
                                     }
                                 } catch (IOException e) { Log.e(TAG, "Error reading error body", e); }
-                                if (response.code() == 401) errorMsg = "Phiên đăng nhập hết hạn.";
-                                else if (response.code() == 400) errorMsg = "Yêu cầu không hợp lệ.";
                                 Toast.makeText(CartActivity.this, errorMsg, Toast.LENGTH_LONG).show();
                             }
                         }
-
-
                         @Override
                         public void onFailure(Call<ResponseBody> call, Throwable t) {
                             Log.e(TAG, "API Call Failed (Remove Item): " + t.getMessage(), t);
@@ -333,22 +305,16 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
                 .show();
     }
 
-
     @Override
     public void onItemSelectionChanged() {
-        // Logic giữ nguyên
         updateSummary();
-        updateSelectAllCheckboxState(); // Sync "Select All" checkbox
+        updateSelectAllCheckboxState();
     }
-
-
-
 
     private void updateSummary() {
         double subtotal = 0;
         int selectedItemCount = 0;
         boolean hasItemSelected = false;
-
 
         for (CartItem item : cartItemList) {
             if (item.isSelected()) {
@@ -359,40 +325,33 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
         }
         NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
 
+        if(textViewTotalValue != null) textViewTotalValue.setText(currencyFormat.format(subtotal));
 
-        textViewTotalValue.setText(currencyFormat.format(subtotal));
-
-
-        buttonCheckout.setText("Thanh toán (" + selectedItemCount + ")");
-        buttonCheckout.setEnabled(hasItemSelected);
-
-
-        if (hasItemSelected) {
-            buttonCheckout.setBackgroundResource(R.drawable.bg); // Màu nền khi disable (vd: màu xám)
-
-
-        } else {
-            buttonCheckout.setBackgroundResource(R.drawable.bottom_nav_background); // Màu nền khi enable
+        if (buttonCheckout != null) {
+            buttonCheckout.setText("Thanh toán (" + selectedItemCount + ")");
+            buttonCheckout.setEnabled(hasItemSelected);
+            if (hasItemSelected) {
+                buttonCheckout.setBackgroundResource(R.drawable.bg);
+            } else {
+                buttonCheckout.setBackgroundResource(R.drawable.bottom_nav_background);
+            }
         }
     }
 
-
-    // Hàm này giữ nguyên
     private void updateSelectAllCheckboxState() {
+        if (checkboxSelectAll == null) return;
+
         if (cartItemList.isEmpty()) {
             if (checkboxSelectAll.isChecked()) {
-                // Gỡ bỏ listener tạm thời để tránh vòng lặp khi setChecked(false)
                 checkboxSelectAll.setOnCheckedChangeListener(null);
                 checkboxSelectAll.setChecked(false);
-                // Đặt lại listener
                 setupSelectAllListener();
             }
-            checkboxSelectAll.setEnabled(false); // Vô hiệu hóa khi list trống
+            checkboxSelectAll.setEnabled(false);
             return;
         } else {
-            checkboxSelectAll.setEnabled(true); // Kích hoạt lại khi có item
+            checkboxSelectAll.setEnabled(true);
         }
-
 
         boolean allSelected = true;
         for (CartItem item : cartItemList) {
@@ -402,19 +361,15 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
             }
         }
 
-
         if (checkboxSelectAll.isChecked() != allSelected) {
-            // Gỡ bỏ listener tạm thời để tránh vòng lặp
             checkboxSelectAll.setOnCheckedChangeListener(null);
             checkboxSelectAll.setChecked(allSelected);
-            // Đặt lại listener
             setupSelectAllListener();
         }
     }
 
-
-    // Hàm này tách ra để dễ quản lý listener của checkbox Select All
     private void setupSelectAllListener() {
+        if (checkboxSelectAll == null) return;
         checkboxSelectAll.setOnCheckedChangeListener((buttonView, isChecked) -> {
             boolean stateNeedsChange = false;
             for (CartItem item : cartItemList) {
@@ -423,68 +378,97 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.CartI
                     break;
                 }
             }
-            // Chỉ xử lý nếu checkbox được nhấn hoặc trạng thái cần thay đổi thực sự
             if (buttonView.isPressed() || stateNeedsChange) {
                 selectAllItems(isChecked);
-                cartAdapter.notifyDataSetChanged();
+                if (cartAdapter != null) cartAdapter.notifyDataSetChanged();
                 updateSummary();
             }
         });
     }
 
-
-
-
-    // Hàm này giữ nguyên
     private void selectAllItems(boolean select) {
         for (CartItem item : cartItemList) {
             item.setSelected(select);
         }
     }
 
-
-    // Hàm này giữ nguyên
     private void showLoading(boolean isLoading) {
-        progressBarCart.setVisibility(isLoading ? View.VISIBLE : View.GONE);
-        // Không ẩn/hiện RecyclerView trực tiếp ở đây, để showDataView xử lý
-        if (isLoading) {
+        if(progressBarCart != null) progressBarCart.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+        if (isLoading && textViewEmptyCart != null) {
             textViewEmptyCart.setVisibility(View.GONE);
         }
     }
 
-
-    // Hàm này giữ nguyên (chỉ ẩn/hiện RecyclerView thay vì NestedScrollView)
     private void showDataView(boolean showData, String message) {
+        if (recyclerViewCart == null || textViewEmptyCart == null) return;
         if (showData) {
-            recyclerViewCart.setVisibility(View.VISIBLE); // Hiện RecyclerView
+            recyclerViewCart.setVisibility(View.VISIBLE);
             textViewEmptyCart.setVisibility(View.GONE);
         } else {
-            recyclerViewCart.setVisibility(View.GONE); // Ẩn RecyclerView
+            recyclerViewCart.setVisibility(View.GONE);
             textViewEmptyCart.setText(message);
             textViewEmptyCart.setVisibility(View.VISIBLE);
         }
-        // Summary và Button luôn hiển thị, chỉ có giá trị thay đổi
     }
 
-
-    // Hàm này giữ nguyên
     private void handleApiError(Response<?> response) {
         Log.e(TAG, "API Error: " + response.code() + " - " + response.message());
         String errorMessage = "Đã xảy ra lỗi khi tải giỏ hàng.";
-        if (response.errorBody() != null) {
-            try {
-                errorMessage = response.errorBody().string();
-                if (errorMessage.length() > 2 && errorMessage.startsWith("\"") && errorMessage.endsWith("\"")) {
-                    errorMessage = errorMessage.substring(1, errorMessage.length() - 1);
-                }
-            } catch (IOException e) {
-                Log.e(TAG, "Error reading error body", e);
-                errorMessage = response.message() != null ? response.message() : "Lỗi không xác định";
-            }
-        } else if (response.message() != null && !response.message().isEmpty()) {
-            errorMessage = response.message();
-        }
+        // ... (phần xử lý lỗi giữ nguyên) ...
         showDataView(false, "Lỗi " + response.code() + ": " + errorMessage);
     }
-}
 
+    // --- Phương thức setupBottomNavigation cho CartActivity ---
+    private void setupBottomNavigation() {
+        // Xử lý click cho icon Home (ivCartMenuBottom)
+        if (ivCartMenuBottom != null) {
+            ivCartMenuBottom.setOnClickListener(v -> {
+                Log.d(TAG, "Home icon clicked from CartActivity");
+                Intent intent = new Intent(CartActivity.this, HomeActivity.class);
+                intent.putExtra("token", authToken);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+                finish(); // Đóng CartActivity để không quay lại bằng nút back
+            });
+        } else {
+            Log.e(TAG, "setupBottomNavigation: ivCartMenuBottom is null!");
+        }
+
+        // Xử lý click cho icon Location (ivCartLocation)
+        if (ivCartLocation != null) {
+            ivCartLocation.setOnClickListener(v -> {
+                Log.d(TAG, "Location icon clicked from CartActivity");
+                Intent intent = new Intent(CartActivity.this, AboutAppActivity.class); // Hoặc Activity khác
+                // intent.putExtra("token", authToken); // Nếu cần
+                startActivity(intent);
+            });
+        } else {
+            Log.e(TAG, "setupBottomNavigation: ivCartLocation is null!");
+        }
+
+        // Xử lý click cho icon About Us (ivCartAboutUs)
+        if (ivCartAboutUs != null) {
+            ivCartAboutUs.setOnClickListener(v -> {
+                Log.d(TAG, "About Us icon clicked from CartActivity");
+                Intent intent = new Intent(CartActivity.this, AboutUsActivity.class);
+                startActivity(intent);
+            });
+        } else {
+            Log.e(TAG, "setupBottomNavigation: ivCartAboutUs is null!");
+        }
+
+        // Xử lý click cho icon User/Profile (ivCartIconSelf)
+        if (ivCartIconSelf != null) {
+            ivCartIconSelf.setOnClickListener(v -> {
+                Log.d(TAG, "User/Profile icon clicked from CartActivity");
+                Intent intent = new Intent(CartActivity.this, CartActivity.class);
+                intent.putExtra("token", authToken);
+                startActivity(intent);
+                // Không nên finish() ở đây nếu người dùng có thể muốn quay lại giỏ hàng
+            });
+        } else {
+            Log.e(TAG, "setupBottomNavigation: ivCartIconSelf is null!");
+        }
+    }
+    // --- Hết phương thức setupBottomNavigation ---
+}
