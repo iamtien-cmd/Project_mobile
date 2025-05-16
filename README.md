@@ -38,12 +38,7 @@
 ---
 
 ## ⚙️ Cài đặt và triển khai
-
-### 1. Clone repo
-```bash
-git clone https://github.com/iamtien-cmd/Project_mobile.git
-cd handmade-shop-app
-2. Backend (Spring Boot)
+Backend (Spring Boot)
 Cấu hình application.properties:
 
 properties
@@ -107,6 +102,11 @@ Edit
 
 ---
 
+
+### Clone repo
+```bash
+git clone https://github.com/iamtien-cmd/Project_mobile.git
+cd handmade-shop-app
 
 
 
