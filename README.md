@@ -53,17 +53,10 @@ Chạy backend:
 bash
 
 ./mvnw spring-boot:run
-Dùng Ngrok để tạo URL public cho Android kết nối:
+Dùng Ngrok để tạo URL public cho Android kết nối:ngrok http 8080
 
-bash
-
-ngrok http 8080
 Android App
 Mở trong Android Studio
-
-Cập nhật BASE_URL trỏ đến link Ngrok
-
-Build và chạy trên thiết bị thật hoặc AVD
 
 🔐 Bảo mật
 Sử dụng JWT để xác thực người dùng
@@ -94,14 +87,13 @@ Dự án dành cho mục đích học tập, không sử dụng thương mại.
 Họ tên: Nguyễn Thị Hồng Nhung-22110391
         Liên Huệ Tiên-22110433
 
-Trường: HCMUTE
----
+Trường: Đại học Sư phạm Kỹ thuật TPHCM
+GVHD: Th.S Nguyễn Hữu Trung
 
 
 ### Clone repo
-```bash
+git bash
 git clone https://github.com/iamtien-cmd/Project_mobile.git
-cd handmade-shop-app
 
 
 
