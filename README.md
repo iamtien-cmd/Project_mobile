@@ -58,7 +58,7 @@ Dùng Ngrok để tạo URL public cho Android kết nối:
 bash
 
 ngrok http 8080
-3. Android App
+Android App
 Mở trong Android Studio
 
 Cập nhật BASE_URL trỏ đến link Ngrok
@@ -95,11 +95,6 @@ Họ tên: Nguyễn Thị Hồng Nhung-22110391
         Liên Huệ Tiên-22110433
 
 Trường: HCMUTE
-
-css
-Copy
-Edit
-
 ---
 
 
