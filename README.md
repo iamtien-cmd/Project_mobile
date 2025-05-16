@@ -41,7 +41,7 @@
 
 ### 1. Clone repo
 ```bash
-git clone https://github.com/your-username/handmade-shop-app.git
+git clone https://github.com/iamtien-cmd/Project_mobile.git
 cd handmade-shop-app
 2. Backend (Spring Boot)
 Cấu hình application.properties:
@@ -49,7 +49,7 @@ Cấu hình application.properties:
 properties
 Copy
 Edit
-spring.datasource.url=jdbc:mysql://localhost:3306/handmade_shop
+spring.datasource.url=jdbc:mysql://localhost:3306/handmade
 spring.datasource.username=root
 spring.datasource.password=your_password
 jwt.secret=your_jwt_secret
