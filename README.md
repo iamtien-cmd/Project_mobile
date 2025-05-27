@@ -31,7 +31,7 @@
 - 🔍 Tìm kiếm sản phẩm theo tên hoặc loại
 - 🛒 Thêm sản phẩm vào giỏ hàng và đặt mua
 - 💳 Thanh toán (giả lập)
-- 📦 Xem lịch sử mua hàng
+- 📦 Theo dõi đơn hàng
 - ⭐ Đánh giá sản phẩm đã mua
 - 🤖 Nhắn tin với chatbot để tư vấn, hỗ trợ
 
