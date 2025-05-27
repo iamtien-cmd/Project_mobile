@@ -61,7 +61,7 @@ http://localhost:8080/api/comments/product/1001 Với 1001 là productId
 ![image](https://github.com/user-attachments/assets/44f8c270-c970-42c5-a0b4-ea3d0316964d)
 Đăng bình luận
 Hosting hình ảnh thành đường dẫn public để csdl có thể truy cập bằng địa chỉ ipv4 của máy tính
-http://localhost:8080/api/v1/upload/image. Sau khi hosting ta có thể truy cập hình ảnh qua link đã host: http://192.168.1.7:8080/api/images/ff5e81f4-74fc-4d1f-a5f7-d1da5aff3034.jpg
+http://localhost:8080/api/v1/upload/image. Sau khi hosting ta có thể truy cập hình ảnh qua link đã host: http://192.168.1.7:8080/api/images/ff5e8  1f4-74fc-4d1f-a5f7-d1da5aff3034.jpg
 ![image](https://github.com/user-attachments/assets/66ebcca6-f060-4435-9560-edb992853e85)
 ![image](https://github.com/user-attachments/assets/2e0665c9-a2ab-4558-86f7-49017f864b99)
 ![image](https://github.com/user-attachments/assets/84fc4214-e527-4629-b506-e0c369aa9e1f)
